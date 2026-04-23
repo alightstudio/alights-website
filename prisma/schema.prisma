@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  email     String?
+  company   String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  works     Work[]
+}
+
+model Work {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  category    String   // TVC广告, 产品动画, 发布会大屏, 影视剧
+  videoUrl    String?  // 视频链接
+  coverUrl    String?  // 封面图
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  // 创作者信息
+  creatorName  String
+  creatorPhone String
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  userId  String?
+  user    User?  @relation(fields: [userId], references: [id])
+  
+  reviews Review[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  workId    String
+  work      Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+  status    String   // PENDING, APPROVED, REJECTED
+  comment   String?
+  reviewer  String   @default("admin")
+  createdAt DateTime @default(now())
+}

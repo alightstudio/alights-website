@@ -1,0 +1,92 @@
+{
+  "company": {
+    "name": "西安栖光文化传播有限公司",
+    "nameEn": "Xi'an Alights Culture Communication Co., Ltd.",
+    "shortName": "栖光",
+    "shortNameEn": "ALIGHTS",
+    "slogan": "专业视效制作 · 光影叙事艺术",
+    "sloganEn": "Professional Visual Effects · Cinematic Storytelling",
+    "description": "西安栖光文化传播有限公司，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。",
+    "descriptionEn": "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. Using light and shadow as our brush, creativity as our ink, we tell compelling stories for brands."
+  },
+  "contact": {
+    "phone": "15091855505",
+    "email": "184436962@qq.com",
+    "address": "陕西省西安市",
+    "wechat": "",
+    "weibo": "",
+    "xiaohongshu": ""
+  },
+  "seo": {
+    "title": "栖光文化 | ALIGHTS - 专业视效制作",
+    "description": "西安栖光文化传播有限公司，专注于高端视效制作领域。TVC广告、产品动画、发布会大屏、影视剧。",
+    "keywords": "栖光,视效,TVC广告,产品动画,发布会大屏,影视剧,3D渲染,CG"
+  },
+  "hero": {
+    "title": "栖光",
+    "titleEn": "ALIGHTS",
+    "subtitle": "专业视效制作 · 光影叙事艺术",
+    "subtitleEn": "Professional Visual Effects · Cinematic Storytelling",
+    "tags": ["TVC广告", "产品动画", "发布会大屏", "影视剧"]
+  },
+  "featuredWorks": [
+    { "id": "1", "title": "奔驰 EQE SUV", "titleEn": "MERCEDES-BENZ EQE SUV", "category": "汽车广告", "categoryEn": "AUTOMOTIVE COMMERCIAL", "image": "/works/image7.jpeg", "order": 1 },
+    { "id": "2", "title": "珠宝手镯渲染", "titleEn": "JEWELRY BRACELET", "category": "产品动画", "categoryEn": "PRODUCT ANIMATION", "image": "/works/image2.png", "order": 2 },
+    { "id": "3", "title": "Rolex 手表", "titleEn": "ROLEX OYSTER PERPETUAL", "category": "产品渲染", "categoryEn": "PRODUCT VISUALIZATION", "image": "/works/image3.png", "order": 3 },
+    { "id": "4", "title": "运动鞋系列", "titleEn": "SPORTS FOOTWEAR COLLECTION", "category": "产品动画", "categoryEn": "PRODUCT ANIMATION", "image": "/works/image4.png", "order": 4 },
+    { "id": "5", "title": "汽车电池系统", "titleEn": "EV BATTERY SYSTEM", "category": "汽车CG", "categoryEn": "AUTOMOTIVE CG", "image": "/works/image5.png", "order": 5 },
+    { "id": "6", "title": "AR 交互界面", "titleEn": "AR INTERFACE VFX", "category": "影视特效", "categoryEn": "FILM VFX", "image": "/works/image8.png", "order": 6 },
+    { "id": "7", "title": "光影纹理", "titleEn": "LIGHT & SHADOW TEXTURE", "category": "视效材质", "categoryEn": "VFX MATERIAL", "image": "/works/image1.jpg", "order": 7 },
+    { "id": "8", "title": "汽车内饰渲染", "titleEn": "CAR INTERIOR RENDER", "category": "汽车CG", "categoryEn": "AUTOMOTIVE CG", "image": "/works/image9.jpeg", "order": 8 },
+    { "id": "9", "title": "电池组细节", "titleEn": "BATTERY PACK DETAIL", "category": "汽车CG", "categoryEn": "AUTOMOTIVE CG", "image": "/works/image6.png", "order": 9 }
+  ],
+  "services": [
+    { "id": "1", "title": "TVC广告", "titleEn": "TVC COMMERCIAL", "desc": "高端商业广告制作", "descEn": "Premium Commercial Production", "order": 1 },
+    { "id": "2", "title": "产品动画", "titleEn": "PRODUCT ANIMATION", "desc": "三维产品可视化", "descEn": "3D Product Visualization", "order": 2 },
+    { "id": "3", "title": "发布会大屏", "titleEn": "EVENT SCREEN", "desc": "沉浸式视觉体验", "descEn": "Immersive Visual Experience", "order": 3 },
+    { "id": "4", "title": "影视剧", "titleEn": "FILM & TV", "desc": "电影级特效制作", "descEn": "Cinematic VFX Production", "order": 4 }
+  ],
+  "brands": [
+    { "id": "1", "name": "Mercedes-Benz", "slug": "mercedes", "order": 1 },
+    { "id": "2", "name": "BMW", "slug": "bmw", "order": 2 },
+    { "id": "3", "name": "Audi", "slug": "audi", "order": 3 },
+    { "id": "4", "name": "Porsche", "slug": "porsche", "order": 4 },
+    { "id": "5", "name": "Tesla", "slug": "tesla", "order": 5 },
+    { "id": "6", "name": "BYD", "slug": "byd", "order": 6 },
+    { "id": "7", "name": "NIO", "slug": "nio", "order": 7 },
+    { "id": "8", "name": "XPeng", "slug": "xpeng", "order": 8 },
+    { "id": "10", "name": "Apple", "slug": "apple", "order": 10 },
+    { "id": "11", "name": "Huawei", "slug": "huawei", "order": 11 },
+    { "id": "12", "name": "Xiaomi", "slug": "xiaomi", "order": 12 },
+    { "id": "13", "name": "OPPO", "slug": "oppo", "order": 13 },
+    { "id": "14", "name": "vivo", "slug": "vivo", "order": 14 },
+    { "id": "15", "name": "Samsung", "slug": "samsung", "order": 15 },
+    { "id": "16", "name": "Sony", "slug": "sony", "order": 16 },
+    { "id": "17", "name": "DJI", "slug": "dji", "order": 17 },
+    { "id": "18", "name": "Dyson", "slug": "dyson", "order": 18 },
+    { "id": "19", "name": "Bose", "slug": "bose", "order": 19 },
+    { "id": "20", "name": "Rolex", "slug": "rolex", "order": 20 },
+    { "id": "21", "name": "Omega", "slug": "omega", "order": 21 },
+    { "id": "22", "name": "Cartier", "slug": "cartier", "order": 22 },
+    { "id": "23", "name": "Tiffany & Co.", "slug": "tiffany", "order": 23 },
+    { "id": "24", "name": "Chanel", "slug": "chanel", "order": 24 },
+    { "id": "25", "name": "Dior", "slug": "dior", "order": 25 },
+    { "id": "26", "name": "Gucci", "slug": "gucci", "order": 26 },
+    { "id": "27", "name": "Hermès", "slug": "hermes", "order": 27 },
+    { "id": "28", "name": "Louis Vuitton", "slug": "louisvuitton", "order": 28 },
+    { "id": "29", "name": "Prada", "slug": "prada", "order": 29 },
+    { "id": "30", "name": "Nike", "slug": "nike", "order": 30 },
+    { "id": "31", "name": "Adidas", "slug": "adidas", "order": 31 },
+    { "id": "33", "name": "FILA", "slug": "fila", "order": 33 },
+    { "id": "34", "name": "Anta", "slug": "anta", "order": 34 },
+    { "id": "35", "name": "Li-Ning", "slug": "lining", "order": 35 },
+    { "id": "36", "name": "Under Armour", "slug": "underarmour", "order": 36 },
+    { "id": "37", "name": "New Balance", "slug": "newbalance", "order": 37 },
+    { "id": "38", "name": "Converse", "slug": "converse", "order": 38 },
+    { "id": "39", "name": "Vans", "slug": "vans", "order": 39 },
+    { "id": "40", "name": "L'Oréal", "slug": "loreal", "order": 40 },
+    { "id": "41", "name": "Estée Lauder", "slug": "esteelauder", "order": 41 },
+    { "id": "42", "name": "Shiseido", "slug": "shiseido", "order": 42 },
+    { "id": "43", "name": "Kiehl's", "slug": "kiehls", "order": 43 }
+  ]
+}

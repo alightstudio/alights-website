@@ -11,12 +11,33 @@ export default function ContactPage() {
     company: '',
     message: '',
   })
+  const [submitting, setSubmitting] = useState(false)
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: 实现表单提交和 AI 回复功能
-    console.log('Form submitted:', formData)
-    alert('感谢您的留言，我们会尽快回复！')
+    setSubmitting(true)
+    setResult(null)
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      const data = await res.json()
+
+      if (res.ok) {
+        setResult({ success: true, message: data.message })
+        setFormData({ name: '', phone: '', email: '', company: '', message: '' })
+      } else {
+        setResult({ success: false, message: data.error || '提交失败' })
+      }
+    } catch {
+      setResult({ success: false, message: '网络错误，请稍后重试' })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -56,7 +77,7 @@ export default function ContactPage() {
               
               <div className="space-y-8 mb-12">
                 <div>
-                  <p className="text-sm text-gray-500 mb-2 tracking-wide">电话</p>
+                  <p className="text-sm text-gray-500 mb-2 tracking-wide">微信</p>
                   <p className="text-lg">15091855505</p>
                 </div>
                 <div>
@@ -71,7 +92,7 @@ export default function ContactPage() {
 
               <div className="pt-8 border-t border-dark-700">
                 <h3 className="text-lg font-light mb-4">营业时间</h3>
-                <p className="text-gray-500 text-sm">周一至周五 9:00 - 18:00</p>
+                <p className="text-gray-500 text-sm">365×7×24</p>
               </div>
             </motion.div>
 
@@ -102,15 +123,15 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <label className="block text-sm text-gray-500 mb-2 tracking-wide">
-                      电话 *
+                      微信 *
                     </label>
                     <input
-                      type="tel"
+                      type="text"
                       required
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full bg-dark-800 border border-dark-600 px-4 py-3 text-white focus:border-accent-gold/50 focus:outline-none transition-colors"
-                      placeholder="联系电话"
+                      placeholder="微信号"
                     />
                   </div>
                 </div>
@@ -158,10 +179,17 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full border border-accent-gold/40 text-accent-gold px-8 py-4 text-sm tracking-widest uppercase hover:bg-accent-gold/10 transition-all duration-500"
+                  disabled={submitting}
+                  className="w-full border border-accent-gold/40 text-accent-gold px-8 py-4 text-sm tracking-widest uppercase hover:bg-accent-gold/10 transition-all duration-500 disabled:opacity-50"
                 >
-                  提交咨询
+                  {submitting ? '提交中...' : '提交咨询'}
                 </button>
+
+                {result && (
+                  <div className={`text-center text-sm ${result.success ? 'text-green-400' : 'text-red-400'}`}>
+                    {result.message}
+                  </div>
+                )}
 
                 <p className="text-xs text-gray-600 text-center">
                   提交后我们将尽快与您联系，或通过 AI 助手获得即时回复
@@ -172,20 +200,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* AI Chat Widget (Placeholder) */}
-      <div className="fixed bottom-8 right-8">
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 1 }}
-          className="w-14 h-14 rounded-full bg-accent-gold/20 border border-accent-gold/40 flex items-center justify-center hover:bg-accent-gold/30 transition-colors"
-          onClick={() => alert('AI 聊天功能即将上线')}
-        >
-          <svg className="w-6 h-6 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-        </motion.button>
-      </div>
+
     </div>
   )
 }

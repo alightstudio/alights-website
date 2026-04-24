@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { put } from '@vercel/blob'
 import { cookies } from 'next/headers'
-import fs from 'fs'
-import path from 'path'
-
-const CONFIG_PATH = path.join(process.cwd(), 'src/data/site-config.json')
-const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads')
 
 async function isAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies()
@@ -12,15 +8,23 @@ async function isAuthenticated(): Promise<boolean> {
   return session?.value === 'authenticated'
 }
 
-function readConfig() {
-  return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'))
+// 允许的文件类型
+const ALLOWED_TYPES: Record<string, string[]> = {
+  video: ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo'],
+  image: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'],
 }
 
-function writeConfig(config: any) {
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8')
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024   // 100MB
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024    // 10MB
+
+function getFileCategory(contentType: string): 'video' | 'image' | null {
+  for (const [category, types] of Object.entries(ALLOWED_TYPES)) {
+    if (types.includes(contentType)) return category as 'video' | 'image'
+  }
+  return null
 }
 
-// POST /api/admin/upload - 文件上传
+// POST /api/admin/upload - 文件上传到 Vercel Blob
 export async function POST(request: NextRequest) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: '未授权' }, { status: 401 })
@@ -35,33 +39,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '没有文件' }, { status: 400 })
     }
 
-    // 确保上传目录存在
-    const targetDir = path.join(UPLOAD_DIR, subdir)
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true })
+    const category = getFileCategory(file.type)
+    if (!category) {
+      return NextResponse.json(
+        { error: `不支持的文件类型: ${file.type}。支持: mp4/mov/webm/avi, jpg/png/webp/gif/svg` },
+        { status: 400 }
+      )
     }
 
-    // 生成唯一文件名
-    const ext = path.extname(file.name) || '.bin'
+    const maxSize = category === 'video' ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: `文件过大，${category === 'video' ? '视频' : '图片'}最大 ${maxSize / 1024 / 1024}MB` },
+        { status: 400 }
+      )
+    }
+
+    // 生成唯一文件路径
+    const ext = file.name.split('.').pop() || (category === 'video' ? 'mp4' : 'jpg')
     const timestamp = Date.now()
     const randomStr = Math.random().toString(36).substring(2, 8)
-    const filename = `${timestamp}_${randomStr}${ext}`
-    const filepath = path.join(targetDir, filename)
+    const pathname = `${subdir}/${timestamp}_${randomStr}.${ext}`
 
-    // 写入文件
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    fs.writeFileSync(filepath, buffer)
-
-    // 返回可访问的 URL 路径
-    const url = `/uploads/${subdir}/${filename}`
+    // 上传到 Vercel Blob
+    const blob = await put(pathname, file, {
+      access: 'public',
+      contentType: file.type,
+    })
 
     return NextResponse.json({
       success: true,
-      url,
-      filename,
+      url: blob.url,
+      pathname: blob.pathname,
       size: file.size,
-      type: file.type
+      type: file.type,
+      category,
     })
   } catch (error) {
     console.error('Upload error:', error)

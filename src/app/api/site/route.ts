@@ -1,30 +1,157 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
+import { prisma } from '@/lib/prisma'
 
-const CONFIG_PATH = path.join(process.cwd(), 'src/data/site-config.json')
+// 强制动态渲染（每次请求都从数据库读取最新数据）
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-// GET /api/site/config - 公开的网站配置读取接口（无需认证）
+// ===== Default Config Fallbacks =====
+const DEFAULT_COMPANY = {
+  name: "西安栖光文化传播有限公司",
+  nameEn: "Xi'an Alights Culture Communication Co., Ltd.",
+  shortName: "栖光",
+  shortNameEn: "ALIGHTS",
+  slogan: "专业视效制作 · 光影叙事艺术",
+  sloganEn: "Professional Visual Effects · Cinematic Storytelling",
+  description: "西安栖光文化传播有限公司，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。",
+  descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production."
+}
+
+const DEFAULT_CONTACT = { phone: "15091855505", email: "184436962@qq.com", address: "陕西省西安市", wechat: "" }
+const DEFAULT_SEO = { title: "栖光文化 | ALIGHTS - 专业视效制作", description: "专业视效制作领域。TVC广告、产品动画、发布会、影视剧。", keywords: "栖光,视效,TVC广告" }
+const DEFAULT_HERO = { title: "栖光", titleEn: "ALIGHTS", subtitle: "专业视效制作 · 光影叙事艺术", subtitleEn: "Professional Visual Effects · Cinematic Storytelling", tags: ["TVC广告", "产品动画", "发布会", "影视剧"] }
+
+const DEFAULT_NAVIGATION = {
+  logo: "栖光",
+  items: [
+    { id: "home", label: "首页", href: "/", visible: true, order: 0 },
+    { id: "works", label: "作品集", href: "/works", visible: true, order: 1 },
+    { id: "gallery", label: "佳片欣赏", href: "/gallery", visible: true, order: 2 },
+    { id: "canvas", label: "像素画布", href: "/canvas", visible: true, order: 3 },
+    { id: "community", label: "社区", href: "/community", visible: true, order: 4 },
+    { id: "about", label: "关于我们", href: "/about", visible: true, order: 5 },
+    { id: "contact", label: "联系合作", href: "/contact", visible: true, order: 6 },
+  ]
+}
+
+const DEFAULT_FOOTER = {
+  logo: "栖光",
+  tagline: "专业视效制作 · 光影叙事艺术",
+  columns: [
+    {
+      id: "nav", title: "导航", type: "links",
+      links: [
+        { label: "作品集", href: "/works", order: 0 },
+        { label: "佳片欣赏", href: "/gallery", order: 1 },
+        { label: "像素画布", href: "/canvas", order: 2 },
+        { label: "社区", href: "/community", order: 3 },
+        { label: "关于我们", href: "/about", order: 4 },
+        { label: "联系方式", href: "/contact", order: 5 },
+      ]
+    },
+    {
+      id: "services", title: "服务", type: "text",
+      items: ["TVC广告", "产品动画", "发布会", "影视剧"]
+    },
+    {
+      id: "contact", title: "联系", type: "contact",
+      items: ["电话：15091855505", "邮箱：184436962@qq.com", "地址：西安市"]
+    }
+  ],
+  copyright: "© 2024-2026 西安栖光文化传播有限公司. All rights reserved.",
+  bottomText: "alights.cn"
+}
+
+const DEFAULT_THEME = {
+  primaryColor: "#c9a962",
+  bgColor: "#0a0a0a",
+  textColor: "#ffffff",
+  fontFamily: "Inter",
+  fontDisplay: "Playfair Display",
+  borderRadius: "0",
+  customCSS: ""
+}
+
+const DEFAULT_ANNOUNCEMENT = {
+  enabled: false,
+  text: "",
+  type: "info",
+  dismissible: true,
+  link: null
+}
+
+const DEFAULT_PAGES = {
+  home: { label: "首页", path: "/", visible: true },
+  works: { label: "作品集", path: "/works", visible: true },
+  gallery: { label: "佳片欣赏", path: "/gallery", visible: true },
+  canvas: { label: "像素画布", path: "/canvas", visible: true },
+  community: { label: "社区", path: "/community", visible: true },
+  about: { label: "关于我们", path: "/about", visible: true },
+  contact: { label: "联系合作", path: "/contact", visible: true },
+  login: { label: "登录", path: "/login", visible: true },
+  register: { label: "注册", path: "/register", visible: true },
+  profile: { label: "个人中心", path: "/profile", visible: true },
+  dashboard: { label: "创作中心", path: "/dashboard", visible: true },
+}
+
+const DEFAULT_CODE_INJECTION = {
+  headHTML: "",
+  footerHTML: "",
+  bodyStartHTML: ""
+}
+
+const DEFAULT_SOCIAL_LINKS = {
+  wechat: "",
+  weibo: "",
+  xiaohongshu: "",
+  bilibili: "",
+  douyin: "",
+  github: ""
+}
+
+// GET /api/site - 公开的网站配置读取接口（无需认证）
 export async function GET() {
   try {
-    const raw = fs.readFileSync(CONFIG_PATH, 'utf-8')
-    const config = JSON.parse(raw)
-    // 只返回前端需要的字段，不返回敏感信息
+    const configs = await prisma.siteConfig.findMany()
+    const configMap: Record<string, any> = {}
+    
+    for (const c of configs) {
+      try {
+        configMap[c.key] = JSON.parse(c.value)
+      } catch {
+        configMap[c.key] = c.value
+      }
+    }
+
     return NextResponse.json({
-      company: config.company,
-      contact: {
-        phone: config.contact?.phone || '',
-        email: config.contact?.email || '',
-        address: config.contact?.address || '',
-        wechat: config.contact?.wechat || '',
-      },
-      seo: config.seo,
-      hero: config.hero,
-      featuredWorks: config.featuredWorks || [],
-      services: config.services || [],
-      brands: config.brands || [],
+      company: configMap.company || DEFAULT_COMPANY,
+      contact: { phone: configMap.contact?.phone || DEFAULT_CONTACT.phone, email: configMap.contact?.email || DEFAULT_CONTACT.email, address: configMap.contact?.address || DEFAULT_CONTACT.address, wechat: configMap.contact?.wechat || "" },
+      seo: configMap.seo || DEFAULT_SEO,
+      hero: configMap.hero || DEFAULT_HERO,
+      featuredWorks: configMap.featuredWorks || [],
+      services: configMap.services || [],
+      brands: configMap.brands || [],
+      brandDisplay: configMap.brandDisplay || { opacity: 0.75, opacityHover: 1, grayscale: false, grayscaleHover: false },
+      navigation: configMap.navigation || DEFAULT_NAVIGATION,
+      footer: configMap.footer || DEFAULT_FOOTER,
+      theme: configMap.theme || DEFAULT_THEME,
+      announcement: configMap.announcement || DEFAULT_ANNOUNCEMENT,
+      pages: configMap.pages || DEFAULT_PAGES,
+      codeInjection: configMap.codeInjection || DEFAULT_CODE_INJECTION,
+      socialLinks: configMap.socialLinks || DEFAULT_SOCIAL_LINKS,
     })
   } catch (error) {
-    return NextResponse.json({ error: '读取配置失败' }, { status: 500 })
+    console.error('读取配置失败:', error)
+    // 数据库不可用时返回默认配置
+    return NextResponse.json({
+      company: DEFAULT_COMPANY,
+      contact: DEFAULT_CONTACT,
+      seo: DEFAULT_SEO,
+      hero: DEFAULT_HERO,
+      featuredWorks: [],
+      services: [],
+      brands: [],
+      brandDisplay: { opacity: 0.75, opacityHover: 1, grayscale: false, grayscaleHover: false },
+    })
   }
 }

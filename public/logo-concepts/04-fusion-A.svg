@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 440" fill="none">
+  <!--
+    融合方案 A：垂直叠放 + 结构性对齐
+    光字的底部与 A 的顶部共享同一水平轴线
+    一条横向光线贯穿中英文
+  -->
+
+  <!-- 栖 · 仅保留最简结构 -->
+  <line x1="80" y1="25" x2="80" y2="130" stroke="#E8E0D0" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="55" y1="55" x2="105" y2="55" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <path d="M80,55 L55,85" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+
+  <line x1="120" y1="25" x2="120" y2="115" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <line x1="120" y1="25" x2="175" y2="25" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <line x1="175" y1="25" x2="175" y2="115" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <line x1="120" y1="115" x2="175" y2="115" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <line x1="120" y1="70" x2="175" y2="70" stroke="#E8E0D0" stroke-width="0.6" stroke-linecap="round"/>
+
+  <!-- 光 · 结构简化 — 精确对应到下方 A 的几何 -->
+  <line x1="230" y1="25" x2="230" y2="135" stroke="#E8E0D0" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M230,55 L205,95" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <path d="M230,55 L260,95 L260,175" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round" fill="none"/>
+
+  <!-- 中线 — 光与 A 的衔接过渡 -->
+  <line x1="230" y1="175" x2="230" y2="195" stroke="#E8E0D0" stroke-width="0.6" stroke-linecap="round"/>
+
+  <!-- 主横线 — 贯穿中英文的结构线 -->
+  <line x1="40" y1="200" x2="420" y2="200" stroke="#B8963C" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- ALIGHTS — 字重 100，间距 12 -->
+  <!-- A 的左腿：对齐光字的竖线 -->
+  <line x1="230" y1="210" x2="200" y2="310" stroke="#E8E0D0" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- A 的右腿 -->
+  <line x1="230" y1="210" x2="260" y2="310" stroke="#E8E0D0" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- A 的横线延伸 — 光束直接穿过 LIGHTS -->
+  <line x1="210" y1="258" x2="325" y2="258" stroke="#E8E0D0" stroke-width="0.8" stroke-linecap="round"/>
+
+  <!-- LIGHTS 文字 — 前移让 A 融入 -->
+  <text x="268" y="302" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-size="44" font-weight="100" letter-spacing="10" fill="#E8E0D0">LIGHTS</text>
+
+  <!-- 角落标识 -->
+  <text x="440" y="420" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-size="8" font-weight="200" letter-spacing="3" fill="#B8963C" text-anchor="end">TYPE A</text>
+</svg>

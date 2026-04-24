@@ -35,6 +35,22 @@ function isValidPhone(phone: string): boolean {
   return /^1[3-9]\d{9}$/.test(phone)
 }
 
+// 生成唯一邀请码
+async function generateReferralCode(): Promise<string> {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  for (let attempt = 0; attempt < 20; attempt++) {
+    let code = ''
+    for (let i = 0; i < 6; i++) {
+      code += chars[Math.floor(Math.random() * chars.length)]
+    }
+    const existing = await prisma.user.findUnique({ where: { referralCode: code } })
+    if (!existing) return code
+  }
+  return 'REF' + Date.now().toString(36).toUpperCase()
+}
+
+const REFERRAL_BONUS = 10 // 双方各得积分
+
 export async function POST(request: Request) {
   try {
     const ip = getClientIP(request)
@@ -48,7 +64,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, phone, email, company, password } = body
+    const { name, phone, email, company, password, referralCode } = body
 
     // 验证必填字段
     if (!name || !phone || !password) {
@@ -78,10 +94,24 @@ export async function POST(request: Request) {
       )
     }
 
+    // 查找邀请人
+    let referrer = null
+    if (referralCode && referralCode.trim()) {
+      referrer = await prisma.user.findUnique({
+        where: { referralCode: referralCode.trim().toUpperCase() },
+      })
+      if (!referrer) {
+        return NextResponse.json(
+          { error: '邀请码无效' },
+          { status: 400 }
+        )
+      }
+    }
+
     // 加密密码
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // 创建用户
+    // 创建用户（含邀请关系）
     const user = await prisma.user.create({
       data: {
         name,
@@ -89,15 +119,59 @@ export async function POST(request: Request) {
         email: email || '',
         company: company || '',
         password: hashedPassword,
+        referralCode: await generateReferralCode(),
+        referredById: referrer?.id || null,
       },
     })
 
+    // 新用户注册奖励 + 邀请奖励
+    if (referrer) {
+      const today = new Date().toISOString().split('T')[0]
+
+      // 新用户获积分
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { points: { increment: REFERRAL_BONUS } },
+      })
+      await prisma.pointsRecord.create({
+        data: {
+          userId: user.id,
+          points: REFERRAL_BONUS,
+          reason: 'referral_signup',
+          date: today,
+        },
+      })
+
+      // 邀请人获积分
+      await prisma.user.update({
+        where: { id: referrer.id },
+        data: { points: { increment: REFERRAL_BONUS } },
+      })
+      await prisma.pointsRecord.create({
+        data: {
+          userId: referrer.id,
+          points: REFERRAL_BONUS,
+          reason: 'referral_invite',
+          date: today,
+        },
+      })
+
+      // 记录邀请关系（现有 Referral 表）
+      await prisma.referral.create({
+        data: {
+          referrerId: referrer.id,
+          refereeId: user.id,
+        },
+      })
+    }
+
     return NextResponse.json({
-      message: '注册成功',
+      message: '注册成功' + (referrer ? '，获得邀请奖励 +' + REFERRAL_BONUS + ' 积分' : ''),
       user: {
         id: user.id,
         name: user.name,
         phone: user.phone,
+        points: referrer ? REFERRAL_BONUS : 0,
       },
     })
   } catch (error) {

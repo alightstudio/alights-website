@@ -1,19 +1,52 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-
-const navItems = [
-  { name: '首页', href: '/' },
-  { name: '作品集', href: '/works' },
-  { name: '作品赏析', href: '/gallery' },
-  { name: '关于我们', href: '/about' },
-  { name: '联系合作', href: '/contact' },
-]
+import { getSiteConfig, applyTheme } from '@/lib/siteConfig'
+import type { NavItem } from '@/lib/siteConfig'
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false)
+  const [userName, setUserName] = useState('')
+  const [navItems, setNavItems] = useState<NavItem[]>([])
+  const [logo, setLogo] = useState('栖光')
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/'
+    return pathname === href || pathname.startsWith(href + '/')
+  }
+
+  useEffect(() => {
+    const name = localStorage.getItem('userName')
+    const id = localStorage.getItem('userId')
+    if (id) {
+      setLoggedIn(true)
+      setUserName(name || '用户')
+    }
+  }, [])
+
+  useEffect(() => {
+    getSiteConfig().then(config => {
+      if (config?.navigation) {
+        setLogo(config.navigation.logo || '栖光')
+        setNavItems(config.navigation.items?.filter(i => i.visible !== false) || [])
+      }
+      if (config?.theme) applyTheme(config.theme)
+    })
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('userId')
+    localStorage.removeItem('userName')
+    localStorage.removeItem('userPhone')
+    setLoggedIn(false)
+    router.push('/')
+  }
 
   return (
     <>
@@ -22,27 +55,48 @@ export default function Navigation() {
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="font-display text-2xl tracking-wider">
-              栖光
+            <Link href="/" className="font-display text-2xl tracking-wider" style={{ fontFamily: 'var(--font-display, unset)' }}>
+              {logo}
             </Link>
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-12">
-              {navItems.map((item) => (
+              {navItems.sort((a, b) => a.order - b.order).map((item) => (
                 <Link
-                  key={item.name}
+                  key={item.id}
                   href={item.href}
-                  className="text-sm text-gray-400 hover:text-white transition-colors tracking-wide"
+                  className={`text-sm transition-colors tracking-wide ${
+                    isActive(item.href)
+                      ? 'text-white'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
                 >
-                  {item.name}
+                  {item.label}
                 </Link>
               ))}
-              <Link
-                href="/login"
-                className="text-sm text-accent-gold hover:text-white transition-colors tracking-wide"
-              >
-                登录
-              </Link>
+              {loggedIn ? (
+                <div className="flex items-center space-x-6">
+                  <Link
+                    href="/profile"
+                    className="text-sm text-accent-gold hover:text-white transition-colors tracking-wide"
+                  >
+                    {userName} · 个人中心
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-sm text-gray-500 hover:text-gray-300 transition-colors tracking-wide"
+                  >
+                    退出
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="text-sm text-accent-gold hover:text-white transition-colors tracking-wide"
+                >
+                  登录
+                </Link>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -69,23 +123,45 @@ export default function Navigation() {
             className="fixed inset-0 z-40 bg-dark-900 pt-24 px-6 md:hidden"
           >
             <div className="flex flex-col space-y-8">
-              {navItems.map((item) => (
+              {navItems.sort((a, b) => a.order - b.order).map((item) => (
                 <Link
-                  key={item.name}
+                  key={item.id}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className="text-2xl text-gray-400 hover:text-white transition-colors tracking-wide"
+                  className={`text-2xl transition-colors tracking-wide ${
+                    isActive(item.href)
+                      ? 'text-white'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
                 >
-                  {item.name}
+                  {item.label}
                 </Link>
               ))}
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="text-2xl text-accent-gold hover:text-white transition-colors tracking-wide"
-              >
-                登录
-              </Link>
+              {loggedIn ? (
+                <>
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsOpen(false)}
+                    className="text-2xl text-accent-gold hover:text-white transition-colors tracking-wide"
+                  >
+                    个人中心
+                  </Link>
+                  <button
+                    onClick={() => { handleLogout(); setIsOpen(false) }}
+                    className="text-2xl text-gray-500 hover:text-gray-300 transition-colors tracking-wide text-left"
+                  >
+                    退出登录
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="text-2xl text-accent-gold hover:text-white transition-colors tracking-wide"
+                >
+                  登录
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

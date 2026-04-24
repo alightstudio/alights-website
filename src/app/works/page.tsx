@@ -1,93 +1,57 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
-import Image from 'next/image'
+import { trackWorkClick } from '@/lib/points'
 
-const categories = ['全部', 'TVC广告', '产品动画', '发布会大屏', '影视剧']
-
-// 栖光文化真实作品数据
-const works = [
-  {
-    id: 1,
-    title: '灯语 LIST',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/work-1-dengyu.jpg',
-    description: '现代汽车广告',
-  },
-  {
-    id: 2,
-    title: '想象 LIST',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/work-2-xiangxiang.jpg',
-    description: '汽车广告',
-  },
-  {
-    id: 3,
-    title: '稳座 LIST',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/work-3-wenzuo.jpg',
-    description: '汽车广告',
-  },
-  {
-    id: 4,
-    title: '零跑 D19 上市TVC',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/work-4-lingpao.jpg',
-    description: '零跑 D19 上市广告片',
-  },
-  {
-    id: 5,
-    title: '张天爱 | 雅娜薇图',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/work-5-zhangtianai.jpg',
-    description: '张天爱代言广告',
-  },
-  {
-    id: 6,
-    title: '自然堂×上海芭蕾舞团',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/work-6-zirantang.jpg',
-    description: '自然堂品牌广告',
-  },
-  {
-    id: 7,
-    title: '乐道汽车',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/image5.png',
-    description: '乐道汽车广告',
-  },
-  {
-    id: 8,
-    title: 'DIORIVIERA',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/image8.png',
-    description: 'DIOR 夏季系列广告',
-  },
-  {
-    id: 9,
-    title: 'SuperELLE×FILA',
-    category: 'TVC广告',
-    year: '2024',
-    thumbnail: '/works/image4.png',
-    description: 'SuperELLE 与 FILA 合作广告',
-  },
-]
+interface FeaturedWork {
+  id: string
+  title: string
+  titleEn: string
+  category: string
+  categoryEn: string
+  image: string
+  homepageOrder: number | null
+  videoUrl?: string
+  views?: number
+  duration?: number
+}
 
 export default function WorksPage() {
+  const [allWorks, setAllWorks] = useState<FeaturedWork[]>([])
   const [activeCategory, setActiveCategory] = useState('全部')
+  const [categories, setCategories] = useState<string[]>(['全部'])
+  const [loading, setLoading] = useState(true)
+  const [totalViews, setTotalViews] = useState(0)
+
+  useEffect(() => {
+    fetch('/api/site')
+      .then(res => res.json())
+      .then(data => {
+        if (data.featuredWorks && Array.isArray(data.featuredWorks)) {
+          const works = data.featuredWorks.sort((a: FeaturedWork, b: FeaturedWork) => (b.views || 0) - (a.views || 0))
+          setAllWorks(works)
+          const total = works.reduce((sum: number, w: FeaturedWork) => sum + (w.views || 0), 0)
+          setTotalViews(total)
+          const cats = Array.from(new Set(works.map((w: FeaturedWork) => w.category))) as string[]
+          setCategories(['全部', ...cats])
+        }
+      })
+      .catch(err => console.error('Failed to load works:', err))
+      .finally(() => setLoading(false))
+  }, [])
 
   const filteredWorks = activeCategory === '全部'
-    ? works
-    : works.filter(work => work.category === activeCategory)
+    ? allWorks
+    : allWorks.filter(work => work.category === activeCategory)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-dark-900 pt-24 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-gold" />
+      </div>
+    )
+  }
 
   return (
     <div className="pt-24 pb-32 px-6 md:px-12 lg:px-24">
@@ -102,10 +66,12 @@ export default function WorksPage() {
           <h1 className="font-display text-5xl md:text-6xl font-light mb-6">
             作品集
           </h1>
-          <div className="w-24 h-px bg-accent-gold/40 mx-auto mb-8" />
-          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            精选代表作品，展示我们在视效领域的专业实力
-          </p>
+          <div className="w-24 h-px bg-accent-gold/40 mx-auto mb-4" />
+          {totalViews > 0 && (
+            <p className="text-xs text-gray-600 tracking-wide">
+              热度累计 <span className="text-accent-gold/60">{totalViews.toLocaleString()}</span>
+            </p>
+          )}
         </motion.div>
 
         {/* Filter */}
@@ -137,47 +103,76 @@ export default function WorksPage() {
               key={work.id}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.05 }}
+              transition={{ duration: 0.6, delay: index * 0.04 }}
               className="group relative aspect-video bg-dark-700 overflow-hidden cursor-pointer"
+              onClick={() => { trackWorkClick(work.id); work.videoUrl && window.open(work.videoUrl, '_blank') }}
             >
               {/* Thumbnail */}
-              {work.thumbnail ? (
-                <Image
-                  src={work.thumbnail}
-                  alt={work.title}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              ) : (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-br from-dark-600 to-dark-800" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-gray-600 text-sm tracking-wide">作品预览</span>
-                  </div>
-                </>
+              <img
+                src={work.image}
+                alt={work.title}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  const parent = target.parentElement
+                  if (parent) {
+                    const placeholder = document.createElement('div')
+                    placeholder.className = 'absolute inset-0 flex items-center justify-center'
+                    placeholder.innerHTML = '<span class="text-gray-600 text-sm tracking-wide">作品预览</span>'
+                    parent.appendChild(placeholder)
+                  }
+                }}
+              />
+
+              {/* Views Badge (top left) */}
+              {work.views && work.views > 0 && (
+                <div className="absolute top-3 left-3 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5 z-10">
+                  🔥 {work.views.toLocaleString()}
+                </div>
               )}
+
+              {/* Meta Badges (top right) */}
+              <div className="absolute top-3 right-3 flex gap-1.5">
+                {work.duration && (
+                  <span className="bg-black/60 text-gray-300 text-xs px-2 py-0.5">
+                    {Math.floor(work.duration / 60)}:{String(work.duration % 60).padStart(2, '0')}
+                  </span>
+                )}
+                <span className="bg-black/60 text-gray-300 text-xs px-2 py-0.5">
+                  {work.category}
+                </span>
+              </div>
 
               {/* Hover Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-dark-900/90 via-dark-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
               {/* Info */}
               <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                <h3 className="text-lg font-light mb-2">{work.title}</h3>
-                <p className="text-xs text-gray-400">{work.category} · {work.year}</p>
-                {work.description && (
-                  <p className="text-xs text-gray-500 mt-2">{work.description}</p>
+                <h3 className="text-lg font-light mb-1 leading-snug">{work.title}</h3>
+                {work.views != null && (
+                  <p className="text-xs text-accent-gold/60">🔥 {work.views.toLocaleString()} 次播放</p>
                 )}
               </div>
 
-              {/* Play Icon */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="w-16 h-16 rounded-full border border-white/30 flex items-center justify-center">
-                  <div className="w-0 h-0 border-l-[10px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />
+              {/* Play Button */}
+              {work.videoUrl && (
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="w-16 h-16 rounded-full border border-white/30 flex items-center justify-center">
+                    <div className="w-0 h-0 border-l-[10px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />
+                  </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           ))}
         </div>
+
+        {/* Empty State */}
+        {filteredWorks.length === 0 && (
+          <div className="text-center py-20 border border-dark-700">
+            <p className="text-gray-500">该分类暂无作品</p>
+          </div>
+        )}
       </div>
     </div>
   )

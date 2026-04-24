@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -13,11 +13,23 @@ model User {
   phone     String   @unique
   email     String?
   company   String?
+  bio       String?
+  avatar    String?
   password  String
+  points    Int      @default(0)
+  referralCode  String?   @unique // 邀请码
+  referredById  String?   // 被谁邀请
+  referredBy    User?     @relation("ReferralRelation", fields: [referredById], references: [id])
+  referrals     User[]    @relation("ReferralRelation") // 我邀请的人
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  works     Work[]
+  works          Work[]
+  posts          ForumPost[]
+  comments       ForumComment[]
+  pointsRecords  PointsRecord[]
+  referrerRecords Referral[]  @relation("ReferralReferrer") // 我作为推荐人的记录
+  refereeRecords  Referral[]  @relation("ReferralReferee")  // 我被推荐的记录
 }
 
 model Work {
@@ -50,4 +62,192 @@ model Review {
   comment   String?
   reviewer  String   @default("admin")
   createdAt DateTime @default(now())
+}
+
+model SiteConfig {
+  key       String   @id
+  value     String   // JSON string
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  company   String?
+  message   String
+  status    String   @default("NEW") // NEW, READ, REPLIED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ===== Forum / 社区 =====
+
+model ForumCategory {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "TVC广告"
+  nameEn      String?
+  icon        String   @default("📁") // emoji
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  posts       ForumPost[]
+}
+
+model ForumPost {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   // markdown text
+  videoUrl    String?
+  coverUrl    String?
+
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+
+  categoryId  String
+  category    ForumCategory @relation(fields: [categoryId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  comments    ForumComment[]
+}
+
+model ForumComment {
+  id        String   @id @default(cuid())
+  content   String
+
+  authorId  String
+  author    User    @relation(fields: [authorId], references: [id])
+
+  postId    String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// ===== 积分系统 =====
+
+model PointsRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  points    Int      @default(1)
+  reason    String   // "click_work" | "login" | "post" | "comment"
+  workId    String?  // 关联的作品ID（可选）
+  date      String   // 日期字符串 "2026-04-24"
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// ===== 访问统计 =====
+
+model SiteAnalytics {
+  id        String   @id @default(cuid())
+  path      String   // 页面路径 e.g. "/", "/gallery"
+  date      String   // 日期字符串 e.g. "2026-04-24"
+  pv        Int      @default(0)  // 当日浏览量
+  uv        Int      @default(0)  // 当日访客数
+  visitorIds String[] // 当日访问过的访客ID列表
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([path, date])
+}
+
+// ===== 像素画板 =====
+
+model Canvas {
+  id        String   @id @default(cuid())
+  width     Int      @default(24)
+  height    Int      @default(24)
+  status    String   @default("ACTIVE") // ACTIVE, ARCHIVED
+  name      String?  // 归档后可命名，24字符以内
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  ownerId   String?  // 周期结束时像素最多者
+  lastRandomChangeAt DateTime? // 最后一次随机变色时间
+
+  pixels      Pixel[]
+  expansions  CanvasExpansion[]
+}
+
+model Pixel {
+  id        String   @id @default(cuid())
+  canvasId  String   @map("canvas_id")
+  x         Int
+  y         Int
+  color     String   // hex "#RRGGBB"
+  userId    String   @map("user_id")
+  placedAt  DateTime @default(now())
+
+  canvas    Canvas   @relation(fields: [canvasId], references: [id], onDelete: Cascade)
+
+  @@unique([canvasId, x, y])
+  @@index([canvasId])
+}
+
+model CanvasExpansion {
+  id          String   @id @default(cuid())
+  canvasId    String   @map("canvas_id") // 扩张后的新画布
+  oldCanvasId String   @map("old_canvas_id") // 被归档的旧画布
+  oldSize     Int      // 旧画布边长 24
+  newSize     Int      // 新画布边长 48
+  expandedAt  DateTime @default(now())
+
+  canvas      Canvas   @relation(fields: [canvasId], references: [id], onDelete: Cascade)
+}
+
+model CanvasPixelCount {
+  id        String   @id @default(cuid())
+  canvasId  String   @map("canvas_id")
+  userId    String   @map("user_id")
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([canvasId, userId])
+  @@index([canvasId, count(sort: Desc)])
+}
+
+// ===== 像素画板经济系统 =====
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String   // pixel_place / trade / referral / purchase / burn / login
+  amount    Int      // 正数为收入，负数为支出
+  balance   Int      // 变动后余额
+  refId     String?  // 关联ID（canvasId / listingId）
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model MarketplaceListing {
+  id        String   @id @default(cuid())
+  canvasId  String   @unique @map("canvas_id")
+  sellerId  String   @map("seller_id")
+  status    String   @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
+  startPrice Int     @default(10) @map("start_price") // 初始售价
+  currentBid Int?    @map("current_bid") // 当前最高出价
+  bidderId  String?  @map("bidder_id") // 当前最高出价者
+  endTime   DateTime // 竞拍截止时间
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  referrerId  String   @map("referrer_id") // 推荐人
+  refereeId   String   @unique @map("referee_id") // 被推荐人
+  rate        Float    @default(0.05) // 5% 分成比例
+  createdAt   DateTime @default(now())
+
+  referrer    User     @relation("ReferralReferrer", fields: [referrerId], references: [id])
+  referee     User     @relation("ReferralReferee", fields: [refereeId], references: [id])
 }

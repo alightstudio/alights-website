@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" fill="none">
+  <!-- A - 极细精确线条 -->
+  <line x1="55" y1="35" x2="20" y2="165" stroke="#E8E0D0" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="55" y1="35" x2="90" y2="165" stroke="#E8E0D0" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- 横线 + 延伸光束，无渐变 -->
+  <line x1="32" y1="100" x2="155" y2="100" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- LIGHTS - 字重压缩，间距拉大 -->
+  <text x="148" y="147" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-size="66" font-weight="100" letter-spacing="14" fill="#E8E0D0">LIGHTS</text>
+
+  <!-- 副标 - 金色极小 -->
+  <text x="620" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-size="9" font-weight="200" letter-spacing="3" fill="#B8963C">01</text>
+</svg>

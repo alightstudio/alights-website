@@ -5,12 +5,12 @@ import Image from 'next/image'
 
 export default function Home() {
   const works = [
-    { title: '灯语 LIST', titleEn: 'DENGYU LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: '/works/work-1-dengyu.jpg' },
-    { title: '想象 LIST', titleEn: 'Xiangxiang LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: '/works/work-2-xiangxiang.jpg' },
-    { title: '稳座 LIST', titleEn: 'Wenzuo LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: '/works/work-3-wenzuo.jpg' },
-    { title: '零跑 D19 上市TVC', titleEn: 'LEAPMOTOR D19 LAUNCH', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: '/works/work-4-lingpao.jpg' },
-    { title: '张天爱 | 雅娜薇图', titleEn: 'ZHANG TIANAI', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: '/works/work-5-zhangtianai.jpg' },
-    { title: '自然堂×上海芭蕾舞团', titleEn: 'NATURAKING × SGP', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: '/works/work-6-zirantang.jpg' },
+    { title: '灯语 LIST', titleEn: 'DENGYU LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://us-xpc5.xpccdn.com/b9c708b9-6207-41ce-a59a-b9d6ee88ae7b/c9de12f5-c71f-4aeb-bad9-f67154f88084.jpg' },
+    { title: '想象 LIST', titleEn: 'Xiangxiang LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://us-xpc5.xpccdn.com/2c1ed4da-92ea-4c0e-9d40-58d1c09b3c5c/6db3c289-f6c1-440d-bc1e-c83671cae8d8.jpg' },
+    { title: '稳座 LIST', titleEn: 'Wenzuo LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://us-xpc5.xpccdn.com/4448bed8-579a-4bb2-9b6d-d8defbabd26a/edc0041e-f0e9-4f07-9623-517d7301aba7.jpg' },
+    { title: '费翔 X D19 ｜ 零跑D19上市TVC', titleEn: 'LEAPMOTOR D19 LAUNCH TVC', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://oss-xpc0.xpccdn.com/uploadfile/article/2025/12/29/e4c586d43e41944b1d8b58476da7549c' },
+    { title: '张天爱 | "无问时间，向美而生" 雅娜薇图', titleEn: 'ZHANG TIANAI × YANAVITU', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://oss-xpc0.xpccdn.com/uploadfile/article/2025/12/11/03e3d4b574519e1720d84581c1d2e331' },
+    { title: '自然堂 × 上海芭蕾舞团', titleEn: 'NATURAKING × SHANGHAI BALLET', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://oss-xpc0.xpccdn.com/uploadfile/article/2025/11/19/8da797222568e63a917063af9df6c14f' },
   ]
 
   return (

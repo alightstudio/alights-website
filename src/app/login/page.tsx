@@ -35,7 +35,11 @@ function LoginForm() {
         throw new Error(data.error || '登录失败')
       }
 
-      // 登录成功，跳转到用户中心
+      // 登录成功，保存用户信息到 localStorage（cookie httpOnly 前端无法读取）
+      localStorage.setItem('userId', data.user.id)
+      localStorage.setItem('userName', data.user.name)
+      localStorage.setItem('userPhone', data.user.phone)
+      // 跳转到用户中心
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message)

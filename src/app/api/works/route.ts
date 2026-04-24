@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
-
-const prisma = new PrismaClient()
 
 // 获取当前用户
 async function getCurrentUser() {
@@ -51,19 +49,25 @@ export async function POST(request: Request) {
   }
 }
 
-// 获取用户作品列表
+// 获取作品列表
 export async function GET() {
   try {
     const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+
+    if (user) {
+      // 已登录：返回用户自己的作品
+      const works = await prisma.work.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+      })
+      return NextResponse.json(works)
     }
 
+    // 未登录：返回已审核通过的作品（公开展示）
     const works = await prisma.work.findMany({
-      where: { userId: user.id },
+      where: { status: 'APPROVED' },
       orderBy: { createdAt: 'desc' },
     })
-
     return NextResponse.json(works)
   } catch (error) {
     console.error('获取作品错误:', error)

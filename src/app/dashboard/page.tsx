@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -8,8 +8,11 @@ import { motion } from 'framer-motion'
 interface Work {
   id: string
   title: string
+  description?: string
   category: string
   status: string
+  videoUrl?: string
+  coverUrl?: string
   createdAt: string
 }
 
@@ -17,15 +20,21 @@ export default function DashboardPage() {
   const router = useRouter()
   const [works, setWorks] = useState<Work[]>([])
   const [loading, setLoading] = useState(true)
+  const [authenticated, setAuthenticated] = useState(true)
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState('')
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'TVC广告',
     videoUrl: '',
+    coverUrl: '',
     creatorName: '',
     creatorPhone: '',
   })
+  const videoInputRef = useRef<HTMLInputElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetchWorks()
@@ -34,6 +43,11 @@ export default function DashboardPage() {
   const fetchWorks = async () => {
     try {
       const res = await fetch('/api/works')
+      if (res.status === 401) {
+        setAuthenticated(false)
+        router.push('/login')
+        return
+      }
       if (res.ok) {
         const data = await res.json()
         setWorks(data)
@@ -50,20 +64,107 @@ export default function DashboardPage() {
     router.push('/')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    const res = await fetch('/api/works', {
+  const uploadFile = async (file: File, subdir: string): Promise<string | null> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('subdir', subdir)
+
+    const res = await fetch('/api/upload', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
+      body: formData,
     })
 
     if (res.ok) {
-      setShowUploadModal(false)
-      setFormData({ title: '', description: '', category: 'TVC广告', videoUrl: '', creatorName: '', creatorPhone: '' })
-      fetchWorks()
-      alert('作品提交成功，等待审核')
+      const data = await res.json()
+      return data.url
+    }
+    const err = await res.json()
+    throw new Error(err.error || '上传失败')
+  }
+
+  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 100 * 1024 * 1024) {
+      alert('视频文件不能超过100MB')
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress('上传视频中...')
+
+    try {
+      const url = await uploadFile(file, 'videos')
+      if (url) {
+        setFormData(prev => ({ ...prev, videoUrl: url }))
+        setUploadProgress('视频上传成功 ✓')
+      }
+    } catch (error: any) {
+      alert(error.message || '视频上传失败')
+      setUploadProgress('')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleCoverSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    setUploadProgress('上传封面中...')
+
+    try {
+      const url = await uploadFile(file, 'covers')
+      if (url) {
+        setFormData(prev => ({ ...prev, coverUrl: url }))
+        setUploadProgress('封面上传成功 ✓')
+      }
+    } catch (error: any) {
+      alert(error.message || '封面上传失败')
+      setUploadProgress('')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.videoUrl) {
+      alert('请上传视频文件或填写视频链接')
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress('提交作品中...')
+
+    try {
+      const res = await fetch('/api/works', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (res.ok) {
+        setShowUploadModal(false)
+        setFormData({
+          title: '', description: '', category: 'TVC广告',
+          videoUrl: '', coverUrl: '', creatorName: '', creatorPhone: '',
+        })
+        setUploadProgress('')
+        fetchWorks()
+        alert('作品提交成功，等待审核')
+      } else {
+        const data = await res.json()
+        alert(data.error || '提交失败')
+      }
+    } catch {
+      alert('提交失败，请重试')
+    } finally {
+      setUploading(false)
+      setUploadProgress('')
     }
   }
 
@@ -109,7 +210,7 @@ export default function DashboardPage() {
               href="/gallery"
               className="border border-dark-600 text-gray-400 px-6 py-3 text-sm tracking-widest uppercase hover:border-gray-600 hover:text-white transition-all"
             >
-              作品赏析
+              佳片欣赏
             </Link>
           </div>
 
@@ -128,11 +229,16 @@ export default function DashboardPage() {
                   key={work.id}
                   className="flex items-center justify-between p-6 bg-dark-800 border border-dark-700 hover:border-dark-600 transition-colors"
                 >
-                  <div>
-                    <h3 className="text-lg mb-1">{work.title}</h3>
-                    <p className="text-sm text-gray-500">
-                      {work.category} · {new Date(work.createdAt).toLocaleDateString('zh-CN')}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    {work.coverUrl && (
+                      <img src={work.coverUrl} alt="" className="w-16 h-10 object-cover rounded" />
+                    )}
+                    <div>
+                      <h3 className="text-lg mb-1">{work.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        {work.category} · {new Date(work.createdAt).toLocaleDateString('zh-CN')}
+                      </p>
+                    </div>
                   </div>
                   <span className={`text-sm ${getStatusLabel(work.status).class}`}>
                     {getStatusLabel(work.status).text}
@@ -155,7 +261,7 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center mb-8">
               <h2 className="font-display text-2xl">上传作品</h2>
               <button
-                onClick={() => setShowUploadModal(false)}
+                onClick={() => { setShowUploadModal(false); setUploadProgress('') }}
                 className="text-gray-500 hover:text-white"
               >
                 ✕
@@ -195,20 +301,77 @@ export default function DashboardPage() {
                 >
                   <option value="TVC广告">TVC广告</option>
                   <option value="产品动画">产品动画</option>
-                  <option value="发布会大屏">发布会大屏</option>
+                  <option value="发布会">发布会</option>
                   <option value="影视剧">影视剧</option>
                 </select>
               </div>
 
+              {/* 视频上传区域 */}
               <div>
-                <label className="block text-sm text-gray-500 mb-2">视频链接</label>
-                <input
-                  type="url"
-                  value={formData.videoUrl}
-                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                  className="w-full bg-dark-700 border border-dark-600 px-4 py-3 focus:border-accent-gold/50 focus:outline-none"
-                  placeholder="B站/腾讯视频/YouTube 等链接"
-                />
+                <label className="block text-sm text-gray-500 mb-2">视频文件 *</label>
+                <div className="space-y-3">
+                  <div
+                    onClick={() => !uploading && videoInputRef.current?.click()}
+                    className={`border-2 border-dashed border-dark-600 hover:border-accent-gold/40 p-8 text-center cursor-pointer transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
+                    <input
+                      ref={videoInputRef}
+                      type="file"
+                      accept="video/mp4,video/quicktime,video/webm"
+                      className="hidden"
+                      onChange={handleVideoSelect}
+                    />
+                    {formData.videoUrl ? (
+                      <div>
+                        <p className="text-green-400 mb-1">✓ 视频已上传</p>
+                        <p className="text-xs text-gray-500">点击重新选择</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-gray-400 mb-1">点击选择视频文件</p>
+                        <p className="text-xs text-gray-600">支持 mp4/mov/webm，最大 100MB</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 h-px bg-dark-600" />
+                    <span className="text-xs text-gray-600">或填写视频链接</span>
+                    <div className="flex-1 h-px bg-dark-600" />
+                  </div>
+                  <input
+                    type="url"
+                    value={formData.videoUrl && !formData.videoUrl.includes('blob.vercel-storage.com') ? formData.videoUrl : ''}
+                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                    className="w-full bg-dark-700 border border-dark-600 px-4 py-3 focus:border-accent-gold/50 focus:outline-none"
+                    placeholder="B站/腾讯视频/YouTube 等链接"
+                    disabled={uploading}
+                  />
+                </div>
+              </div>
+
+              {/* 封面图上传 */}
+              <div>
+                <label className="block text-sm text-gray-500 mb-2">封面图</label>
+                <div className="flex gap-4 items-start">
+                  <div
+                    onClick={() => !uploading && coverInputRef.current?.click()}
+                    className={`border border-dark-600 hover:border-accent-gold/40 w-32 h-20 flex items-center justify-center cursor-pointer transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
+                    <input
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleCoverSelect}
+                    />
+                    {formData.coverUrl ? (
+                      <img src={formData.coverUrl} alt="封面" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-gray-600">选择封面</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">支持 jpg/png/webp，建议 16:9</p>
+                </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -232,15 +395,22 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              {uploadProgress && (
+                <div className="text-center text-sm text-accent-gold">
+                  {uploadProgress}
+                </div>
+              )}
+
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="w-full bg-accent-gold/20 border border-accent-gold/40 text-accent-gold px-8 py-4 text-sm tracking-widest uppercase hover:bg-accent-gold/30 transition-all"
+                  disabled={uploading}
+                  className="w-full bg-accent-gold/20 border border-accent-gold/40 text-accent-gold px-8 py-4 text-sm tracking-widest uppercase hover:bg-accent-gold/30 transition-all disabled:opacity-50"
                 >
-                  提交审核
+                  {uploading ? '处理中...' : '提交审核'}
                 </button>
                 <p className="text-xs text-gray-600 text-center mt-4">
-                  提交后管理员将在24小时内完成审核，通过后作品将在"作品赏析"页面展示
+                  提交后管理员将在24小时内完成审核，通过后作品将在"佳片欣赏"页面展示
                 </p>
               </div>
             </form>

@@ -58,9 +58,13 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
               viewport={{ once: true }}
-              className="relative aspect-video bg-dark-700 rounded overflow-hidden image-placeholder flex items-center justify-center"
+              className="relative aspect-video bg-dark-700 rounded overflow-hidden"
             >
-              <span className="text-gray-600 text-sm tracking-wide">团队照片</span>
+              <img
+                src="/team.jpg"
+                alt="栖光团队"
+                className="w-full h-full object-cover opacity-80"
+              />
             </motion.div>
           </div>
         </div>

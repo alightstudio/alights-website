@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -14,7 +14,15 @@ export default function RegisterPage() {
     company: '',
     password: '',
     confirmPassword: '',
+    referralCode: '',
   })
+
+  // 自动填充邀请码
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const ref = params.get('ref')
+    if (ref) setFormData(f => ({ ...f, referralCode: ref }))
+  }, [])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -44,6 +52,7 @@ export default function RegisterPage() {
           email: formData.email,
           company: formData.company,
           password: formData.password,
+          referralCode: formData.referralCode || undefined,
         }),
       })
 
@@ -75,7 +84,7 @@ export default function RegisterPage() {
           </Link>
 
           <h1 className="font-display text-4xl font-light mb-4">用户注册</h1>
-          <p className="text-gray-400 mb-12">注册后可上传作品参与审核，有机会在作品赏析页展示</p>
+          <p className="text-gray-400 mb-12">注册后可上传作品参与审核，有机会在佳片欣赏页展示</p>
 
           {error && (
             <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 mb-6 text-sm">
@@ -167,6 +176,20 @@ export default function RegisterPage() {
                 className="w-full bg-dark-800 border border-dark-600 px-4 py-3 text-white focus:border-accent-gold/50 focus:outline-none transition-colors"
                 placeholder="再次输入密码"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-500 mb-2 tracking-wide">
+                邀请码 <span className="text-gray-600">（选填）</span>
+              </label>
+              <input
+                type="text"
+                value={formData.referralCode}
+                onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
+                className="w-full bg-dark-800 border border-dark-600 px-4 py-3 text-white focus:border-accent-gold/50 focus:outline-none transition-colors"
+                placeholder="由好友分享的邀请码"
+              />
+              <p className="text-xs text-gray-700 mt-1.5">填写邀请码，双方各获得 10 积分奖励</p>
             </div>
 
             <button

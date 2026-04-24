@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <rect width="800" height="450" fill="#1a1a2e"/>
+  <circle cx="400" cy="170" r="60" fill="none" stroke="#c9a962" stroke-width="2" opacity="0.5"/>
+  <line x1="400" y1="230" x2="400" y2="310" stroke="#c9a962" stroke-width="2" opacity="0.3"/>
+  <line x1="320" y1="270" x2="480" y2="270" stroke="#c9a962" stroke-width="2" opacity="0.3"/>
+  <text x="400" y="370" text-anchor="middle" fill="#666" font-size="16" font-family="sans-serif">团队照片 · 待上传</text>
+</svg>

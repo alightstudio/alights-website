@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none">
+  <!-- 栖 · 木 — 仅保留最核心结构线 -->
+  <line x1="50" y1="50" x2="50" y2="220" stroke="#E8E0D0" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="25" y1="90" x2="75" y2="90" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <path d="M50,90 L30,130" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- 栖 · 西 — 极简矩形轮廓 -->
+  <line x1="90" y1="50" x2="90" y2="170" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <line x1="90" y1="50" x2="145" y2="50" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <line x1="145" y1="50" x2="145" y2="170" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <line x1="90" y1="170" x2="145" y2="170" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <!-- 内部的横线（"西"的结构） -->
+  <line x1="90" y1="110" x2="145" y2="110" stroke="#E8E0D0" stroke-width="0.8" stroke-linecap="round"/>
+
+  <!-- 光 — 仅轮廓 -->
+  <line x1="200" y1="50" x2="200" y2="80" stroke="#E8E0D0" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M200,80 L180,120" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,80 L220,120 L220,220" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round" fill="none"/>
+  <line x1="220" y1="220" x2="208" y2="212" stroke="#E8E0D0" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- 金色角标 -->
+  <text x="300" y="300" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-size="9" font-weight="200" letter-spacing="3" fill="#B8963C">02</text>
+</svg>

@@ -1,4 +1,10 @@
 {
+  "brandDisplay": {
+    "opacity": 0.75,
+    "opacityHover": 1.0,
+    "grayscale": false,
+    "grayscaleHover": false
+  },
   "company": {
     "name": "西安栖光文化传播有限公司",
     "nameEn": "Xi'an Alights Culture Communication Co., Ltd.",
@@ -19,74 +25,417 @@
   },
   "seo": {
     "title": "栖光文化 | ALIGHTS - 专业视效制作",
-    "description": "西安栖光文化传播有限公司，专注于高端视效制作领域。TVC广告、产品动画、发布会大屏、影视剧。",
-    "keywords": "栖光,视效,TVC广告,产品动画,发布会大屏,影视剧,3D渲染,CG"
+    "description": "西安栖光文化传播有限公司，专注于高端视效制作领域。TVC广告、产品动画、发布会、影视剧。",
+    "keywords": "栖光,视效,TVC广告,产品动画,发布会,影视剧,3D渲染,CG"
   },
   "hero": {
     "title": "栖光",
     "titleEn": "ALIGHTS",
     "subtitle": "专业视效制作 · 光影叙事艺术",
     "subtitleEn": "Professional Visual Effects · Cinematic Storytelling",
-    "tags": ["TVC广告", "产品动画", "发布会大屏", "影视剧"]
+    "tags": [
+      "TVC广告",
+      "产品动画",
+      "发布会",
+      "影视剧"
+    ]
   },
   "featuredWorks": [
-    { "id": "1", "title": "奔驰 EQE SUV", "titleEn": "MERCEDES-BENZ EQE SUV", "category": "汽车广告", "categoryEn": "AUTOMOTIVE COMMERCIAL", "image": "/works/image7.jpeg", "order": 1 },
-    { "id": "2", "title": "珠宝手镯渲染", "titleEn": "JEWELRY BRACELET", "category": "产品动画", "categoryEn": "PRODUCT ANIMATION", "image": "/works/image2.png", "order": 2 },
-    { "id": "3", "title": "Rolex 手表", "titleEn": "ROLEX OYSTER PERPETUAL", "category": "产品渲染", "categoryEn": "PRODUCT VISUALIZATION", "image": "/works/image3.png", "order": 3 },
-    { "id": "4", "title": "运动鞋系列", "titleEn": "SPORTS FOOTWEAR COLLECTION", "category": "产品动画", "categoryEn": "PRODUCT ANIMATION", "image": "/works/image4.png", "order": 4 },
-    { "id": "5", "title": "汽车电池系统", "titleEn": "EV BATTERY SYSTEM", "category": "汽车CG", "categoryEn": "AUTOMOTIVE CG", "image": "/works/image5.png", "order": 5 },
-    { "id": "6", "title": "AR 交互界面", "titleEn": "AR INTERFACE VFX", "category": "影视特效", "categoryEn": "FILM VFX", "image": "/works/image8.png", "order": 6 },
-    { "id": "7", "title": "光影纹理", "titleEn": "LIGHT & SHADOW TEXTURE", "category": "视效材质", "categoryEn": "VFX MATERIAL", "image": "/works/image1.jpg", "order": 7 },
-    { "id": "8", "title": "汽车内饰渲染", "titleEn": "CAR INTERIOR RENDER", "category": "汽车CG", "categoryEn": "AUTOMOTIVE CG", "image": "/works/image9.jpeg", "order": 8 },
-    { "id": "9", "title": "电池组细节", "titleEn": "BATTERY PACK DETAIL", "category": "汽车CG", "categoryEn": "AUTOMOTIVE CG", "image": "/works/image6.png", "order": 9 }
+    {
+      "id": "13593273",
+      "title": "灯语LIST",
+      "titleEn": "",
+      "category": "广告片/汽车",
+      "categoryEn": "",
+      "image": "https://us-xpc5.xpccdn.com/b9c708b9-6207-41ce-a59a-b9d6ee88ae7b/c9de12f5-c71f-4aeb-bad9-f67154f88084.jpg",
+      "homepageOrder": 1,
+      "videoUrl": "https://www.xinpianchang.com/a13593273",
+      "views": 23,
+      "duration": 17
+    },
+    {
+      "id": "13593271",
+      "title": "想象LIST",
+      "titleEn": "",
+      "category": "广告片/汽车",
+      "categoryEn": "",
+      "image": "https://us-xpc5.xpccdn.com/2c1ed4da-92ea-4c0e-9d40-58d1c09b3c5c/6db3c289-f6c1-440d-bc1e-c83671cae8d8.jpg",
+      "homepageOrder": 2,
+      "videoUrl": "https://www.xinpianchang.com/a13593271",
+      "views": 23,
+      "duration": 24
+    },
+    {
+      "id": "13593268",
+      "title": "稳座LIST",
+      "titleEn": "",
+      "category": "广告片/产品广告",
+      "categoryEn": "",
+      "image": "https://us-xpc5.xpccdn.com/4448bed8-579a-4bb2-9b6d-d8defbabd26a/edc0041e-f0e9-4f07-9623-517d7301aba7.jpg",
+      "homepageOrder": 3,
+      "videoUrl": "https://www.xinpianchang.com/a13593268",
+      "views": 19,
+      "duration": 27
+    },
+    {
+      "id": "13569267",
+      "title": "费翔 X D19 ｜ 零跑D19上市TVC",
+      "titleEn": "",
+      "category": "广告片/汽车",
+      "categoryEn": "",
+      "image": "https://oss-xpc0.xpccdn.com/uploadfile/article/2025/12/29/e4c586d43e41944b1d8b58476da7549c",
+      "homepageOrder": 4,
+      "videoUrl": "https://www.xinpianchang.com/a13569267",
+      "views": 5712,
+      "duration": 207
+    },
+    {
+      "id": "13556111",
+      "title": "张天爱 | “无问时间，向美而生”雅娜薇图品牌全球代言人",
+      "titleEn": "",
+      "category": "广告片/美妆/护肤",
+      "categoryEn": "",
+      "image": "https://oss-xpc0.xpccdn.com/uploadfile/article/2025/12/11/03e3d4b574519e1720d84581c1d2e331",
+      "homepageOrder": 5,
+      "videoUrl": "https://www.xinpianchang.com/a13556111",
+      "views": 23866,
+      "duration": 68
+    },
+    {
+      "id": "13537991",
+      "title": "自然堂 × 上海芭蕾舞团",
+      "titleEn": "",
+      "category": "广告片/美妆/护肤",
+      "categoryEn": "",
+      "image": "https://oss-xpc0.xpccdn.com/uploadfile/article/2025/11/19/8da797222568e63a917063af9df6c14f",
+      "homepageOrder": 6,
+      "videoUrl": "https://www.xinpianchang.com/a13537991",
+      "views": 162,
+      "duration": 102
+    },
+    {
+      "id": "13410358",
+      "title": "乐道汽车「乐道锁“鲜”驿站」",
+      "titleEn": "",
+      "category": "广告片/汽车",
+      "categoryEn": "",
+      "image": "https://oss-xpc0.xpccdn.com/uploadfile/article/2025/6/23/65e44534a03677081f6c1fb589d95c1d",
+      "homepageOrder": null,
+      "videoUrl": "https://www.xinpianchang.com/a13410358",
+      "views": 636,
+      "duration": 142
+    },
+    {
+      "id": "13401633",
+      "title": "DIORIVIERA夏日限定系列",
+      "titleEn": "",
+      "category": "竖屏广告/服装/时尚",
+      "categoryEn": "",
+      "image": "https://oss-xpc0.xpccdn.com/uploadfile/article/2025/6/15/7d91ef6ff0c5026ae22a588dd3bddcec",
+      "homepageOrder": null,
+      "videoUrl": "https://www.xinpianchang.com/a13401633",
+      "views": 858,
+      "duration": 28
+    },
+    {
+      "id": "13399832",
+      "title": "SuperELLE x FILA蝶舞柔云系列",
+      "titleEn": "",
+      "category": "广告片/服装/时尚",
+      "categoryEn": "",
+      "image": "https://oss-xpc0.xpccdn.com/uploadfile/article/2025/6/13/7e48b44cd992f72e4f5ef3e0737485c2",
+      "homepageOrder": null,
+      "videoUrl": "https://www.xinpianchang.com/a13399832",
+      "views": 2486,
+      "duration": 24
+    },
+    {
+      "id": "13328776",
+      "title": "全新帕里斯帝“我想开了”",
+      "titleEn": "",
+      "category": "AIGC/创意",
+      "categoryEn": "",
+      "image": "https://oss-xpc0.xpccdn.com/uploadfile/article/2025/3/29/b54b8cec5bf962208f815196d08449e2",
+      "homepageOrder": null,
+      "videoUrl": "https://www.xinpianchang.com/a13328776",
+      "views": 401,
+      "duration": 22
+    }
   ],
   "services": [
-    { "id": "1", "title": "TVC广告", "titleEn": "TVC COMMERCIAL", "desc": "高端商业广告制作", "descEn": "Premium Commercial Production", "order": 1 },
-    { "id": "2", "title": "产品动画", "titleEn": "PRODUCT ANIMATION", "desc": "三维产品可视化", "descEn": "3D Product Visualization", "order": 2 },
-    { "id": "3", "title": "发布会大屏", "titleEn": "EVENT SCREEN", "desc": "沉浸式视觉体验", "descEn": "Immersive Visual Experience", "order": 3 },
-    { "id": "4", "title": "影视剧", "titleEn": "FILM & TV", "desc": "电影级特效制作", "descEn": "Cinematic VFX Production", "order": 4 }
+    {
+      "id": "1",
+      "title": "TVC广告",
+      "titleEn": "TVC COMMERCIAL",
+      "desc": "高端商业广告制作",
+      "descEn": "Premium Commercial Production",
+      "order": 1
+    },
+    {
+      "id": "2",
+      "title": "产品动画",
+      "titleEn": "PRODUCT ANIMATION",
+      "desc": "三维产品可视化",
+      "descEn": "3D Product Visualization",
+      "order": 2
+    },
+    {
+      "id": "3",
+      "title": "发布会",
+      "titleEn": "LAUNCH EVENT",
+      "desc": "沉浸式视觉体验",
+      "descEn": "Immersive Visual Experience",
+      "order": 3
+    },
+    {
+      "id": "4",
+      "title": "影视剧",
+      "titleEn": "FILM & TV",
+      "desc": "电影级特效制作",
+      "descEn": "Cinematic VFX Production",
+      "order": 4
+    }
   ],
   "brands": [
-    { "id": "1", "name": "Mercedes-Benz", "slug": "mercedes", "order": 1 },
-    { "id": "2", "name": "BMW", "slug": "bmw", "order": 2 },
-    { "id": "3", "name": "Audi", "slug": "audi", "order": 3 },
-    { "id": "4", "name": "Porsche", "slug": "porsche", "order": 4 },
-    { "id": "5", "name": "Tesla", "slug": "tesla", "order": 5 },
-    { "id": "6", "name": "BYD", "slug": "byd", "order": 6 },
-    { "id": "7", "name": "NIO", "slug": "nio", "order": 7 },
-    { "id": "8", "name": "XPeng", "slug": "xpeng", "order": 8 },
-    { "id": "10", "name": "Apple", "slug": "apple", "order": 10 },
-    { "id": "11", "name": "Huawei", "slug": "huawei", "order": 11 },
-    { "id": "12", "name": "Xiaomi", "slug": "xiaomi", "order": 12 },
-    { "id": "13", "name": "OPPO", "slug": "oppo", "order": 13 },
-    { "id": "14", "name": "vivo", "slug": "vivo", "order": 14 },
-    { "id": "15", "name": "Samsung", "slug": "samsung", "order": 15 },
-    { "id": "16", "name": "Sony", "slug": "sony", "order": 16 },
-    { "id": "17", "name": "DJI", "slug": "dji", "order": 17 },
-    { "id": "18", "name": "Dyson", "slug": "dyson", "order": 18 },
-    { "id": "19", "name": "Bose", "slug": "bose", "order": 19 },
-    { "id": "20", "name": "Rolex", "slug": "rolex", "order": 20 },
-    { "id": "21", "name": "Omega", "slug": "omega", "order": 21 },
-    { "id": "22", "name": "Cartier", "slug": "cartier", "order": 22 },
-    { "id": "23", "name": "Tiffany & Co.", "slug": "tiffany", "order": 23 },
-    { "id": "24", "name": "Chanel", "slug": "chanel", "order": 24 },
-    { "id": "25", "name": "Dior", "slug": "dior", "order": 25 },
-    { "id": "26", "name": "Gucci", "slug": "gucci", "order": 26 },
-    { "id": "27", "name": "Hermès", "slug": "hermes", "order": 27 },
-    { "id": "28", "name": "Louis Vuitton", "slug": "louisvuitton", "order": 28 },
-    { "id": "29", "name": "Prada", "slug": "prada", "order": 29 },
-    { "id": "30", "name": "Nike", "slug": "nike", "order": 30 },
-    { "id": "31", "name": "Adidas", "slug": "adidas", "order": 31 },
-    { "id": "33", "name": "FILA", "slug": "fila", "order": 33 },
-    { "id": "34", "name": "Anta", "slug": "anta", "order": 34 },
-    { "id": "35", "name": "Li-Ning", "slug": "lining", "order": 35 },
-    { "id": "36", "name": "Under Armour", "slug": "underarmour", "order": 36 },
-    { "id": "37", "name": "New Balance", "slug": "newbalance", "order": 37 },
-    { "id": "38", "name": "Converse", "slug": "converse", "order": 38 },
-    { "id": "39", "name": "Vans", "slug": "vans", "order": 39 },
-    { "id": "40", "name": "L'Oréal", "slug": "loreal", "order": 40 },
-    { "id": "41", "name": "Estée Lauder", "slug": "esteelauder", "order": 41 },
-    { "id": "42", "name": "Shiseido", "slug": "shiseido", "order": 42 },
-    { "id": "43", "name": "Kiehl's", "slug": "kiehls", "order": 43 }
+    {
+      "id": "1",
+      "name": "Porsche",
+      "slug": "porsche",
+      "order": 1
+    },
+    {
+      "id": "2",
+      "name": "BMW",
+      "slug": "bmw",
+      "order": 2
+    },
+    {
+      "id": "3",
+      "name": "Audi",
+      "slug": "audi",
+      "order": 3
+    },
+    {
+      "id": "4",
+      "name": "Mercedes-Benz",
+      "slug": "mercedes",
+      "order": 4
+    },
+    {
+      "id": "5",
+      "name": "Tesla",
+      "slug": "tesla",
+      "order": 5
+    },
+    {
+      "id": "6",
+      "name": "Apple",
+      "slug": "apple",
+      "order": 6
+    },
+    {
+      "id": "7",
+      "name": "Huawei",
+      "slug": "huawei",
+      "order": 7
+    },
+    {
+      "id": "8",
+      "name": "Xiaomi",
+      "slug": "xiaomi",
+      "order": 8
+    },
+    {
+      "id": "9",
+      "name": "Samsung",
+      "slug": "samsung",
+      "order": 9
+    },
+    {
+      "id": "10",
+      "name": "Sony",
+      "slug": "sony",
+      "order": 10
+    },
+    {
+      "id": "11",
+      "name": "DJI",
+      "slug": "dji",
+      "order": 11
+    },
+    {
+      "id": "12",
+      "name": "Dyson",
+      "slug": "dyson",
+      "order": 12
+    },
+    {
+      "id": "13",
+      "name": "Nike",
+      "slug": "nike",
+      "order": 13
+    },
+    {
+      "id": "14",
+      "name": "Adidas",
+      "slug": "adidas",
+      "order": 14
+    },
+    {
+      "id": "15",
+      "name": "FILA",
+      "slug": "fila",
+      "order": 15
+    },
+    {
+      "id": "16",
+      "name": "Anta",
+      "slug": "anta",
+      "order": 16
+    },
+    {
+      "id": "17",
+      "name": "Li-Ning",
+      "slug": "lining",
+      "order": 17
+    },
+    {
+      "id": "18",
+      "name": "Under Armour",
+      "slug": "underarmour",
+      "order": 18
+    },
+    {
+      "id": "19",
+      "name": "New Balance",
+      "slug": "newbalance",
+      "order": 19
+    },
+    {
+      "id": "20",
+      "name": "Vans",
+      "slug": "vans",
+      "order": 20
+    },
+    {
+      "id": "21",
+      "name": "Louis Vuitton",
+      "slug": "louisvuitton",
+      "order": 21
+    },
+    {
+      "id": "22",
+      "name": "Chanel",
+      "slug": "chanel",
+      "order": 22
+    },
+    {
+      "id": "23",
+      "name": "Dior",
+      "slug": "dior",
+      "order": 23
+    },
+    {
+      "id": "24",
+      "name": "Gucci",
+      "slug": "gucci",
+      "order": 24
+    },
+    {
+      "id": "25",
+      "name": "Prada",
+      "slug": "prada",
+      "order": 25
+    },
+    {
+      "id": "26",
+      "name": "Hermès",
+      "slug": "hermes",
+      "order": 26
+    },
+    {
+      "id": "27",
+      "name": "Cartier",
+      "slug": "cartier",
+      "order": 27
+    },
+    {
+      "id": "28",
+      "name": "Tiffany & Co.",
+      "slug": "tiffany",
+      "order": 28
+    },
+    {
+      "id": "29",
+      "name": "Rolex",
+      "slug": "rolex",
+      "order": 29
+    },
+    {
+      "id": "30",
+      "name": "Omega",
+      "slug": "omega",
+      "order": 30
+    },
+    {
+      "id": "31",
+      "name": "L'Oréal",
+      "slug": "loreal",
+      "order": 31
+    },
+    {
+      "id": "32",
+      "name": "Estée Lauder",
+      "slug": "esteelauder",
+      "order": 32
+    },
+    {
+      "id": "33",
+      "name": "Shiseido",
+      "slug": "shiseido",
+      "order": 33
+    },
+    {
+      "id": "34",
+      "name": "OPPO",
+      "slug": "oppo",
+      "order": 34
+    },
+    {
+      "id": "35",
+      "name": "vivo",
+      "slug": "vivo",
+      "order": 35
+    },
+    {
+      "id": "36",
+      "name": "Bose",
+      "slug": "bose",
+      "order": 36
+    },
+    {
+      "id": "37",
+      "name": "BYD",
+      "slug": "byd",
+      "order": 37
+    },
+    {
+      "id": "38",
+      "name": "NIO",
+      "slug": "nio",
+      "order": 38
+    },
+    {
+      "id": "39",
+      "name": "XPeng",
+      "slug": "xpeng",
+      "order": 39
+    },
+    {
+      "id": "40",
+      "name": "Lululemon",
+      "slug": "lululemon",
+      "order": 40
+    }
   ]
 }

@@ -125,6 +125,9 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [settingsMobileOpen, setSettingsMobileOpen] = useState(false)
+  const [mobileSectionOpen, setMobileSectionOpen] = useState(false)
+  const [currentSectionLabel, setCurrentSectionLabel] = useState('公司信息')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [activeSettingTab, setActiveSettingTab] = useState<SettingsSection>('company')
 
@@ -388,44 +391,76 @@ export default function AdminPage() {
   // ==============================
   // SETTINGS PANEL
   // ==============================
-  const renderSettings = () => (
-    <div className="flex gap-8">
-      {/* Settings Sidebar */}
-      <div className="w-56 flex-shrink-0">
-        <div className="space-y-1">
-          {[
-            { id: 'company', label: '公司信息', icon: Globe },
-            { id: 'contact', label: '联系方式', icon: Phone },
-            { id: 'seo', label: 'SEO 设置', icon: Languages },
-            { id: 'hero', label: '首屏内容', icon: Type },
-            { id: 'works', label: '代表作品', icon: Image },
-            { id: 'services', label: '服务领域', icon: SettingsIcon },
-            { id: 'brands', label: '合作品牌', icon: Star },
-            { id: 'display', label: '品牌显示', icon: Palette },
-            { id: 'navigation', label: '导航菜单', icon: Menu },
-            { id: 'footer', label: '页脚配置', icon: LayoutDashboard },
-            { id: 'theme', label: '主题样式', icon: Palette },
-            { id: 'pages', label: '页面管理', icon: Globe },
-            { id: 'announcement', label: '通知公告', icon: Info },
-            { id: 'codeInjection', label: '代码注入', icon: Type },
-            { id: 'social', label: '社交链接', icon: MessageSquare },
-            { id: 'security', label: '安全设置', icon: Shield },
-          ].map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setSettingsSection(id as SettingsSection)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                settingsSection === id
-                  ? 'bg-accent-gold text-dark-900'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          ))}
+  const renderSettings = () => {
+    const sections: Array<{ id: string; label: string; icon: any }> = [
+      { id: 'company', label: '公司信息', icon: Globe },
+      { id: 'contact', label: '联系方式', icon: Phone },
+      { id: 'seo', label: 'SEO 设置', icon: Languages },
+      { id: 'hero', label: '首屏内容', icon: Type },
+      { id: 'works', label: '代表作品', icon: Image },
+      { id: 'services', label: '服务领域', icon: SettingsIcon },
+      { id: 'brands', label: '合作品牌', icon: Star },
+      { id: 'display', label: '品牌显示', icon: Palette },
+      { id: 'navigation', label: '导航菜单', icon: Menu },
+      { id: 'footer', label: '页脚配置', icon: LayoutDashboard },
+      { id: 'theme', label: '主题样式', icon: Palette },
+      { id: 'pages', label: '页面管理', icon: Globe },
+      { id: 'announcement', label: '通知公告', icon: Info },
+      { id: 'codeInjection', label: '代码注入', icon: Type },
+      { id: 'social', label: '社交链接', icon: MessageSquare },
+      { id: 'security', label: '安全设置', icon: Shield },
+    ]
+    const currentSectionLabel = sections.find(s => s.id === settingsSection)?.label || '设置'
+    return (
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Settings Sidebar - Desktop */}
+        <div className="hidden lg:block w-56 flex-shrink-0">
+          <div className="space-y-1">
+            {sections.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setSettingsSection(id as SettingsSection)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  settingsSection === id
+                    ? 'bg-accent-gold text-dark-900'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+
+        {/* Settings Section Selector - Mobile */}
+        <div className="lg:hidden relative">
+          <button
+            onClick={() => setMobileSectionOpen(!mobileSectionOpen)}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-dark-800 border border-white/10 rounded-lg text-white text-sm"
+          >
+            <span>{currentSectionLabel}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${mobileSectionOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {mobileSectionOpen && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-dark-800 border border-white/10 rounded-lg z-40 max-h-60 overflow-y-auto shadow-xl">
+              {sections.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => { setSettingsSection(id as SettingsSection); setSettingsMobileOpen(false) }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                    settingsSection === id
+                      ? 'bg-accent-gold/20 text-accent-gold'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
       {/* Settings Main */}
       <div className="flex-1 min-w-0">
@@ -774,9 +809,14 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <div className="flex">
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-30 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+      )}
+
+      <div className="flex relative">
         {/* Sidebar */}
-        <aside className={`${mobileMenuOpen ? 'block' : 'hidden'} lg:block w-64 bg-dark-800 min-h-screen border-r border-white/5 fixed lg:static z-50`}>
+        <aside className={`${mobileMenuOpen ? 'block' : 'hidden'} lg:block w-64 bg-dark-800 min-h-screen border-r border-white/5 fixed lg:static z-40 top-0 lg:top-auto bottom-0 lg:bottom-auto overflow-y-auto`}>
           <div className="p-6">
             <h1 className="text-accent-gold font-display text-xl hidden lg:block">栖光管理后台</h1>
           </div>
@@ -812,7 +852,7 @@ export default function AdminPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8 min-w-0">
+        <main className="flex-1 p-4 lg:p-8 min-w-0 overflow-x-hidden">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-2xl font-light text-white mb-8">
               {activeTab === 'dashboard' && '概览'}
@@ -900,11 +940,11 @@ export default function AdminPage() {
             <h3 className="text-xl font-medium text-white mb-4">审核作品</h3>
             <div className="mb-4">
               <p className="text-gray-400 text-sm mb-1">作品名称</p>
-              <p className="text-white">{selectedWork.title}</p>
+              <p className="text-white">{selectedWork?.title}</p>
             </div>
             <div className="mb-4">
               <p className="text-gray-400 text-sm mb-1">创作者</p>
-              <p className="text-white">{selectedWork.creatorName}</p>
+              <p className="text-white">{selectedWork?.creatorName}</p>
             </div>
             <div className="mb-6">
               <p className="text-gray-400 text-sm mb-2">审核意见（可选）</p>
@@ -913,9 +953,9 @@ export default function AdminPage() {
                 className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent-gold resize-none h-24" />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => handleReview(selectedWork.id, 'APPROVED')}
+              <button onClick={() => handleReview(selectedWork!.id, 'APPROVED')}
                 className="flex-1 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">通过</button>
-              <button onClick={() => handleReview(selectedWork.id, 'REJECTED')}
+              <button onClick={() => handleReview(selectedWork!.id, 'REJECTED')}
                 className="flex-1 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">拒绝</button>
               <button onClick={() => { setSelectedWork(null); setReviewComment('') }}
                 className="px-6 py-3 bg-dark-700 text-gray-400 rounded-lg hover:bg-dark-600 transition-colors">取消</button>
@@ -2270,4 +2310,5 @@ function SocialLinksEditor({ config, onChange, onSave }: { config: any; onChange
       </div>
     </SettingsForm>
   )
+}
 }

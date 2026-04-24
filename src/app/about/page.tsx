@@ -1,8 +1,19 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 
 export default function AboutPage() {
+  const [teamVideo, setTeamVideo] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/site')
+      .then(res => res.json())
+      .then(data => {
+        if (data.aboutTeamVideo) setTeamVideo(data.aboutTeamVideo)
+      })
+      .catch(() => {})
+  }, [])
   return (
     <div className="pt-24 pb-32">
       {/* Hero */}
@@ -60,11 +71,22 @@ export default function AboutPage() {
               viewport={{ once: true }}
               className="relative aspect-video bg-dark-700 rounded overflow-hidden"
             >
-              <img
-                src="/team.jpg"
-                alt="栖光团队"
-                className="w-full h-full object-cover opacity-80"
-              />
+              {teamVideo ? (
+                <video
+                  src={teamVideo}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover opacity-80"
+                />
+              ) : (
+                <img
+                  src="/team.jpg"
+                  alt="栖光团队"
+                  className="w-full h-full object-cover opacity-80"
+                />
+              )}
             </motion.div>
           </div>
         </div>

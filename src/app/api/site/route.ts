@@ -139,6 +139,7 @@ export async function GET() {
       pages: configMap.pages || DEFAULT_PAGES,
       codeInjection: configMap.codeInjection || DEFAULT_CODE_INJECTION,
       socialLinks: configMap.socialLinks || DEFAULT_SOCIAL_LINKS,
+      aboutTeamVideo: configMap.aboutTeamVideo || '',
     })
   } catch (error) {
     console.error('读取配置失败:', error)
@@ -152,6 +153,7 @@ export async function GET() {
       services: [],
       brands: [],
       brandDisplay: { opacity: 0.75, opacityHover: 1, grayscale: false, grayscaleHover: false },
+      aboutTeamVideo: '',
     })
   }
 }

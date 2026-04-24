@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import {
@@ -113,7 +113,7 @@ interface AnalyticsData {
   days: number
 }
 
-type Tab = 'dashboard' | 'works' | 'users' | 'settings' | 'analytics' | 'contact' | 'canvas'
+type Tab = 'dashboard' | 'works' | 'users' | 'settings' | 'analytics' | 'contact' | 'canvas' | 'media'
 
 // ===== SETTINGS SECTIONS =====
 type SettingsSection = 'company' | 'contact' | 'seo' | 'hero' | 'works' | 'services' | 'brands' | 'display' | 'security' | 'navigation' | 'footer' | 'theme' | 'pages' | 'codeInjection' | 'announcement' | 'social'
@@ -787,6 +787,7 @@ export default function AdminPage() {
               { id: 'users' as Tab, label: '用户管理', icon: Users },
               { id: 'analytics' as Tab, label: '统计', icon: BarChart2 },
               { id: 'canvas' as Tab, label: '像素画布', icon: Palette },
+              { id: 'media' as Tab, label: '媒体管理', icon: Upload },
               { id: 'contact' as Tab, label: '客户联系人', icon: MessageSquare },
               { id: 'settings' as Tab, label: '网站配置', icon: Globe },
             ].map(({ id, label, icon: Icon }) => (
@@ -819,6 +820,7 @@ export default function AdminPage() {
               {activeTab === 'users' && '用户管理'}
               {activeTab === 'analytics' && '访问统计'}
               {activeTab === 'canvas' && '像素画布管理'}
+              {activeTab === 'media' && '媒体管理'}
               {activeTab === 'settings' && '网站配置'}
             </h2>
 
@@ -828,6 +830,7 @@ export default function AdminPage() {
             {activeTab === 'settings' && renderSettings()}
             {activeTab === 'analytics' && renderAnalytics()}
             {activeTab === 'canvas' && renderCanvasDashboard()}
+            {activeTab === 'media' && renderMedia()}
             {activeTab === 'contact' && renderContacts()}
           </div>
         </main>
@@ -1056,6 +1059,179 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </motion.div>
+        )}
+      </div>
+    )
+  }
+
+  // ==============================
+  // MEDIA MANAGEMENT
+  // ==============================
+  function renderMedia() {
+    const [uploading, setUploading] = useState(false)
+    const [uploadedUrl, setUploadedUrl] = useState<string | null>(null)
+    const [teamVideoUrl, setTeamVideoUrl] = useState<string | null>(null)
+    const [dragOver, setDragOver] = useState(false)
+    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+    // Load current team video URL from site config
+    const loadTeamVideo = async () => {
+      try {
+        const res = await fetch('/api/site')
+        const data = await res.json()
+        if (data.aboutTeamVideo) setTeamVideoUrl(data.aboutTeamVideo)
+      } catch {}
+    }
+    useEffect(() => { loadTeamVideo() }, [])
+
+    const handleUpload = async (file: File) => {
+      if (!file.type.startsWith('video/') && !file.type.startsWith('image/')) {
+        setMsg({ type: 'error', text: '仅支持视频和图片文件' })
+        return
+      }
+      if (file.size > 100 * 1024 * 1024) {
+        setMsg({ type: 'error', text: '文件过大，最大100MB' })
+        return
+      }
+      setUploading(true)
+      setMsg(null)
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('subdir', 'media')
+        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || '上传失败')
+        setUploadedUrl(data.url)
+        setMsg({ type: 'success', text: '上传成功！' })
+      } catch (err: any) {
+        setMsg({ type: 'error', text: err.message })
+      } finally {
+        setUploading(false)
+      }
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+      e.preventDefault()
+      setDragOver(false)
+      const file = e.dataTransfer.files[0]
+      if (file) handleUpload(file)
+    }
+
+    const setAsTeamVideo = async () => {
+      if (!uploadedUrl) return
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ section: 'aboutTeamVideo', data: uploadedUrl })
+        })
+        if (!res.ok) throw new Error('保存失败')
+        setTeamVideoUrl(uploadedUrl)
+        setMsg({ type: 'success', text: '已设置为团队视频！' })
+      } catch (err: any) {
+        setMsg({ type: 'error', text: err.message })
+      }
+    }
+
+    const removeTeamVideo = async () => {
+      if (!confirm('确定移除团队视频，恢复为图片？')) return
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },  
+          body: JSON.stringify({ section: 'aboutTeamVideo', data: '' })
+        })
+        if (!res.ok) throw new Error('删除失败')
+        setTeamVideoUrl(null)
+        setUploadedUrl(null)
+        setMsg({ type: 'success', text: '已移除团队视频' })
+      } catch (err: any) {
+        setMsg({ type: 'error', text: err.message })
+      }
+    }
+
+    return (
+      <div className="space-y-8">
+        {/* Current Team Video Status */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="bg-dark-800 rounded-lg border border-white/5 p-6">
+          <h3 className="text-lg font-medium text-white mb-3">关于页 · 团队视频</h3>
+          {teamVideoUrl ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-green-400 text-sm">
+                <CheckCircle className="w-4 h-4" /> 团队视频已设置
+              </div>
+              <div className="relative aspect-video bg-dark-700 rounded overflow-hidden max-w-lg">
+                <video src={teamVideoUrl} controls className="w-full h-full object-contain" />
+              </div>
+              <div className="flex gap-3">
+                <span className="text-xs text-gray-500 truncate max-w-md">{teamVideoUrl}</span>
+                <button onClick={removeTeamVideo}
+                  className="px-3 py-1 rounded text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+                  移除
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <Info className="w-4 h-4" /> 当前未设置，页面使用 /team.jpg 默认图片
+            </div>
+          )}
+        </motion.div>
+
+        {/* Upload Area */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="bg-dark-800 rounded-lg border border-white/5 p-6">
+          <h3 className="text-lg font-medium text-white mb-4">上传视频</h3>
+          <div
+            onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors cursor-pointer ${
+              dragOver ? 'border-accent-gold bg-accent-gold/5' : 'border-white/10 hover:border-white/30'
+            }`}
+            onClick={() => document.getElementById('media-upload-input')?.click()}
+          >
+            <input id="media-upload-input" type="file" accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/webp"
+              className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f) }} />
+            <Upload className="w-10 h-10 mx-auto mb-4 text-gray-500" />
+            <p className="text-gray-400 text-sm">
+              {uploading ? '上传中...' : '点击或拖拽视频到此处上传'}
+            </p>
+            <p className="text-gray-600 text-xs mt-2">支持 MP4 / MOV / WebM，最大 100MB</p>
+          </div>
+
+          {msg && (
+            <div className={`mt-4 px-4 py-3 rounded-lg text-sm ${
+              msg.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+              'bg-red-500/10 text-red-400 border border-red-500/20'
+            }`}>
+              {msg.text}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Uploaded Preview */}
+        {uploadedUrl && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="bg-dark-800 rounded-lg border border-white/5 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-white">已上传</h3>
+              <button onClick={setAsTeamVideo}
+                className="flex items-center gap-2 px-5 py-2.5 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 transition-colors">
+                <Film className="w-4 h-4" /> 设为团队视频
+              </button>
+            </div>
+            <div className="relative aspect-video bg-dark-700 rounded overflow-hidden max-w-lg">
+              {uploadedUrl.match(/\.(mp4|mov|webm|quicktime)/i) ? (
+                <video src={uploadedUrl} controls className="w-full h-full object-contain" />
+              ) : (
+                <img src={uploadedUrl} alt="已上传" className="w-full h-full object-contain" />
+              )}
+            </div>
+            <div className="mt-2 text-xs text-gray-500 truncate">{uploadedUrl}</div>
           </motion.div>
         )}
       </div>

@@ -1,4 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
-<rect width="60" height="60" rx="8" fill="#C41230"/>
-<text x="30" y="34" font-family="system-ui,-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">S</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 24">
+  <text x="60" y="18" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="300" fill="#c8c8c8" text-anchor="middle" letter-spacing="4">SHISEIDO</text>
 </svg>

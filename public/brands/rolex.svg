@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
-<rect width="60" height="60" rx="8" fill="#A07C2C"/>
-<text x="30" y="34" font-family="system-ui,-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">R</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path d="M4 16h16l-.8 3H4.8L4 16zm1-2h14l-.5 1.5H5.5L5 14zm3-8l1.5 5H8L7 7l1-1zm4-3l1 7h-2l1-7zm4 3l1 1-1 5h-1.5L16 6zM6 12h12v1H6v-1z" fill="#c9a962"/>
+  <circle cx="7" cy="5" r="1" fill="#c9a962"/>
+  <circle cx="12" cy="3" r="1" fill="#c9a962"/>
+  <circle cx="17" cy="5" r="1" fill="#c9a962"/>
+  <text x="12" y="22" font-family="Georgia,serif" font-size="3.5" fill="#c9a962" text-anchor="middle" letter-spacing="2">ROLEX</text>
 </svg>

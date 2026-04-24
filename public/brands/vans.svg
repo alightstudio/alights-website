@@ -1,4 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
-<rect width="60" height="60" rx="8" fill="#000000"/>
-<text x="30" y="34" font-family="system-ui,-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">V</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <path d="M15 8c0-2 1.5-4 4-4 1.5 0 2.5.5 3.5 1.5L35 18V8c0-2 1.5-4 4-4 1.5 0 3 .5 4 1.5l20 20V8h8v24c0 2-1.5 4-4 4-1.5 0-3-.5-4-1.5L39 14v22h-8V12c0-2-1.5-4-4-4-1.5 0-3 .5-4 1.5L7 28V8h8zm65 0h30v8H88v4h18v8H88v4h22v8H80V8zm42 0h8l10 14 10-14h8v32h-8V22l-10 14-10-14v18h-8V8z" fill="#c8c8c8"/>
 </svg>

@@ -133,7 +133,6 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                 config={spotlightConfig}
                 className="text-sm tracking-wide text-center"
                 glowClassName="text-sm tracking-wide"
-                darkColor="#555"
               />
             </div>
             <div className="flex flex-wrap justify-center gap-4 mt-6 text-xs text-gray-600 tracking-wider">

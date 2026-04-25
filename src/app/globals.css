@@ -116,3 +116,8 @@ html {
 .card-hover:hover {
   transform: translateY(-4px);
 }
+
+/* SpotlightText: 鼠标进入容器时显示金色光晕 */
+.spotlight-container:hover .spotlight-accent {
+  opacity: 1 !important;
+}

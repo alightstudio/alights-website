@@ -126,6 +126,7 @@ const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; 
       { label: '暗字颜色', path: 'spotlight.darkColor', type: 'color', placeholder: '#1a1a1a' },
       { label: '光圈半径(px)', path: 'spotlight.glowSize', placeholder: '220' },
       { label: '边缘扩散(px)', path: 'spotlight.glowSpread', placeholder: '80' },
+      { label: '感应半径(px)', path: 'spotlight.detectRadius', placeholder: '500' },
       { label: '环境光', path: 'spotlight.accentGlow', type: 'toggle', toggleLabels: ['关闭', '开启'] },
       { label: '环境光颜色', path: 'spotlight.accentColor', type: 'color', placeholder: '#c9a962' },
       { label: '文字光晕(px)', path: 'spotlight.textShadowGlow', placeholder: '40' },

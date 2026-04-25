@@ -1,24 +1,26 @@
 'use client'
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, useState } from 'react'
 
 export interface SpotlightConfig {
   enabled?: boolean
   glowColor?: string
   darkColor?: string
-  glowSize?: number       // 径向光圈半径（像素）
+  glowSize?: number       // 近距离时亮圈半径
   glowSpread?: number     // 衰减距离
-  accentGlow?: boolean    // 是否显示金色环境光
-  accentColor?: string    // 金色环境光颜色
-  textShadowGlow?: number // 亮文字光晕大小
+  detectRadius?: number   // 远距离感应半径（鼠标在此范围内开始显现）
+  accentGlow?: boolean
+  accentColor?: string
+  textShadowGlow?: number
 }
 
 const DEFAULTS: Required<SpotlightConfig> = {
   enabled: true,
   glowColor: '#f5f0e8',
   darkColor: '#1a1a1a',
-  glowSize: 220,       // 径向光圈半径（像素）
-  glowSpread: 80,     // 衰减距离
+  glowSize: 220,
+  glowSpread: 80,
+  detectRadius: 500,
   accentGlow: true,
   accentColor: '#c9a962',
   textShadowGlow: 40,
@@ -32,6 +34,7 @@ export function resolveSpotlightConfig(raw: any): SpotlightConfig {
     darkColor: raw.darkColor || DEFAULTS.darkColor,
     glowSize: Number(raw.glowSize) || DEFAULTS.glowSize,
     glowSpread: Number(raw.glowSpread) || DEFAULTS.glowSpread,
+    detectRadius: Number(raw.detectRadius) || DEFAULTS.detectRadius,
     accentGlow: raw.accentGlow !== false,
     accentColor: raw.accentColor || DEFAULTS.accentColor,
     textShadowGlow: Number(raw.textShadowGlow) || DEFAULTS.textShadowGlow,
@@ -52,70 +55,106 @@ export default function SpotlightText({
   const cfg = { ...DEFAULTS, ...(config || {}) }
   const containerRef = useRef<HTMLDivElement>(null)
   const layerRef = useRef<HTMLDivElement>(null)
+  const accentRef = useRef<HTMLDivElement>(null)
+  const rafRef = useRef<number>(0)
 
-  const handleMove = useCallback((clientX: number, clientY: number) => {
+  const update = useCallback((clientX: number, clientY: number) => {
     const el = containerRef.current
-    if (!el) return
-    const r = el.getBoundingClientRect()
-    const x = clientX - r.left
-    const y = clientY - r.top
-    const pctX = ((clientX - r.left) / r.width) * 100
-    const pctY = ((clientY - r.top) / r.height) * 100
-    const size = cfg.glowSize
-    const spread = cfg.glowSpread
+    const layer = layerRef.current
+    const accent = accentRef.current
+    if (!el || !layer) return
 
-    // 更新亮层 mask-image 径向遮罩
-    if (layerRef.current) {
-      layerRef.current.style.maskImage = `radial-gradient(circle ${size}px at ${x}px ${y}px, black 0%, black 50%, transparent 100%)`
-      layerRef.current.style.webkitMaskImage = `radial-gradient(circle ${size}px at ${x}px ${y}px, black 0%, black 50%, transparent 100%)`
+    const rect = el.getBoundingClientRect()
+    const cx = rect.left + rect.width / 2
+    const cy = rect.top + rect.height / 2
+    const dist = Math.hypot(clientX - cx, clientY - cy)
+    const detect = cfg.detectRadius
+    const size = cfg.glowSize
+
+    // intensity: 0 = far away, 1 = at center of text
+    const intensity = Math.max(0, Math.min(1, 1 - dist / detect))
+    // easeOutQuart for smooth approach feel
+    const t = 1 - Math.pow(1 - intensity, 4)
+
+    if (t < 0.005) {
+      // 完全隐藏
+      layer.style.opacity = '0'
+      if (accent) accent.style.opacity = '0'
+      return
     }
 
-    // 更新金色环境光位置
-    el.style.setProperty('--mx', pctX + '%')
-    el.style.setProperty('--my', pctY + '%')
-  }, [cfg.glowSize])
+    // 鼠标相对于容器内的坐标
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+
+    // 动态半径：远时大且淡，近时小且浓
+    // 远距离：大圈 diffuse glow（接近 detectRadius 大小）
+    // 近距离：收拢到 glowSize
+    const maxRadius = detect * 0.8
+    const minRadius = size
+    const currentRadius = maxRadius - (maxRadius - minRadius) * t
+
+    // mask 渐变：中心不透明 → 外缘全透明，无硬边
+    // black 0% → transparent 100%，完全平滑
+    const mask = `radial-gradient(circle ${currentRadius}px at ${x}px ${y}px, black 0%, transparent 100%)`
+    layer.style.maskImage = mask
+    layer.style.webkitMaskImage = mask
+    layer.style.opacity = String(t)
+
+    // 文字光晕也随 intensity 缩放
+    const glow = cfg.textShadowGlow * t
+    layer.style.textShadow = `0 0 ${glow}px ${cfg.glowColor}${Math.round(t * 0.4 * 255).toString(16).padStart(2, '0')}`
+
+    // 金色环境光
+    if (accent) {
+      const pctX = (x / rect.width) * 100
+      const pctY = (y / rect.height) * 100
+      el.style.setProperty('--mx', pctX + '%')
+      el.style.setProperty('--my', pctY + '%')
+      const accentSize = currentRadius * 1.5
+      accent.style.width = accentSize + 'px'
+      accent.style.height = accentSize + 'px'
+      accent.style.opacity = String(t * 0.8)
+    }
+  }, [cfg.glowSize, cfg.detectRadius, cfg.textShadowGlow, cfg.glowColor])
 
   useEffect(() => {
     const el = containerRef.current
     if (!el || !cfg.enabled) return
 
-    // 初始化亮层 mask（隐藏状态）
+    // 初始隐藏
     if (layerRef.current) {
-      const initMask = `radial-gradient(circle 0px at 50% 50%, black 0%, transparent 100%)`
-      layerRef.current.style.maskImage = initMask
-      layerRef.current.style.webkitMaskImage = initMask
+      layerRef.current.style.opacity = '0'
     }
 
-    const onMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY)
-    const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) handleMove(e.touches[0].clientX, e.touches[0].clientY)
+    const onMouseMove = (e: MouseEvent) => {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => update(e.clientX, e.clientY))
     }
-    const onMouseLeave = () => {
-      if (layerRef.current) {
-        const hideMask = `radial-gradient(circle 0px at 50% 50%, black 0%, transparent 100%)`
-        layerRef.current.style.maskImage = hideMask
-        layerRef.current.style.webkitMaskImage = hideMask
-        layerRef.current.style.transition = '-webkit-mask-image 0.4s ease, mask-image 0.4s ease'
-        setTimeout(() => {
-          if (layerRef.current) layerRef.current.style.transition = ''
-        }, 400)
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = requestAnimationFrame(() => update(e.touches[0].clientX, e.touches[0].clientY))
       }
     }
+    const onMouseLeave = () => {
+      // 不需要处理——document mousemove 会在鼠标远离时自动 t→0
+    }
 
-    el.addEventListener('mousemove', onMouseMove, { passive: true })
-    el.addEventListener('mouseleave', onMouseLeave)
+    // 全局监听——近距离感应
+    document.addEventListener('mousemove', onMouseMove, { passive: true })
     el.addEventListener('touchmove', onTouchMove, { passive: true })
     el.addEventListener('touchend', onMouseLeave)
     el.addEventListener('touchcancel', onMouseLeave)
 
     return () => {
-      el.removeEventListener('mousemove', onMouseMove)
-      el.removeEventListener('mouseleave', onMouseLeave)
+      document.removeEventListener('mousemove', onMouseMove)
       el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onMouseLeave)
       el.removeEventListener('touchcancel', onMouseLeave)
+      cancelAnimationFrame(rafRef.current)
     }
-  }, [cfg.enabled, handleMove])
+  }, [cfg.enabled, update])
 
   if (!cfg.enabled) {
     return <div className={className}>{text}</div>
@@ -135,7 +174,7 @@ export default function SpotlightText({
       <div className={className} style={{ color: cfg.darkColor, position: 'relative', zIndex: 1 }}>
         {text}
       </div>
-      {/* 亮色遮罩层 — 通过 mask-image 径向渐变显示 */}
+      {/* 亮色遮罩层 */}
       <div
         ref={layerRef}
         className={`spotlight-layer ${glowClassName}`}
@@ -146,9 +185,9 @@ export default function SpotlightText({
           alignItems: 'center',
           justifyContent: 'center',
           color: cfg.glowColor,
-          textShadow: `0 0 ${cfg.textShadowGlow}px ${cfg.glowColor}66`,
           pointerEvents: 'none',
           zIndex: 2,
+          willChange: 'mask-image, opacity',
         }}
         aria-hidden="true"
       >
@@ -157,17 +196,18 @@ export default function SpotlightText({
       {/* 金色环境光晕 */}
       {cfg.accentGlow && (
         <div
+          ref={accentRef}
           style={{
             position: 'absolute',
             top: 'var(--my, 50%)',
             left: 'var(--mx, 50%)',
-            width: cfg.glowSize * 2,
-            height: cfg.glowSize * 2,
+            width: cfg.detectRadius * 1.2 + 'px',
+            height: cfg.detectRadius * 1.2 + 'px',
             transform: 'translate(-50%, -50%)',
-            background: `radial-gradient(circle ${cfg.glowSize * 0.75}px at center, ${cfg.accentColor}14 0%, transparent 70%)`,
+            background: `radial-gradient(circle 50% at center, ${cfg.accentColor}12 0%, transparent 70%)`,
             pointerEvents: 'none',
             opacity: 0,
-            transition: 'opacity 0.3s',
+            transition: 'width 0.1s, height 0.1s',
             zIndex: 0,
           }}
           className="spotlight-accent"

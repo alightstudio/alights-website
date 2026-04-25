@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 // 默认配置（fallback）
 const DEFAULT_CONFIG = {
@@ -71,7 +72,7 @@ const DEFAULT_CONFIG = {
         { label: '联系方式', href: '/contact', order: 4 },
       ]},
       { id: 'services', title: '服务', type: 'text', items: ['TVC广告', '产品动画', '发布会', '影视剧'] },
-      { id: 'contact', title: '联系', type: 'contact', items: ['电话：15091855505', '邮箱：184436962@qq.com', '地址：西安市'] }
+      { id: 'contact', title: '联系', type: 'contact', items: ['微信：15091855505', '邮箱：184436962@qq.com', '地址：西安市'] }
     ],
     copyright: '© 2024-2026 西安栖光文化传播有限公司. All rights reserved.',
     bottomText: 'alights.cn'
@@ -131,9 +132,7 @@ const DEFAULT_CONFIG = {
 }
 
 async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const session = cookieStore.get('admin_session')
-  return session?.value === 'authenticated'
+  return verifyAdminSession()
 }
 
 // 从数据库读取完整配置

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { createSessionToken } from '@/lib/admin-auth'
 
 // 管理员用户名从环境变量读取
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -76,8 +77,9 @@ export async function POST(request: NextRequest) {
 
     // 登录成功
     loginAttempts.delete(ip)
+    const sessionToken = createSessionToken()
     const response = NextResponse.json({ success: true })
-    response.cookies.set('admin_session', 'authenticated', {
+    response.cookies.set('admin_session', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

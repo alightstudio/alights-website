@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { cookies } from 'next/headers'
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 export async function POST(request: NextRequest) {
   try {
     // 验证管理员 session
-    const cookieStore = await cookies()
-    const session = cookieStore.get('admin_session')?.value
-    if (session !== 'authenticated') {
+    if (!(await verifyAdminSession())) {
       return NextResponse.json({ error: '未登录' }, { status: 401 })
     }
 
@@ -26,16 +24,14 @@ export async function POST(request: NextRequest) {
     const envPassword = process.env.ADMIN_PASSWORD || 'admin123'
 
     if (stored) {
-      // 数据库中有存储的凭据 - 验证当前密码
       const creds = JSON.parse(stored.value)
-      const valid = creds.password === currentPassword // 直接比较（旧版）
+      let passwordValid = false
       if (creds.password.startsWith('$2')) {
-        // bcrypt hash
-        const validBcrypt = await bcrypt.compare(currentPassword, creds.password)
-        if (!validBcrypt) {
-          return NextResponse.json({ error: '当前密码错误' }, { status: 403 })
-        }
-      } else if (!valid) {
+        passwordValid = await bcrypt.compare(currentPassword, creds.password)
+      } else {
+        passwordValid = currentPassword === creds.password
+      }
+      if (!passwordValid) {
         return NextResponse.json({ error: '当前密码错误' }, { status: 403 })
       }
 

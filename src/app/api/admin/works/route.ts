@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 // 获取所有作品
 export async function GET() {
-  const cookieStore = await cookies()
-  const session = cookieStore.get('admin_session')
-  
-  if (session?.value !== 'authenticated') {
+  if (!(await verifyAdminSession())) {
     return NextResponse.json({ error: '未授权' }, { status: 401 })
   }
 

@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
-import { cookies } from 'next/headers'
-
-async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const session = cookieStore.get('admin_session')
-  return session?.value === 'authenticated'
-}
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 // 允许的文件类型
 const ALLOWED_TYPES: Record<string, string[]> = {
@@ -26,7 +20,7 @@ function getFileCategory(contentType: string): 'video' | 'image' | null {
 
 // POST /api/admin/upload - 文件上传到 Vercel Blob
 export async function POST(request: NextRequest) {
-  if (!(await isAuthenticated())) {
+  if (!(await verifyAdminSession())) {
     return NextResponse.json({ error: '未授权' }, { status: 401 })
   }
 

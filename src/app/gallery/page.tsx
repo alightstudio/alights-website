@@ -159,7 +159,18 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.style.display = 'none'
-                  target.parentElement!.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center gap-2"><span class="text-3xl text-dark-600">▶</span><span class="text-xs text-dark-600">${work.title}</span></div>`
+                  const parent = target.parentElement!
+                  const div = document.createElement('div')
+                  div.className = 'w-full h-full flex flex-col items-center justify-center gap-2'
+                  const icon = document.createElement('span')
+                  icon.className = 'text-3xl text-dark-600'
+                  icon.textContent = '▶'
+                  const label = document.createElement('span')
+                  label.className = 'text-xs text-dark-600'
+                  label.textContent = work.title
+                  div.appendChild(icon)
+                  div.appendChild(label)
+                  parent.appendChild(div)
                 }}
               />
               <div className="absolute top-2 right-2 bg-black/70 text-xs text-gray-400 px-2 py-0.5">

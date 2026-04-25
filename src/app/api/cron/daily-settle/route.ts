@@ -1,9 +1,24 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+
+// Vercel Cron 鉴权：验证 CRON_SECRET header
+function isAuthorized(req: NextRequest): boolean {
+  const authHeader = req.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) {
+    // 未配置 CRON_SECRET 时允许本地开发调用
+    return process.env.NODE_ENV !== 'production'
+  }
+  return authHeader === `Bearer ${cronSecret}`
+}
 
 // POST /api/cron/daily-settle — Vercel Cron 每日 00:00 触发
 // 检查所有超过24h的活跃画布，归档并创建新画布
-export async function POST() {
+export async function POST(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 })
+  }
+
   try {
     const now = new Date()
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
@@ -47,10 +62,31 @@ export async function POST() {
         },
       })
 
+      // 4. 给画布拥有者发放积分奖励
+      if (ownerId) {
+        const topCount = leaderboard[0]._count.id
+        const bonus = Math.max(10, Math.floor(topCount * 0.5))
+        await prisma.user.update({
+          where: { id: ownerId },
+          data: { points: { increment: bonus } },
+        })
+        await prisma.transaction.create({
+          data: {
+            userId: ownerId,
+            type: 'canvas_own',
+            amount: bonus,
+            balance: 0, // 简化处理，不精确追踪
+            refId: canvas.id,
+            note: `画布所有权奖励 (${canvas.width}x${canvas.height}, ${topCount}像素)`,
+          },
+        })
+      }
+
       results.push({
         canvasId: canvas.id,
         size: canvas.width + 'x' + canvas.height,
         ownerId,
+        bonus: ownerId ? Math.max(10, Math.floor(leaderboard[0]._count.id * 0.5)) : 0,
         pixelCount: leaderboard.reduce((s, r) => s + r._count.id, 0),
         topUsers: leaderboard.slice(0, 5).map(r => ({ userId: r.userId, count: r._count.id })),
       })

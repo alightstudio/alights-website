@@ -106,19 +106,13 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
           <div>
             <p className="text-xs md:text-sm text-accent-gold/60 tracking-[0.4em] uppercase mb-4">Visual Effects Studio</p>
             <div className="mb-2">
-              <SpotlightText
-                text={hero.title}
-                config={spotlightConfig}
-                className="font-display text-6xl md:text-8xl font-black tracking-wider"
-                glowClassName="font-display text-6xl md:text-8xl font-black tracking-wider"
-              />
+              <h1 className="font-display text-6xl md:text-8xl font-black tracking-wider text-gray-300">
+                {hero.title}
+              </h1>
             </div>
-            <SpotlightText
-              text={hero.titleEn}
-              config={spotlightConfig}
-              className="text-xl md:text-3xl font-display font-light tracking-[0.3em]"
-              glowClassName="text-xl md:text-3xl font-display font-light tracking-[0.3em]"
-            />
+            <p className="text-xl md:text-3xl font-display font-light tracking-[0.3em] text-gray-500">
+              {hero.titleEn}
+            </p>
           </div>
           <div className="mt-12">
             <SpotlightText

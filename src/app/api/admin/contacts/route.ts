@@ -1,17 +1,11 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { cookies } from 'next/headers'
-
-async function checkAdmin() {
-  const cookieStore = await cookies()
-  const session = cookieStore.get('admin_session')?.value
-  return session === 'authenticated'
-}
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 // 获取所有联系记录
 export async function GET() {
   try {
-    if (!(await checkAdmin())) {
+    if (!(await verifyAdminSession())) {
       return NextResponse.json({ error: '未授权' }, { status: 401 })
     }
 

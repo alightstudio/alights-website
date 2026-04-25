@@ -210,7 +210,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topInspirations.map((work: any, i: number) => (
-              <Link key={work.id} href={work.videoUrl} target="_blank" rel="noopener noreferrer"
+              <Link key={work.id} href="/gallery"
                 className="group cursor-pointer block">
                 <div className="relative aspect-video bg-dark-800 border border-dark-700 overflow-hidden mb-3">
                   <img
@@ -228,7 +228,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                     🔥 {work.views.toLocaleString()}
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-4xl">▶</span>
+                    <span className="text-2xl text-accent-gold">查看详情</span>
                   </div>
                 </div>
                 <h3 className="text-sm font-light mb-1 group-hover:text-accent-gold/80 transition-colors leading-snug">{work.title}</h3>

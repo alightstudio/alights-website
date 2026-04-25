@@ -94,7 +94,7 @@ const DEFAULT_CONFIG = {
     bgColor: '#0a0a0a',
     textColor: '#ffffff',
     fontFamily: 'Inter',
-    fontDisplay: 'noto-serif-sc',
+    fontDisplay: 'playfair',
     borderRadius: '0',
     customCSS: ''
   },

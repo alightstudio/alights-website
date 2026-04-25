@@ -119,7 +119,7 @@ const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; 
     ],
   },
   spotlight: {
-    icon: Eye, label: '聚光效果（仅副标题）',
+    icon: Eye, label: '聚光效果',
     fields: [
       { label: '启用', path: 'spotlight.enabled', type: 'toggle', toggleLabels: ['禁用', '启用'] },
       { label: '亮字颜色', path: 'spotlight.glowColor', type: 'color', placeholder: '#f5f0e8' },

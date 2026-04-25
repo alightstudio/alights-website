@@ -1,7 +1,10 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+
+const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), { ssr: false })
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -13,6 +16,14 @@ export default function ContactPage() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [particleConfig, setParticleConfig] = useState<any>(null)
+
+  useEffect(() => {
+    fetch('/api/site')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.particle) setParticleConfig(data.particle) })
+      .catch(() => {})
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +52,10 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="pt-24 pb-32">
+    <div className="pt-24 pb-32 relative overflow-hidden">
+      {/* Particle Background */}
+      {particleConfig && <ParticleBackground config={particleConfig} />}
+
       {/* Header */}
       <section className="px-6 md:px-12 lg:px-24 mb-32">
         <div className="max-w-7xl mx-auto">

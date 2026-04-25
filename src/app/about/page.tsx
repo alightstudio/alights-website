@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
+
+const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), { ssr: false })
 
 const VALUE_DEFAULTS = [
   { title: '极简主义', desc: '减到不能减的设计哲学，让每一帧都充满力量' },
@@ -25,6 +28,7 @@ const STORY_TEXT = [
 interface SiteData {
   company?: { name: string; slogan: string; description: string }
   services?: { title: string; desc: string }[]
+  particle?: any
 }
 
 export default function AboutPage() {
@@ -83,7 +87,9 @@ export default function AboutPage() {
   const aboutDesc = company?.description || ''
 
   return (
-    <div className="pt-24 pb-32">
+    <div className="pt-24 pb-32 relative overflow-hidden">
+      {/* Particle Background */}
+      {config?.particle && <ParticleBackground config={config.particle} />}
       {/* Hero */}
       <section className="px-6 md:px-12 lg:px-24 mb-32">
         <div className="max-w-7xl mx-auto">

@@ -238,7 +238,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {works.length > 0 ? works.map((work: any) => (
-              <div key={work.id} className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer">
+              <Link key={work.id} href={`/works?id=${work.id}`} className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
                 <Image src={work.coverUrl || ''} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                 <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
@@ -249,18 +249,18 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                     <span>{work.category}</span><span className="text-gray-700">·</span><span className="text-gray-600">{work.categoryEn || ''}</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             )) : DEFAULT_WORKS_PLACEHOLDER.map((work, i) => (
-              <div key={i} className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer">
+              <Link key={i} href="/works" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
                 <Image src={work.image} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                 <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <p className="text-[10px] text-accent-gold/70 tracking-[0.2em] mb-1">{work.titleEn}</p>
                   <h3 className="text-lg font-light mb-2 tracking-wide">{work.title}</h3>
-                  <div className="flex items-center gap-2 text-xs text-gray-500"><span>TVC广告</span><span className="text-gray-700">·</span><span className="text-gray-600">TVC COMMERCIAL</span></div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500"><span>{work.category}</span><span className="text-gray-700">·</span><span className="text-gray-600">{work.categoryEn}</span></div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="text-center mt-16">
@@ -277,7 +277,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
         <div className="max-w-4xl mx-auto text-center relative">
           <p className="text-xs text-accent-gold/60 tracking-[0.3em] uppercase mb-4">Contact</p>
           <h2 className="font-display text-4xl md:text-5xl font-light mb-2">开启合作</h2>
-          <p className="text-sm text-gray-500 tracking-wider mb-8">LET&apos;S CREATE TOGETHER · 一起创作</p>
+          <p className="text-sm text-gray-500 tracking-wider mb-8">LET&apos;S CREATE TOGETHER</p>
           <p className="text-gray-400 mb-4 max-w-2xl mx-auto leading-relaxed">无论您的项目规模大小,我们都将用心对待。期待与您一起,用光影创造不凡。</p>
           <p className="text-gray-600 text-sm mb-12 max-w-2xl mx-auto leading-relaxed">No matter the scale of your project, we approach it with dedication. Let&apos;s create something extraordinary together with light and shadow.</p>
           <Link href="/contact" className="inline-block border border-accent-gold/40 text-accent-gold px-12 py-4 text-sm tracking-widest uppercase hover:bg-accent-gold/10 transition-all duration-500">

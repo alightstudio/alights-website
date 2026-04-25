@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { createHash, randomBytes } from 'crypto'
+import { randomBytes } from 'crypto'
 
 // ===== Session 管理 =====
 // 使用内存存储 session token → 真实 secret 的映射

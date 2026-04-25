@@ -14,14 +14,38 @@ const DEFAULT_FOOTER: FooterConfig = {
       { label: '联系方式', href: '/contact', order: 5 },
     ]},
     { id: 'services', title: '服务', type: 'text', items: ['TVC广告', '产品动画', '发布会', '影视剧'] },
-    { id: 'contact', title: '联系', type: 'contact', items: ['微信：15091855505', '邮箱：184436962@qq.com', '地址：西安市'] },
+    { id: 'contact', title: '联系', type: 'contact', items: [] },
   ],
   copyright: '© 2026 西安栖光文化传播有限公司. All rights reserved.',
   bottomText: 'alights.cn',
 }
 
-export default function Footer({ initialFooter }: { initialFooter?: FooterConfig }) {
+interface FooterProps {
+  initialFooter?: FooterConfig | null
+  initialContact?: { wechat?: string; email?: string; address?: string; phone?: string } | null
+}
+
+/** 从 contact 配置动态生成联系栏 items（不填则整行不显示） */
+function buildContactItems(contact: { wechat?: string; email?: string; address?: string } | null | undefined): string[] {
+  if (!contact) return []
+  const items: string[] = []
+  if (contact.wechat) items.push(`微信：${contact.wechat}`)
+  if (contact.email) items.push(`邮箱：${contact.email}`)
+  if (contact.address) items.push(`地址：${contact.address}`)
+  return items
+}
+
+export default function Footer({ initialFooter, initialContact }: FooterProps) {
   const cfg = initialFooter || DEFAULT_FOOTER
+
+  // 动态覆盖联系栏：优先使用 contact 配置生成，否则用 footer 中的静态 items
+  const dynamicContactItems = buildContactItems(initialContact)
+  const columns = cfg.columns?.map(col => {
+    if (col.type === 'contact' && dynamicContactItems.length > 0) {
+      return { ...col, items: dynamicContactItems }
+    }
+    return col
+  }) || []
 
   return (
     <footer className="bg-dark-900 border-t border-dark-700 py-16 px-6 md:px-12 lg:px-24" style={{ fontFamily: 'var(--font-family, unset)' }}>
@@ -34,29 +58,33 @@ export default function Footer({ initialFooter }: { initialFooter?: FooterConfig
           </div>
 
           {/* Columns */}
-          {cfg.columns?.map(col => (
-            <div key={col.id}>
-              <h4 className="text-sm tracking-widest uppercase mb-6">{col.title}</h4>
-              {col.type === 'links' && (
-                <ul className="space-y-3">
-                  {(col.links || []).sort((a, b) => a.order - b.order).map((link, i) => (
-                    <li key={i}>
-                      <Link href={link.href} className="text-gray-500 text-sm hover:text-white transition-colors">
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {(col.type === 'text' || col.type === 'contact') && (
-                <ul className="space-y-3 text-gray-500 text-sm">
-                  {(col.items || []).map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
+          {columns.map(col => {
+            // 联系栏如果没有内容则不渲染
+            if (col.type === 'contact' && (!col.items || col.items.length === 0)) return null
+            return (
+              <div key={col.id}>
+                <h4 className="text-sm tracking-widest uppercase mb-6">{col.title}</h4>
+                {col.type === 'links' && (
+                  <ul className="space-y-3">
+                    {(col.links || []).sort((a, b) => a.order - b.order).map((link, i) => (
+                      <li key={i}>
+                        <Link href={link.href} className="text-gray-500 text-sm hover:text-white transition-colors">
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {(col.type === 'text' || col.type === 'contact') && (
+                  <ul className="space-y-3 text-gray-500 text-sm">
+                    {(col.items || []).map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )
+          })}
         </div>
 
         {/* Bottom */}

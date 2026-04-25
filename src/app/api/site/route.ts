@@ -17,7 +17,7 @@ const DEFAULT_COMPANY = {
   descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production."
 }
 
-const DEFAULT_CONTACT = { phone: "15091855505", email: "184436962@qq.com", address: "陕西省西安市", wechat: "" }
+const DEFAULT_CONTACT = { phone: "15091855505", email: "184436962@qq.com", address: "陕西省西安市", wechat: "15091855505" }
 const DEFAULT_SEO = { title: "栖光文化 | ALIGHTS - 专业视效制作", description: "专业视效制作领域。TVC广告、产品动画、发布会、影视剧。", keywords: "栖光,视效,TVC广告" }
 const DEFAULT_HERO = { title: "栖光", titleEn: "ALIGHTS", subtitle: "光栖之处 · 自有答案", subtitleEn: "Where light alights · Truth resides", tags: ["TVC广告", "产品动画", "AIGC", "发布会", "影视剧"] }
 
@@ -54,8 +54,7 @@ const DEFAULT_FOOTER = {
       items: ["TVC广告", "产品动画", "发布会", "影视剧"]
     },
     {
-      id: "contact", title: "联系", type: "contact",
-      items: ["电话：15091855505", "邮箱：184436962@qq.com", "地址：西安市"]
+      id: "contact", title: "联系", type: "contact"
     }
   ],
   copyright: "© 2024-2026 西安栖光文化传播有限公司. All rights reserved.",

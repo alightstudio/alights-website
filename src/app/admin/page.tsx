@@ -46,10 +46,10 @@ const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; 
   contact: {
     icon: Phone, label: '联系方式',
     fields: [
+      { label: '微信', path: 'contact.wechat', placeholder: '15091855505' },
+      { label: '邮箱', path: 'contact.email', placeholder: 'example@qq.com' },
+      { label: '地址', path: 'contact.address', placeholder: '陕西省西安市' },
       { label: '电话', path: 'contact.phone' },
-      { label: '邮箱', path: 'contact.email' },
-      { label: '地址', path: 'contact.address' },
-      { label: '微信', path: 'contact.wechat' },
       { label: '微博', path: 'contact.weibo' },
       { label: '小红书', path: 'contact.xiaohongshu' },
     ],

@@ -93,12 +93,13 @@ function extractSubsetChars(...objects: any[]): string {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { fonts, cssVars } = await getThemeConfig()
 
-  const [heroCfg, companyCfg, servicesCfg, navCfg, footerCfg] = await Promise.all([
+  const [heroCfg, companyCfg, servicesCfg, navCfg, footerCfg, contactCfg] = await Promise.all([
     prisma.siteConfig.findFirst({ where: { key: 'hero' } }),
     prisma.siteConfig.findFirst({ where: { key: 'company' } }),
     prisma.siteConfig.findFirst({ where: { key: 'services' } }),
     prisma.siteConfig.findFirst({ where: { key: 'navigation' } }),
     prisma.siteConfig.findFirst({ where: { key: 'footer' } }),
+    prisma.siteConfig.findFirst({ where: { key: 'contact' } }),
   ])
 
   const heroVal = heroCfg ? JSON.parse(heroCfg.value) : {}
@@ -106,6 +107,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const servicesVal = servicesCfg ? JSON.parse(servicesCfg.value) : {}
   const navVal = navCfg ? JSON.parse(navCfg.value) : {}
   const footerVal = footerCfg ? JSON.parse(footerCfg.value) : {}
+  const contactVal = contactCfg ? JSON.parse(contactCfg.value) : null
 
   const basicChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.·:：!？，。、；（）—&©'
   const pageChars = extractSubsetChars(heroVal, companyVal, servicesVal, navVal, footerVal)
@@ -116,7 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ? `${fontCSS}\n:root{${Object.entries(cssVars).map(([k, v]) => `${k}:${v}`).join(';')}}`
     : `:root{${Object.entries(cssVars).map(([k, v]) => `${k}:${v}`).join(';')}}`
 
-  const navSite = navVal?.navigation
+  const navSite = navVal?.navigation || navVal || {}
   const logo = navSite?.logo || '栖光'
   const items = navSite?.items?.filter((i: any) => i.visible !== false) || []
   const footer = footerVal || null
@@ -137,7 +139,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main className="min-h-screen">
           {children}
         </main>
-        <Footer initialFooter={footer} />
+        <Footer initialFooter={footer} initialContact={contactVal} />
       </body>
     </html>
   )

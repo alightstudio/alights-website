@@ -19,7 +19,7 @@ const DEFAULT_CONFIG = {
     phone: "15091855505",
     email: "184436962@qq.com",
     address: "陕西省西安市",
-    wechat: "",
+    wechat: "15091855505",
     weibo: "",
     xiaohongshu: ""
   },
@@ -72,7 +72,7 @@ const DEFAULT_CONFIG = {
         { label: '联系方式', href: '/contact', order: 4 },
       ]},
       { id: 'services', title: '服务', type: 'text', items: ['TVC广告', '产品动画', '发布会', '影视剧'] },
-      { id: 'contact', title: '联系', type: 'contact', items: ['微信：15091855505', '邮箱：184436962@qq.com', '地址：西安市'] }
+      { id: 'contact', title: '联系', type: 'contact' }
     ],
     copyright: '© 2024-2026 西安栖光文化传播有限公司. All rights reserved.',
     bottomText: 'alights.cn'
@@ -93,7 +93,7 @@ const DEFAULT_CONFIG = {
     bgColor: '#0a0a0a',
     textColor: '#ffffff',
     fontFamily: 'Inter',
-    fontDisplay: 'Playfair Display',
+    fontDisplay: 'noto-serif-sc',
     borderRadius: '0',
     customCSS: ''
   },

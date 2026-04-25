@@ -1,2314 +1,1268 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
-  LayoutDashboard,
-  Users,
-  Film,
-  Image,
-  Globe,
-  Phone,
-  Settings as SettingsIcon,
-  LogOut,
-  CheckCircle,
-  Clock,
-  Eye,
-  EyeOff,
-  Trash2,
-  Search,
-  Menu,
-  X,
-  Plus,
-  Edit3,
-  Save,
-  Upload,
-  ChevronDown,
-  ChevronUp,
-  Star,
-  StarOff,
-  GripVertical,
-  ExternalLink,
-  AlertCircle,
-  Info,
-  Type,
-  Mail,
-  MapPin,
-  Smartphone,
-  Languages,
-  Palette,
-  Shield,
-  Key,
-  BarChart2,
-  MessageSquare,
+  LayoutDashboard, Film, Users, Settings, BarChart3,
+  MessageSquare, Palette, Image, LogOut, Menu, X,
+  CheckCircle, Trash2, Edit3, Search, Globe, Phone,
+  Mail, Type, Languages, Megaphone,
+  Share2, Shield, Eye, ChevronRight, Award,
+  Plus, ChevronUp, ChevronDown, TrendingUp, TrendingDown, Minus,
+  FileText, Clock, Upload
 } from 'lucide-react'
 
-interface Work {
-  id: string
-  title: string
-  description: string | null
-  category: string
-  videoUrl: string | null
-  coverUrl: string | null
-  status: string
-  creatorName: string
-  creatorPhone: string
-  createdAt: string
-  userId: string | null
-}
-
-interface User {
-  id: string
-  name: string
-  phone: string
-  email: string | null
-  company: string | null
-  bio?: string
-  points?: number
-  createdAt: string
-  _count?: { works: number }
-}
-
-interface Stats {
-  totalWorks: number
-  pendingWorks: number
-  approvedWorks: number
-  totalUsers: number
-  recentWorks: Work[]
-}
-
-interface SiteConfig {
-  brandDisplay?: {
-    opacity: number
-    opacityHover: number
-    grayscale: boolean
-    grayscaleHover: boolean
-  }
-  company: {
-    name: string; nameEn: string; shortName: string; shortNameEn: string
-    slogan: string; sloganEn: string; description: string; descriptionEn: string
-  }
-  contact: { phone: string; email: string; address: string; wechat: string; weibo: string; xiaohongshu: string }
-  seo: { title: string; description: string; keywords: string }
-  hero: { title: string; titleEn: string; subtitle: string; subtitleEn: string; tags: string[] }
-  featuredWorks: Array<{ id: string; title: string; titleEn: string; category: string; categoryEn: string; image: string; homepageOrder: number | null; videoUrl?: string; views?: number; duration?: number }>
-  services: Array<{ id: string; title: string; titleEn: string; desc: string; descEn: string; order: number }>
-  brands: Array<{ id: string; name: string; slug: string; order: number }>
-  navigation?: { logo: string; items: Array<{ id: string; label: string; href: string; visible: boolean; order: number }> }
-  footer?: { logo: string; tagline: string; columns: any[]; copyright: string; bottomText: string }
-  theme?: { primaryColor: string; bgColor: string; textColor: string; fontFamily: string; fontDisplay: string; borderRadius: string; customCSS: string }
-  pages?: Record<string, { label: string; path: string; visible: boolean }>
-  announcement?: { enabled: boolean; text: string; type: string; dismissible: boolean; link: string | null }
-  codeInjection?: { headHTML: string; footerHTML: string; bodyStartHTML: string }
-  socialLinks?: Record<string, string>
-}
-
-interface AnalyticsData {
-  totalPv: number
-  totalUv: number
-  avgDailyPv: number
-  dateList: Array<{ date: string; pv: number; uv: number }>
-  pageStats: Array<{ path: string; pv: number }>
-  days: number
-}
+/* ─── Types ─── */
+interface Work { id: string; title: string; description: string | null; category: string; videoUrl: string | null; coverUrl: string | null; status: string; creatorName: string; creatorPhone: string; createdAt: string }
+interface User { id: string; name: string; phone: string; email: string | null; company: string | null; bio?: string; points?: number; createdAt: string; _count?: { works: number } }
+interface Stats { totalWorks: number; pendingWorks: number; approvedWorks: number; totalUsers: number; recentWorks: Work[] }
+interface ContactMsg { id: string; name: string; email: string; phone?: string; subject?: string; message: string; createdAt: string; read: boolean }
+interface SiteConfig { [key: string]: any }
+interface NavItem { id: string; label: string; href: string; visible: boolean; order: number }
+interface BrandItem { name: string; logo: string; slug?: string }
 
 type Tab = 'dashboard' | 'works' | 'users' | 'settings' | 'analytics' | 'contact' | 'canvas' | 'media'
+type StatusFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
 
-// ===== SETTINGS SECTIONS =====
-type SettingsSection = 'company' | 'contact' | 'seo' | 'hero' | 'works' | 'services' | 'brands' | 'display' | 'security' | 'navigation' | 'footer' | 'theme' | 'pages' | 'codeInjection' | 'announcement' | 'social'
+/* ─── Reusable field config for settings forms ─── */
+interface FieldDef { label: string; path: string; type?: 'text' | 'textarea' | 'color' | 'toggle'; placeholder?: string; toggleLabels?: [string, string] }
 
+const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; fields: FieldDef[]; special?: 'navigation' | 'brands' }> = {
+  company: {
+    icon: Globe, label: '公司信息',
+    fields: [
+      { label: '中文名称', path: 'company.name' },
+      { label: '英文名称', path: 'company.nameEn' },
+      { label: '中文简称', path: 'company.shortName' },
+      { label: '英文简称', path: 'company.shortNameEn' },
+      { label: '中文标语', path: 'company.slogan' },
+      { label: '英文标语', path: 'company.sloganEn' },
+      { label: '中文简介', path: 'company.description', type: 'textarea' },
+      { label: '英文简介', path: 'company.descriptionEn', type: 'textarea' },
+      { label: '中文详情', path: 'company.detail', type: 'textarea' },
+    ],
+  },
+  contact: {
+    icon: Phone, label: '联系方式',
+    fields: [
+      { label: '电话', path: 'contact.phone' },
+      { label: '邮箱', path: 'contact.email' },
+      { label: '地址', path: 'contact.address' },
+      { label: '微信', path: 'contact.wechat' },
+      { label: '微博', path: 'contact.weibo' },
+      { label: '小红书', path: 'contact.xiaohongshu' },
+    ],
+  },
+  seo: {
+    icon: Languages, label: 'SEO 设置',
+    fields: [
+      { label: '页面标题', path: 'seo.title' },
+      { label: '页面描述', path: 'seo.description', type: 'textarea' },
+      { label: '关键词', path: 'seo.keywords' },
+    ],
+  },
+  hero: {
+    icon: Type, label: '首屏内容',
+    fields: [
+      { label: '主标题(中文)', path: 'hero.title' },
+      { label: '主标题(英文)', path: 'hero.titleEn' },
+      { label: '副标题(中文)', path: 'hero.subtitle' },
+      { label: '副标题(英文)', path: 'hero.subtitleEn' },
+      { label: '标签(逗号分隔)', path: 'hero.tags', placeholder: 'TVC广告,产品动画,发布会,影视剧' },
+    ],
+  },
+  brands: {
+    icon: Award, label: '合作品牌',
+    fields: [
+      { label: '品牌名称', path: 'brands.name' },
+      { label: 'Logo 路径', path: 'brands.logo', placeholder: '/brands/xxx.svg 或图片URL' },
+      { label: '文件别名', path: 'brands.slug', placeholder: '用于本地SVG文件引用' },
+    ],
+    special: 'brands',
+  },
+  brandDisplay: {
+    icon: Eye, label: '品牌展示',
+    fields: [
+      { label: '默认透明度', path: 'brandDisplay.opacity', placeholder: '0.75' },
+      { label: '悬停透明度', path: 'brandDisplay.opacityHover', placeholder: '1' },
+      { label: '默认灰度', path: 'brandDisplay.grayscale', type: 'toggle', toggleLabels: ['彩色', '灰度'] },
+      { label: '悬停灰度', path: 'brandDisplay.grayscaleHover', type: 'toggle', toggleLabels: ['彩色', '灰度'] },
+    ],
+  },
+  theme: {
+    icon: Palette, label: '主题样式',
+    fields: [
+      { label: '主题色', path: 'theme.primaryColor', type: 'color', placeholder: '#c9a962' },
+      { label: '背景色', path: 'theme.bgColor', type: 'color', placeholder: '#0a0a0a' },
+      { label: '文字色', path: 'theme.textColor', type: 'color', placeholder: '#ffffff' },
+      { label: '正文字体', path: 'theme.fontFamily' },
+      { label: '展示字体', path: 'theme.fontDisplay' },
+      { label: '圆角大小', path: 'theme.borderRadius', placeholder: '0' },
+      { label: '自定义 CSS', path: 'theme.customCSS', type: 'textarea', placeholder: '额外 CSS 样式...' },
+    ],
+  },
+  navigation: {
+    icon: Menu, label: '导航菜单',
+    fields: [
+      { label: 'Logo 文字', path: 'navigation.logo' },
+    ],
+    special: 'navigation',
+  },
+  footer: {
+    icon: Globe, label: '页脚配置',
+    fields: [
+      { label: 'Logo', path: 'footer.logo' },
+      { label: '标语', path: 'footer.tagline' },
+      { label: '版权信息', path: 'footer.copyright' },
+      { label: '底部文字', path: 'footer.bottomText' },
+    ],
+  },
+  announcement: {
+    icon: Megaphone, label: '公告设置',
+    fields: [
+      { label: '公告内容', path: 'announcement.text', type: 'textarea' },
+      { label: '公告类型', path: 'announcement.type', placeholder: 'info / warning / success' },
+      { label: '是否显示', path: 'announcement.visible', type: 'toggle', toggleLabels: ['隐藏', '显示'] },
+    ],
+  },
+  social: {
+    icon: Share2, label: '社交链接',
+    fields: [
+      { label: '微信链接', path: 'socialLinks.wechat' },
+      { label: '微博链接', path: 'socialLinks.weibo' },
+      { label: '小红书', path: 'socialLinks.xiaohongshu' },
+      { label: '抖音', path: 'socialLinks.douyin' },
+      { label: 'B站', path: 'socialLinks.bilibili' },
+      { label: 'Behance', path: 'socialLinks.behance' },
+      { label: '新片场', path: 'socialLinks.xinpianchang' },
+    ],
+  },
+  security: {
+    icon: Shield, label: '安全设置',
+    fields: [
+      { label: '维护模式', path: 'security.maintenanceMode', type: 'toggle', toggleLabels: ['关闭', '开启'] },
+      { label: '允许注册', path: 'security.allowRegistration', type: 'toggle', toggleLabels: ['禁止', '允许'] },
+      { label: '允许作品提交', path: 'security.allowSubmissions', type: 'toggle', toggleLabels: ['禁止', '允许'] },
+    ],
+  },
+}
+
+/* ─── Toggle Switch Component ─── */
+function ToggleSwitch({ checked, onChange, labels }: { checked: boolean; onChange: (v: boolean) => void; labels?: [string, string] }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent-gold/30 ${
+        checked ? 'bg-accent-gold' : 'bg-white/10'
+      }`}>
+      <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${
+        checked ? 'translate-x-6' : 'translate-x-1'
+      }`} />
+      {labels && (
+        <span className={`absolute text-[10px] font-medium ${
+          checked ? 'left-1.5 text-dark-900' : 'right-1.5 text-gray-400'
+        }`}>
+          {checked ? labels[1] : labels[0]}
+        </span>
+      )}
+    </button>
+  )
+}
+
+/* ─── Toast Component ─── */
+function Toast({ show, message, type }: { show: boolean; message: string; type: 'success' | 'error' }) {
+  return (
+    <div className={`fixed top-4 right-4 z-[100] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-2xl border transition-all duration-300 ${
+      show ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'
+    } ${type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+      {type === 'success' ? <CheckCircle className="w-5 h-5" /> : <X className="w-5 h-5" />}
+      <span className="text-sm font-medium">{message}</span>
+    </div>
+  )
+}
+
+/* ─── Main Component ─── */
 export default function AdminPage() {
-  const router = useRouter()
+  /* ── State ── */
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
-  const [settingsSection, setSettingsSection] = useState<SettingsSection>('company')
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [settingsMobileOpen, setSettingsMobileOpen] = useState(false)
-  const [mobileSectionOpen, setMobileSectionOpen] = useState(false)
-  const [currentSectionLabel, setCurrentSectionLabel] = useState('公司信息')
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
-  const [activeSettingTab, setActiveSettingTab] = useState<SettingsSection>('company')
+  const [authed, setAuthed] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [settingsSection, setSettingsSection] = useState<string>('company')
 
-  // Data states
+  // Toast
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({ show: false, message: '', type: 'success' })
+
+  // Data
   const [stats, setStats] = useState<Stats | null>(null)
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
-  const [analyticsDays, setAnalyticsDays] = useState(30)
   const [works, setWorks] = useState<Work[]>([])
   const [users, setUsers] = useState<User[]>([])
-  const [contacts, setContacts] = useState<any[]>([])
-  const [canvasStats, setCanvasStats] = useState<any>(null)
-  const [settling, setSettling] = useState(false)
-  const [settleResult, setSettleResult] = useState<string>('')
-  const [selectedWork, setSelectedWork] = useState<Work | null>(null)
-  const [reviewComment, setReviewComment] = useState('')
-
-  // Settings config state
   const [config, setConfig] = useState<SiteConfig | null>(null)
+  const [editConfig, setEditConfig] = useState<SiteConfig | null>(null)
+  const [contacts, setContacts] = useState<ContactMsg[]>([])
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
 
-  // Filter states
-  const [workFilter, setWorkFilter] = useState('ALL')
+  // Filters
+  const [workFilter, setWorkFilter] = useState<StatusFilter>('ALL')
   const [workSearch, setWorkSearch] = useState('')
   const [userSearch, setUserSearch] = useState('')
 
   // User edit modal
-  const [editUser, setEditUser] = useState<any | null>(null)
-  const [showUserEdit, setShowUserEdit] = useState(false)
-  const [userEditForm, setUserEditForm] = useState({ name: '', phone: '', email: '', company: '', bio: '', points: 0 })
-  const [userEditSaving, setUserEditSaving] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [userForm, setUserForm] = useState({ name: '', phone: '', email: '', company: '', bio: '', points: 0 })
 
-  // Temp edit states for settings
-  const [tempConfig, setTempConfig] = useState<SiteConfig | null>(null)
+  /* ── Helpers ── */
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ show: true, message, type })
+    setTimeout(() => setToast(t => ({ ...t, show: false })), 3000)
+  }
 
+  /* ── Auth ── */
   useEffect(() => {
-    checkAuth()
+    fetch('/api/admin/check-auth').then(r => {
+      if (r.ok) { setAuthed(true); setLoading(false) }
+      else { window.location.href = '/admin/login' }
+    }).catch(() => { window.location.href = '/admin/login' })
   }, [])
 
+  /* ── Data fetching ── */
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchDashboardData()
-      fetchWorks()
-      fetchUsers()
-      fetchSiteConfig()
-    }
-  }, [isAuthenticated])
+    if (!authed) return
+    Promise.all([
+      fetch('/api/admin/stats').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/admin/works').then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/admin/users').then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/admin/settings').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([s, w, u, c]) => {
+      if (s) setStats(s)
+      setWorks(w); setUsers(u)
+      if (c) { setConfig(c); setEditConfig(c) }
+    })
+  }, [authed])
 
-  // Refresh analytics when tab is selected
   useEffect(() => {
-    if (isAuthenticated && activeTab === 'analytics') {
-      fetchAnalyticsData(analyticsDays)
-    }
-  }, [isAuthenticated, activeTab])
+    if (!authed || activeTab !== 'contact') return
+    fetch('/api/admin/contacts').then(r => r.ok ? r.json() : []).catch(() => []).then(setContacts)
+  }, [authed, activeTab])
 
-  // Fetch contacts when tab selected
   useEffect(() => {
-    if (isAuthenticated && activeTab === 'contact') {
-      fetchContacts()
-    }
-  }, [isAuthenticated, activeTab])
+    if (!authed || activeTab !== 'analytics') return
+    fetch('/api/analytics?days=30').then(r => r.ok ? r.json() : null).catch(() => null).then(setAnalyticsData)
+  }, [authed, activeTab])
 
-  // Fetch canvas data when tab selected
-  useEffect(() => {
-    if (isAuthenticated && activeTab === 'canvas') {
-      fetchCanvasStats()
-    }
-  }, [isAuthenticated, activeTab])
-
-  const checkAuth = async () => {
-    try {
-      const res = await fetch('/api/admin/check-auth')
-      if (res.ok) { setIsAuthenticated(true) }
-      else { router.push('/admin/login') }
-    } catch { router.push('/admin/login') }
-    finally { setIsLoading(false) }
-  }
-
-  const fetchDashboardData = async () => {
-    try {
-      const res = await fetch('/api/admin/stats')
-      if (res.ok) setStats(await res.json())
-    } catch (e) { console.error('Failed to fetch stats:', e) }
-  }
-
-  const fetchWorks = async () => {
-    try {
-      const res = await fetch('/api/admin/works')
-      if (res.ok) setWorks(await res.json())
-    } catch (e) { console.error('Failed to fetch works:', e) }
-  }
-
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch('/api/admin/users')
-      if (res.ok) setUsers(await res.json())
-    } catch (e) { console.error('Failed to fetch users:', e) }
-  }
-
-  const fetchSiteConfig = async () => {
-    try {
-      const res = await fetch('/api/admin/settings')
-      if (res.ok) {
-        const data = await res.json()
-        setConfig(data)
-        setTempConfig(data)
-      }
-    } catch (e) { console.error('Failed to fetch config:', e) }
-  }
-
-  const fetchAnalyticsData = async (days: number = 30) => {
-    try {
-      const res = await fetch(`/api/analytics?days=${days}`)
-      if (res.ok) setAnalytics(await res.json())
-    } catch (e) { console.error('Failed to fetch analytics:', e) }
-  }
-
-  const fetchContacts = async () => {
-    try {
-      const res = await fetch('/api/admin/contacts')
-      if (res.ok) setContacts(await res.json())
-    } catch (e) { console.error('Failed to fetch contacts:', e) }
-  }
-
-  const fetchCanvasStats = async () => {
-    try {
-      const res = await fetch('/api/canvas/current')
-      if (res.ok) {
-        const data = await res.json()
-        setCanvasStats(data.canvas)
-      }
-    } catch (e) { console.error('Failed to fetch canvas stats:', e) }
-    try {
-      const res = await fetch('/api/canvas/history')
-      if (res.ok) {
-        const history = await res.json()
-        setCanvasStats((prev: any) => prev ? { ...prev, archiveCount: history.length, archives: history } : null)
-      }
-    } catch (e) { console.error('Failed to fetch canvas history:', e) }
-  }
-
-  const handleManualSettle = async () => {
-    setSettling(true)
-    setSettleResult('')
-    try {
-      const res = await fetch('/api/cron/daily-settle', { method: 'POST' })
-      const data = await res.json()
-      setSettleResult(data.settled > 0 ? '结算完成: ' + data.settled + ' 个画布已归档' : '当前无已过期画布')
-      fetchCanvasStats()
-    } catch (e) {
-      setSettleResult('结算失败: ' + String(e))
-    } finally {
-      setSettling(false)
-    }
-  }
-
-  const saveConfig = async (section: string, data: any) => {
+  /* ── Actions ── */
+  const saveSection = async (section: string, data: any) => {
     setSaveStatus('saving')
     try {
       const res = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ section, data })
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section, data }),
       })
       if (res.ok) {
-        setSaveStatus('saved')
-        setConfig((prev) => prev ? { ...prev, [section]: data } : prev)
+        setSaveStatus('saved'); setConfig(prev => prev ? { ...prev, [section]: data } : prev)
+        showToast('保存成功')
         setTimeout(() => setSaveStatus('idle'), 2000)
       } else {
-        setSaveStatus('error')
-        setTimeout(() => setSaveStatus('idle'), 3000)
+        showToast('保存失败', 'error')
       }
     } catch {
-      setSaveStatus('error')
-      setTimeout(() => setSaveStatus('idle'), 3000)
+      showToast('网络错误', 'error')
     }
   }
 
-  const handleReview = async (workId: string, status: 'APPROVED' | 'REJECTED') => {
-    try {
-      const res = await fetch('/api/admin/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workId, status, comment: reviewComment })
-      })
-      if (res.ok) {
-        setSelectedWork(null); setReviewComment('')
-        fetchWorks(); fetchDashboardData()
-      }
-    } catch (e) { console.error('Review failed:', e) }
+  const reviewWork = async (id: string, status: 'APPROVED' | 'REJECTED') => {
+    await fetch(`/api/admin/works/${id}/review`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
+    })
+    fetchWorks(); fetchStats()
   }
 
-  const handleDeleteWork = async (workId: string) => {
-    if (!confirm('确定要删除这个作品吗？此操作不可恢复。')) return
-    try {
-      const res = await fetch(`/api/admin/works/${workId}`, { method: 'DELETE' })
-      if (res.ok) { fetchWorks(); fetchDashboardData() }
-    } catch (e) { console.error('Delete failed:', e) }
+  const deleteWork = async (id: string) => {
+    if (!confirm('确定删除此作品？')) return
+    await fetch(`/api/admin/works/${id}`, { method: 'DELETE' })
+    fetchWorks(); fetchStats()
   }
 
-  const handleLogout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' })
-    router.push('/admin/login')
+  const deleteContact = async (id: string) => {
+    if (!confirm('确定删除此留言？')) return
+    await fetch(`/api/admin/contacts/${id}`, { method: 'DELETE' })
+    setContacts(prev => prev.filter(c => c.id !== id))
   }
 
-  const filteredWorks = works.filter(w =>
-    (workFilter === 'ALL' || w.status === workFilter) &&
-    (w.title.toLowerCase().includes(workSearch.toLowerCase()) || w.creatorName.toLowerCase().includes(workSearch.toLowerCase()))
-  )
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.phone.includes(userSearch)
-  )
+  const logout = async () => {
+    try { await fetch('/api/admin/logout', { method: 'POST' }) } catch {}
+    window.location.href = '/admin/login'
+  }
 
-  const openUserEdit = async (userId: string) => {
-    try {
-      const res = await fetch('/api/admin/users/' + userId)
-      const data = await res.json()
-      if (data.user) {
-        setUserEditForm({
-          name: data.user.name,
-          phone: data.user.phone,
-          email: data.user.email || '',
-          company: data.user.company || '',
-          bio: data.user.bio || '',
-          points: data.user.points,
-        })
-        setEditUser(data.user)
-        setShowUserEdit(true)
-      }
-    } catch (e) {
-      console.error('获取用户详情失败:', e)
-    }
+  const fetchWorks = () => fetch('/api/admin/works').then(r => r.ok ? r.json() : []).then(setWorks).catch(() => {})
+  const fetchStats = () => fetch('/api/admin/stats').then(r => r.ok ? r.json() : null).then(setStats).catch(() => {})
+
+  const openUserEdit = (u: User) => {
+    setUserForm({ name: u.name, phone: u.phone, email: u.email || '', company: u.company || '', bio: u.bio || '', points: u.points || 0 })
+    setEditingUser(u)
   }
 
   const saveUserEdit = async () => {
-    if (!editUser) return
-    setUserEditSaving(true)
-    try {
-      const res = await fetch('/api/admin/users/' + editUser.id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userEditForm),
+    if (!editingUser) return
+    await fetch(`/api/admin/users/${editingUser.id}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userForm),
+    })
+    setEditingUser(null)
+    const res = await fetch('/api/admin/users'); if (res.ok) setUsers(await res.json())
+    showToast('用户信息已更新')
+  }
+
+  /* ── Derived state ── */
+  const filteredWorks = works.filter(w =>
+    (workFilter === 'ALL' || w.status === workFilter) &&
+    w.title.toLowerCase().includes(workSearch.toLowerCase())
+  )
+  const filteredUsers = users.filter(u =>
+    u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.phone.includes(userSearch)
+  )
+
+  /* ── Config field helper ── */
+  const getConfigValue = useCallback((path: string): string => {
+    if (!editConfig) return ''
+    return String(path.split('.').reduce((o: any, k) => o?.[k], editConfig) ?? '')
+  }, [editConfig])
+
+  const getConfigBoolValue = useCallback((path: string): boolean => {
+    if (!editConfig) return false
+    const val = path.split('.').reduce((o: any, k) => o?.[k], editConfig)
+    return val === true || val === 'true'
+  }, [editConfig])
+
+  const updateConfigValue = useCallback((path: string, value: string) => {
+    if (!editConfig) return
+    const keys = path.split('.')
+    setEditConfig(prev => {
+      if (!prev) return prev
+      const n = { ...prev }; let ref: any = n
+      keys.forEach((k, i) => {
+        if (i < keys.length - 1) { ref[k] = { ...ref[k] }; ref = ref[k] }
+        else ref[k] = value
       })
-      if (res.ok) {
-        setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...userEditForm } : u))
-        setShowUserEdit(false)
-        setEditUser(null)
-      }
-    } catch (e) {
-      console.error('保存用户信息失败:', e)
-    } finally {
-      setUserEditSaving(false)
-    }
-  }
+      return n
+    })
+  }, [editConfig])
 
-  if (isLoading) return (
-    <div className="min-h-screen bg-dark-900 flex items-center justify-center">
-      <div className="text-accent-gold text-xl">加载中...</div>
-    </div>
-  )
-  if (!isAuthenticated) return null
+  const updateConfigBool = useCallback((path: string, value: boolean) => {
+    if (!editConfig) return
+    const keys = path.split('.')
+    setEditConfig(prev => {
+      if (!prev) return prev
+      const n = { ...prev }; let ref: any = n
+      keys.forEach((k, i) => {
+        if (i < keys.length - 1) { ref[k] = { ...ref[k] }; ref = ref[k] }
+        else ref[k] = value
+      })
+      return n
+    })
+  }, [editConfig])
 
-  // ==============================
-  // SETTINGS PANEL
-  // ==============================
-  const renderSettings = () => {
-    const sections: Array<{ id: string; label: string; icon: any }> = [
-      { id: 'company', label: '公司信息', icon: Globe },
-      { id: 'contact', label: '联系方式', icon: Phone },
-      { id: 'seo', label: 'SEO 设置', icon: Languages },
-      { id: 'hero', label: '首屏内容', icon: Type },
-      { id: 'works', label: '代表作品', icon: Image },
-      { id: 'services', label: '服务领域', icon: SettingsIcon },
-      { id: 'brands', label: '合作品牌', icon: Star },
-      { id: 'display', label: '品牌显示', icon: Palette },
-      { id: 'navigation', label: '导航菜单', icon: Menu },
-      { id: 'footer', label: '页脚配置', icon: LayoutDashboard },
-      { id: 'theme', label: '主题样式', icon: Palette },
-      { id: 'pages', label: '页面管理', icon: Globe },
-      { id: 'announcement', label: '通知公告', icon: Info },
-      { id: 'codeInjection', label: '代码注入', icon: Type },
-      { id: 'social', label: '社交链接', icon: MessageSquare },
-      { id: 'security', label: '安全设置', icon: Shield },
-    ]
-    const currentSectionLabel = sections.find(s => s.id === settingsSection)?.label || '设置'
-    return (
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Settings Sidebar - Desktop */}
-        <div className="hidden lg:block w-56 flex-shrink-0">
-          <div className="space-y-1">
-            {sections.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setSettingsSection(id as SettingsSection)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  settingsSection === id
-                    ? 'bg-accent-gold text-dark-900'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Settings Section Selector - Mobile */}
-        <div className="lg:hidden relative">
-          <button
-            onClick={() => setMobileSectionOpen(!mobileSectionOpen)}
-            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-dark-800 border border-white/10 rounded-lg text-white text-sm"
-          >
-            <span>{currentSectionLabel}</span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${mobileSectionOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {mobileSectionOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-dark-800 border border-white/10 rounded-lg z-40 max-h-60 overflow-y-auto shadow-xl">
-              {sections.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => { setSettingsSection(id as SettingsSection); setSettingsMobileOpen(false) }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                    settingsSection === id
-                      ? 'bg-accent-gold/20 text-accent-gold'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-      {/* Settings Main */}
-      <div className="flex-1 min-w-0">
-        {saveStatus !== 'idle' && (
-          <div className={`mb-6 px-4 py-3 rounded-lg text-sm flex items-center gap-2 ${
-            saveStatus === 'saving' ? 'bg-accent-gold/10 text-accent-gold' :
-            saveStatus === 'saved' ? 'bg-green-500/10 text-green-400' :
-            'bg-red-500/10 text-red-400'
-          }`}>
-            {saveStatus === 'saving' && '⟳ 保存中...'}
-            {saveStatus === 'saved' && '✓ 保存成功'}
-            {saveStatus === 'error' && '✗ 保存失败，请重试'}
-          </div>
-        )}
-
-        {settingsSection === 'company' && tempConfig && (
-          <SettingsForm title="公司信息" onSave={() => saveConfig('company', tempConfig!.company)}>
-            <Field label="公司名称（中文）" value={tempConfig.company.name}
-              onChange={v => setTemp({ ...tempConfig, company: { ...tempConfig.company, name: v } })} />
-            <Field label="公司名称（英文）" value={tempConfig.company.nameEn}
-              onChange={v => setTemp({ ...tempConfig, company: { ...tempConfig.company, nameEn: v } })} />
-            <Field label="简称（中文）" value={tempConfig.company.shortName}
-              onChange={v => setTemp({ ...tempConfig, company: { ...tempConfig.company, shortName: v } })} />
-            <Field label="简称（英文）" value={tempConfig.company.shortNameEn}
-              onChange={v => setTemp({ ...tempConfig, company: { ...tempConfig.company, shortNameEn: v } })} />
-            <Field label=" slogan（中文）" value={tempConfig.company.slogan}
-              onChange={v => setTemp({ ...tempConfig, company: { ...tempConfig.company, slogan: v } })} />
-            <Field label="slogan（英文）" value={tempConfig.company.sloganEn}
-              onChange={v => setTemp({ ...tempConfig, company: { ...tempConfig.company, sloganEn: v } })} />
-            <Field label="公司简介（中文）" value={tempConfig.company.description}
-              onChange={v => setTemp({ ...tempConfig, company: { ...tempConfig.company, description: v } })} multiline />
-            <Field label="公司简介（英文）" value={tempConfig.company.descriptionEn}
-              onChange={v => setTemp({ ...tempConfig, company: { ...tempConfig.company, descriptionEn: v } })} multiline />
-          </SettingsForm>
-        )}
-
-        {settingsSection === 'contact' && tempConfig && (
-          <SettingsForm title="联系方式" onSave={() => saveConfig('contact', tempConfig!.contact)}>
-            <Field label="手机号" value={tempConfig.contact.phone} onChange={v => setTemp({ ...tempConfig, contact: { ...tempConfig.contact, phone: v } })} prefix={<Smartphone className="w-4 h-4 text-gray-500" />} />
-            <Field label="邮箱" value={tempConfig.contact.email} onChange={v => setTemp({ ...tempConfig, contact: { ...tempConfig.contact, email: v } })} prefix={<Mail className="w-4 h-4 text-gray-500" />} />
-            <Field label="地址" value={tempConfig.contact.address} onChange={v => setTemp({ ...tempConfig, contact: { ...tempConfig.contact, address: v } })} prefix={<MapPin className="w-4 h-4 text-gray-500" />} />
-            <Field label="微信" value={tempConfig.contact.wechat} onChange={v => setTemp({ ...tempConfig, contact: { ...tempConfig.contact, wechat: v } })} />
-            <Field label="微博" value={tempConfig.contact.weibo} onChange={v => setTemp({ ...tempConfig, contact: { ...tempConfig.contact, weibo: v } })} />
-            <Field label="小红书" value={tempConfig.contact.xiaohongshu} onChange={v => setTemp({ ...tempConfig, contact: { ...tempConfig.contact, xiaohongshu: v } })} />
-          </SettingsForm>
-        )}
-
-        {settingsSection === 'seo' && tempConfig && (
-          <SettingsForm title="SEO 设置" onSave={() => saveConfig('seo', tempConfig!.seo)}>
-            <Field label="网站标题" value={tempConfig.seo.title}
-              onChange={v => setTemp({ ...tempConfig, seo: { ...tempConfig.seo, title: v } })} />
-            <Field label="网站描述" value={tempConfig.seo.description}
-              onChange={v => setTemp({ ...tempConfig, seo: { ...tempConfig.seo, description: v } })} multiline />
-            <Field label="关键词（用逗号分隔）" value={tempConfig.seo.keywords}
-              onChange={v => setTemp({ ...tempConfig, seo: { ...tempConfig.seo, keywords: v } })} multiline />
-          </SettingsForm>
-        )}
-
-        {settingsSection === 'hero' && tempConfig && (
-          <SettingsForm title="首屏内容" onSave={() => saveConfig('hero', tempConfig!.hero)}>
-            <Field label="主标题" value={tempConfig.hero.title}
-              onChange={v => setTemp({ ...tempConfig, hero: { ...tempConfig.hero, title: v } })} />
-            <Field label="副标题（英文）" value={tempConfig.hero.titleEn}
-              onChange={v => setTemp({ ...tempConfig, hero: { ...tempConfig.hero, titleEn: v } })} />
-            <Field label="副标题（中文）" value={tempConfig.hero.subtitle}
-              onChange={v => setTemp({ ...tempConfig, hero: { ...tempConfig.hero, subtitle: v } })} />
-            <Field label="副标题（英文）" value={tempConfig.hero.subtitleEn}
-              onChange={v => setTemp({ ...tempConfig, hero: { ...tempConfig.hero, subtitleEn: v } })} />
-            <TagEditor label="关键词标签" tags={tempConfig.hero.tags}
-              onChange={tags => setTemp({ ...tempConfig, hero: { ...tempConfig.hero, tags } })} />
-          </SettingsForm>
-        )}
-
-        {settingsSection === 'works' && tempConfig && (
-          <WorksEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('featuredWorks', tempConfig!.featuredWorks)} />
-        )}
-
-        {settingsSection === 'services' && tempConfig && (
-          <ServicesEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('services', tempConfig!.services)} />
-        )}
-
-        {settingsSection === 'brands' && tempConfig && (
-          <BrandsEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('brands', tempConfig!.brands)} />
-        )}
-
-        {settingsSection === 'navigation' && tempConfig && (
-          <NavigationEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('navigation', tempConfig!.navigation)} />
-        )}
-
-        {settingsSection === 'footer' && tempConfig && (
-          <FooterEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('footer', tempConfig!.footer)} />
-        )}
-
-        {settingsSection === 'theme' && tempConfig && (
-          <ThemeEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('theme', tempConfig!.theme)} />
-        )}
-
-        {settingsSection === 'pages' && tempConfig && (
-          <PageManager config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('pages', tempConfig!.pages)} />
-        )}
-
-        {settingsSection === 'announcement' && tempConfig && (
-          <AnnouncementEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('announcement', { enabled: tempConfig!.announcement!.enabled, text: tempConfig!.announcement!.text, type: tempConfig!.announcement!.type, dismissible: tempConfig!.announcement!.dismissible, link: tempConfig!.announcement!.link })} />
-        )}
-
-        {settingsSection === 'codeInjection' && tempConfig && (
-          <CodeInjectionEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('codeInjection', tempConfig!.codeInjection)} />
-        )}
-
-        {settingsSection === 'social' && tempConfig && (
-          <SocialLinksEditor config={tempConfig} onChange={setTempConfig} onSave={() => saveConfig('socialLinks', tempConfig!.socialLinks)} />
-        )}
-
-        {settingsSection === 'display' && tempConfig && (
-          <SettingsForm title="品牌显示" onSave={() => saveConfig('brandDisplay', tempConfig!.brandDisplay)}>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">默认亮度</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="1"
-                    step="0.05"
-                    value={tempConfig.brandDisplay?.opacity ?? 0.75}
-                    onChange={(e) => setTemp({
-                      ...tempConfig,
-                      brandDisplay: { ...tempConfig.brandDisplay, opacity: parseFloat(e.target.value) }
-                    })}
-                    className="flex-1 h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-accent-gold"
-                  />
-                  <span className="text-sm text-white w-12 text-right">{Math.round((tempConfig.brandDisplay?.opacity ?? 0.75) * 100)}%</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Hover 亮度</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="1"
-                    step="0.05"
-                    value={tempConfig.brandDisplay?.opacityHover ?? 1}
-                    onChange={(e) => setTemp({
-                      ...tempConfig,
-                      brandDisplay: { ...tempConfig.brandDisplay, opacityHover: parseFloat(e.target.value) }
-                    })}
-                    className="flex-1 h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-accent-gold"
-                  />
-                  <span className="text-sm text-white w-12 text-right">{Math.round((tempConfig.brandDisplay?.opacityHover ?? 1) * 100)}%</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between py-3 border-t border-white/5">
-                <div>
-                  <p className="text-sm text-white">默认灰度</p>
-                  <p className="text-xs text-gray-500">启用后品牌 logo 默认为黑白</p>
-                </div>
-                <button
-                  onClick={() => setTemp({
-                    ...tempConfig,
-                    brandDisplay: { ...tempConfig.brandDisplay, grayscale: !tempConfig.brandDisplay?.grayscale }
-                  })}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    tempConfig.brandDisplay?.grayscale ? 'bg-accent-gold' : 'bg-dark-600'
-                  }`}
-                >
-                  <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
-                    tempConfig.brandDisplay?.grayscale ? 'left-7' : 'left-1'
-                  }`} />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between py-3 border-t border-white/5">
-                <div>
-                  <p className="text-sm text-white">Hover 灰度</p>
-                  <p className="text-xs text-gray-500">启用后鼠标悬停时保持黑白</p>
-                </div>
-                <button
-                  onClick={() => setTemp({
-                    ...tempConfig,
-                    brandDisplay: { ...tempConfig.brandDisplay, grayscaleHover: !tempConfig.brandDisplay?.grayscaleHover }
-                  })}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    tempConfig.brandDisplay?.grayscaleHover ? 'bg-accent-gold' : 'bg-dark-600'
-                  }`}
-                >
-                  <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
-                    tempConfig.brandDisplay?.grayscaleHover ? 'left-7' : 'left-1'
-                  }`} />
-                </button>
-              </div>
-            </div>
-          </SettingsForm>
-        )}
-
-        {settingsSection === 'security' && (
-          <SecuritySettings />
-        )}
-      </div>
-    </div>
-  )
-
-  const setTemp = ( updater: any ) => {
-    if (typeof updater === 'function') {
-      setTempConfig(updater(tempConfig))
-    } else {
-      setTempConfig(updater)
-    }
-  }
-
-  // ==============================
-  // ANALYTICS
-  // ==============================
-  function renderAnalytics() {
-    if (!analytics) {
+  const renderField = (f: FieldDef) => {
+    if (f.type === 'toggle') {
+      const val = getConfigBoolValue(f.path)
       return (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-gold" />
+        <div key={f.path} className="flex items-center justify-between gap-4 py-1">
+          <span className="text-sm text-gray-300">{val ? f.toggleLabels?.[1] || '开启' : f.toggleLabels?.[0] || '关闭'}</span>
+          <ToggleSwitch checked={val} onChange={v => updateConfigBool(f.path, v)} labels={f.toggleLabels} />
         </div>
       )
     }
+    const val = getConfigValue(f.path)
+    if (f.type === 'textarea') {
+      return <textarea key={f.path} value={val} onChange={e => updateConfigValue(f.path, e.target.value)}
+        placeholder={f.placeholder || ''}
+        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none min-h-[80px] resize-y" />
+    }
+    if (f.type === 'color') {
+      return <div key={f.path} className="flex gap-2">
+        <input type="color" value={val || f.placeholder || '#000000'} onChange={e => updateConfigValue(f.path, e.target.value)}
+          className="w-10 h-10 rounded cursor-pointer bg-transparent border border-white/10" />
+        <input type="text" value={val} onChange={e => updateConfigValue(f.path, e.target.value)} placeholder={f.placeholder || ''}
+          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none font-mono" />
+      </div>
+    }
+    return <input key={f.path} type={f.type || 'text'} value={val} onChange={e => updateConfigValue(f.path, e.target.value)}
+      placeholder={f.placeholder || ''}
+      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+  }
 
-    return (
-      <div className="space-y-8">
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { label: '总浏览量 (PV)', value: analytics.totalPv.toLocaleString(), icon: Eye },
-            { label: '访问用户 (UV)', value: analytics.totalUv.toLocaleString(), icon: Users },
-            { label: `日均访问 (${analytics.days}天)`, value: analytics.avgDailyPv.toFixed(0), icon: BarChart2 },
-          ].map(({ label, value, icon: Icon }, i) => (
-            <motion.div key={label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-              className="bg-dark-800 rounded-lg p-5 border border-white/5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-gray-400 text-sm">{label}</span>
-                <Icon className="w-5 h-5 text-accent-gold" />
-              </div>
-              <p className="text-3xl font-light text-white">{value}</p>
-            </motion.div>
-          ))}
+  /* ── Tabs definition ── */
+  const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
+    { id: 'dashboard', label: '概览', icon: LayoutDashboard },
+    { id: 'works', label: '作品管理', icon: Film },
+    { id: 'users', label: '用户管理', icon: Users },
+    { id: 'settings', label: '网站配置', icon: Settings },
+    { id: 'analytics', label: '数据分析', icon: BarChart3 },
+    { id: 'contact', label: '留言管理', icon: MessageSquare },
+    { id: 'canvas', label: '像素画布', icon: Palette },
+    { id: 'media', label: '媒体管理', icon: Image },
+  ]
+
+  /* ── Loading / Unauthenticated ── */
+  if (loading) return <div className="min-h-screen bg-dark-900 flex items-center justify-center"><span className="text-accent-gold text-xl">加载中...</span></div>
+  if (!authed) return null
+
+  /* ═══════════════════ RENDER ═══════════════════ */
+  return (
+    <div className="flex h-screen bg-dark-900 overflow-hidden font-sans">
+
+      {/* ── Toast ── */}
+      <Toast show={toast.show} message={toast.message} type={toast.type} />
+
+      {/* ── Sidebar ── */}
+      <aside className="hidden lg:flex w-56 flex-shrink-0 flex-col bg-black/40 border-r border-white/5">
+        <div className="p-6 border-b border-white/5">
+          <h1 className="text-lg font-semibold text-white tracking-tight">栖光文化</h1>
+          <p className="text-xs text-gray-500 mt-0.5">管理后台</p>
         </div>
-
-        {/* Time Range Selector */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-sm text-gray-400">统计周期：</span>
-          {[7, 14, 30, 90].map(d => (
-            <button
-              key={d}
-              onClick={() => {
-                setAnalyticsDays(d)
-                fetchAnalyticsData(d)
-              }}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                analyticsDays === d
-                  ? 'bg-accent-gold text-dark-900'
-                  : 'bg-dark-700 text-gray-400 hover:text-white'
-              }`}
-            >
-              {d}天
+        <nav className="flex-1 p-3 space-y-0.5">
+          {tabs.map(({ id, label, icon: Icon }) => (
+            <button key={id} onClick={() => setActiveTab(id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
+                activeTab === id
+                  ? 'bg-accent-gold/90 text-dark-900 font-medium shadow-md shadow-accent-gold/10'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}>
+              <Icon className="w-4 h-4" /><span>{label}</span>
             </button>
           ))}
+        </nav>
+        <div className="p-3 border-t border-white/5">
+          <button onClick={logout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-400/5 transition-colors">
+            <LogOut className="w-4 h-4" />退出登录
+          </button>
         </div>
+      </aside>
 
-        {/* Daily Trend Chart */}
-        <div className="bg-dark-800 rounded-lg p-6 border border-white/5">
-          <h3 className="text-lg font-medium text-white mb-4">每日访问趋势</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-2 text-gray-400 font-normal">日期</th>
-                  <th className="text-right py-2 text-gray-400 font-normal">PV</th>
-                  <th className="text-right py-2 text-gray-400 font-normal">UV</th>
-                  <th className="hidden sm:table-cell text-right py-2 text-gray-400 font-normal">趋势</th>
-                </tr>
-              </thead>
-              <tbody>
-                {analytics.dateList.map((day) => {
-                  const barWidth = analytics.totalPv > 0 ? (day.pv / analytics.totalPv) * 100 : 0
-                  return (
-                    <tr key={day.date} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                      <td className="py-3 text-white/80">{day.date}</td>
-                      <td className="py-3 text-right text-white">{day.pv.toLocaleString()}</td>
-                      <td className="py-3 text-right text-white/80">{day.uv.toLocaleString()}</td>
-                      <td className="hidden sm:table-cell py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="w-32 h-2 bg-dark-700 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-accent-gold rounded-full transition-all"
-                              style={{ width: `${Math.min(barWidth, 100)}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-gray-500 w-10 text-right">{barWidth.toFixed(1)}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+      {/* ── Main Content ── */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Top bar */}
+        <header className="h-14 flex items-center justify-between px-4 lg:px-6 border-b border-white/5 bg-black/20 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 text-gray-400 hover:text-white"><Menu className="w-5 h-5" /></button>
+            <h2 className="text-base font-medium text-white">{tabs.find(t => t.id === activeTab)?.label}</h2>
           </div>
-        </div>
+          <div className="flex items-center gap-2 text-xs">
+            {saveStatus === 'saving' && <span className="text-accent-gold animate-pulse">保存中...</span>}
+            {saveStatus === 'saved' && <span className="text-green-400 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>已保存</span>}
+          </div>
+        </header>
 
-        {/* Page Statistics */}
-        {analytics.pageStats && analytics.pageStats.length > 0 && (
-          <div className="bg-dark-800 rounded-lg p-6 border border-white/5">
-            <h3 className="text-lg font-medium text-white mb-4">页面访问排行</h3>
-            <div className="space-y-2">
-              {analytics.pageStats
-                .sort((a, b) => b.pv - a.pv)
-                .slice(0, 15)
-                .map((page, i) => {
-                  const maxPv = analytics.pageStats[0]?.pv || 1
-                  return (
-                    <div key={page.path} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500 w-6 text-right">{i + 1}</span>
-                      <span className="text-xs text-gray-400 w-8 text-right">{page.pv}</span>
-                      <div className="flex-1 h-5 bg-dark-700 rounded overflow-hidden relative">
-                        <div
-                          className="h-full bg-gradient-to-r from-accent-gold/40 to-accent-gold rounded transition-all"
-                          style={{ width: `${(page.pv / maxPv) * 100}%` }}
-                        />
-                        <span className="absolute left-2 top-0.5 text-xs text-white/60 truncate max-w-full">
-                          {page.path || '/'}
+        {/* ── Content ── */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 scroll-smooth">
+
+          {/* ===== DASHBOARD ===== */}
+          {activeTab === 'dashboard' && stats && (
+            <div className="space-y-6">
+              {/* Stat cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: '总作品数', value: stats.totalWorks, color: 'text-blue-400', bg: 'bg-blue-400/8', border: 'border-blue-400/15' },
+                  { label: '待审核', value: stats.pendingWorks, color: 'text-yellow-400', bg: 'bg-yellow-400/8', border: 'border-yellow-400/15' },
+                  { label: '已通过', value: stats.approvedWorks, color: 'text-green-400', bg: 'bg-green-400/8', border: 'border-green-400/15' },
+                  { label: '总用户数', value: stats.totalUsers, color: 'text-purple-400', bg: 'bg-purple-400/8', border: 'border-purple-400/15' },
+                ].map(s => (
+                  <div key={s.label} className={`p-4 rounded-xl ${s.bg} ${s.border} border`}>
+                    <p className="text-[11px] text-gray-500 uppercase tracking-wider">{s.label}</p>
+                    <p className={`text-3xl font-bold mt-1 ${s.color}`}>{s.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recent works */}
+              <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+                <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2"><Film className="w-4 h-4 text-accent-gold/60"/>最近提交的作品</h3>
+                {stats.recentWorks?.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {stats.recentWorks.map((w: Work) => (
+                      <div key={w.id} className="flex items-center justify-between py-2.5 px-3 bg-white/[0.02] rounded-lg hover:bg-white/[0.04] transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-white truncate">{w.title}</p>
+                          <p className="text-[11px] text-gray-500">{w.creatorName} · {w.category}</p>
+                        </div>
+                        <span className={`ml-3 text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                          w.status === 'PENDING' ? 'bg-yellow-400/10 text-yellow-400' :
+                          w.status === 'APPROVED' ? 'bg-green-400/10 text-green-400' :
+                          'bg-red-400/10 text-red-400'
+                        }`}>
+                          {w.status === 'PENDING' ? '待审核' : w.status === 'APPROVED' ? '已通过' : '已拒绝'}
                         </span>
                       </div>
-                    </div>
-                  )
-                })}
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-dark-900">
-      {/* Mobile Header */}
-      <div className="lg:hidden flex items-center justify-between p-4 border-b border-white/5">
-        <span className="text-accent-gold font-display text-xl">栖光管理后台</span>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
-        </button>
-      </div>
-
-      {/* Mobile Overlay */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-30 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-      )}
-
-      <div className="flex relative">
-        {/* Sidebar */}
-        <aside className={`${mobileMenuOpen ? 'block' : 'hidden'} lg:block w-64 bg-dark-800 min-h-screen border-r border-white/5 fixed lg:static z-40 top-0 lg:top-auto bottom-0 lg:bottom-auto overflow-y-auto`}>
-          <div className="p-6">
-            <h1 className="text-accent-gold font-display text-xl hidden lg:block">栖光管理后台</h1>
-          </div>
-          <nav className="px-4 pb-4">
-            {[
-              { id: 'dashboard' as Tab, label: '概览', icon: LayoutDashboard },
-              { id: 'works' as Tab, label: '作品审核', icon: Film },
-              { id: 'users' as Tab, label: '用户管理', icon: Users },
-              { id: 'analytics' as Tab, label: '统计', icon: BarChart2 },
-              { id: 'canvas' as Tab, label: '像素画布', icon: Palette },
-              { id: 'media' as Tab, label: '媒体管理', icon: Upload },
-              { id: 'contact' as Tab, label: '客户联系人', icon: MessageSquare },
-              { id: 'settings' as Tab, label: '网站配置', icon: Globe },
-            ].map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => { setActiveTab(id); setMobileMenuOpen(false) }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mt-1 ${
-                  activeTab === id ? 'bg-accent-gold text-dark-900' : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
-          <div className="px-4 mt-auto">
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-400 transition-colors">
-              <LogOut className="w-5 h-5" />
-              <span>退出登录</span>
-            </button>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-8 min-w-0 overflow-x-hidden">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl font-light text-white mb-8">
-              {activeTab === 'dashboard' && '概览'}
-              {activeTab === 'works' && '作品管理'}
-              {activeTab === 'users' && '用户管理'}
-              {activeTab === 'analytics' && '访问统计'}
-              {activeTab === 'canvas' && '像素画布管理'}
-              {activeTab === 'media' && '媒体管理'}
-              {activeTab === 'settings' && '网站配置'}
-            </h2>
-
-            {activeTab === 'dashboard' && renderDashboard()}
-            {activeTab === 'works' && renderWorks()}
-            {activeTab === 'users' && renderUsers()}
-            {activeTab === 'settings' && renderSettings()}
-            {activeTab === 'analytics' && renderAnalytics()}
-            {activeTab === 'canvas' && renderCanvasDashboard()}
-            {activeTab === 'media' && renderMedia()}
-            {activeTab === 'contact' && renderContacts()}
-          </div>
-        </main>
-      </div>
-
-      {/* User Edit Modal */}
-      {showUserEdit && editUser && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="bg-dark-800 rounded-lg max-w-lg w-full p-6"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-medium text-white">编辑用户</h3>
-              <button onClick={() => setShowUserEdit(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-400 text-xs mb-1.5">用户名</label>
-                <input value={userEditForm.name} onChange={e => setUserEditForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full px-3 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-xs mb-1.5">手机号</label>
-                <input value={userEditForm.phone} onChange={e => setUserEditForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full px-3 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-xs mb-1.5">邮箱</label>
-                <input value={userEditForm.email} onChange={e => setUserEditForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full px-3 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-400 text-xs mb-1.5">公司</label>
-                  <input value={userEditForm.company} onChange={e => setUserEditForm(f => ({ ...f, company: e.target.value }))}
-                    className="w-full px-3 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-xs mb-1.5">积分</label>
-                  <input type="number" min={0} value={userEditForm.points} onChange={e => setUserEditForm(f => ({ ...f, points: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-gray-400 text-xs mb-1.5">简介</label>
-                <textarea value={userEditForm.bio} onChange={e => setUserEditForm(f => ({ ...f, bio: e.target.value }))}
-                  className="w-full px-3 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold resize-none h-20" />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={saveUserEdit} disabled={userEditSaving}
-                className="flex-1 py-2.5 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 transition-colors disabled:opacity-50">
-                {userEditSaving ? '保存中...' : '保存修改'}
-              </button>
-              <button onClick={() => setShowUserEdit(false)}
-                className="px-6 py-2.5 bg-dark-700 text-gray-400 rounded-lg text-sm hover:bg-dark-600 transition-colors">取消</button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Review Modal */}
-      {selectedWork && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="bg-dark-800 rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-xl font-medium text-white mb-4">审核作品</h3>
-            <div className="mb-4">
-              <p className="text-gray-400 text-sm mb-1">作品名称</p>
-              <p className="text-white">{selectedWork?.title}</p>
-            </div>
-            <div className="mb-4">
-              <p className="text-gray-400 text-sm mb-1">创作者</p>
-              <p className="text-white">{selectedWork?.creatorName}</p>
-            </div>
-            <div className="mb-6">
-              <p className="text-gray-400 text-sm mb-2">审核意见（可选）</p>
-              <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)}
-                placeholder="输入审核意见..."
-                className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent-gold resize-none h-24" />
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => handleReview(selectedWork!.id, 'APPROVED')}
-                className="flex-1 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">通过</button>
-              <button onClick={() => handleReview(selectedWork!.id, 'REJECTED')}
-                className="flex-1 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">拒绝</button>
-              <button onClick={() => { setSelectedWork(null); setReviewComment('') }}
-                className="px-6 py-3 bg-dark-700 text-gray-400 rounded-lg hover:bg-dark-600 transition-colors">取消</button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </div>
-  )
-
-  // ==============================
-  // CONTACT SUBMISSIONS
-  // ==============================
-  function renderContacts() {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-white">客户咨询记录</h3>
-          <span className="text-sm text-gray-400">共 {contacts.length} 条</span>
-        </div>
-        {contacts.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 bg-dark-800 rounded-lg border border-white/5">暂无咨询记录</div>
-        ) : (
-          <div className="space-y-3">
-            {contacts.map((c: any) => (
-              <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                className="bg-dark-800 rounded-lg border border-white/5 p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-white font-medium">{c.name}</p>
-                    <p className="text-sm text-gray-400">
-                      {c.phone && <span className="mr-4">📱 {c.phone}</span>}
-                      {c.email && <span className="mr-4">✉️ {c.email}</span>}
-                      {c.company && <span>🏢 {c.company}</span>}
-                    </p>
+                    ))}
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    c.status === 'NEW' ? 'bg-yellow-400/20 text-yellow-400' :
-                    c.status === 'READ' ? 'bg-blue-400/20 text-blue-400' :
-                    'bg-green-400/20 text-green-400'
-                  }`}>
-                    {c.status === 'NEW' ? '新' : c.status === 'READ' ? '已读' : '已回复'}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 bg-dark-900 rounded p-3 mb-3">{c.message}</p>
-                <p className="text-xs text-gray-600">{new Date(c.createdAt).toLocaleString('zh-CN')}</p>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // ==============================
-  // CANVAS MANAGEMENT
-  // ==============================
-  function renderCanvasDashboard() {
-    return (
-      <div className="space-y-8">
-        {/* 当前画布状态 */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: '画布尺寸', value: canvasStats ? canvasStats.width + '×' + canvasStats.height : '--', icon: Palette, color: 'text-accent-gold' },
-            { label: '已填充', value: canvasStats ? canvasStats.fillRate + '%' : '--', icon: CheckCircle, color: 'text-green-400' },
-            { label: '像素总数', value: canvasStats ? canvasStats.placedPixels + '/' + canvasStats.totalPixels : '--', icon: LayoutDashboard, color: 'text-blue-400' },
-            { label: '历史画布', value: canvasStats?.archiveCount || 0, icon: Clock, color: 'text-purple-400' },
-          ].map(({ label, value, icon: Icon, color }, i) => (
-            <motion.div key={label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-              className="bg-dark-800 rounded-lg p-5 border border-white/5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">{label}</p>
-                  <p className={'text-2xl font-light mt-1 ' + color}>{value}</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center"><Icon className={'w-5 h-5 ' + color} /></div>
+                ) : <p className="text-sm text-gray-500 py-8 text-center">暂无作品</p>}
               </div>
-            </motion.div>
-          ))}
-        </div>
 
-        {/* 手动结算 */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="bg-dark-800 rounded-lg border border-white/5 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-medium text-white">画布结算</h3>
-              <p className="text-sm text-gray-400 mt-1">手动触发每日结算，将超过24小时的画布归档并创建新画布</p>
-            </div>
-            <button onClick={handleManualSettle} disabled={settling}
-              className={'px-6 py-3 rounded-lg text-sm transition-colors ' + (settling ? 'bg-gray-700 text-gray-400' : 'bg-accent-gold text-dark-900 hover:bg-accent-gold/90')}>
-              {settling ? '结算中...' : '手动结算'}
-            </button>
-          </div>
-          {settleResult && (
-            <div className={'text-sm px-4 py-2 rounded ' + (settleResult.includes('失败') ? 'bg-red-900/30 text-red-400' : 'bg-green-900/30 text-green-400')}>
-              {settleResult}
+              {/* Quick actions */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: '审核作品', desc: `${stats.pendingWorks} 条待处理`, icon: Eye, action: () => setActiveTab('works'), color: 'text-yellow-400' },
+                  { label: '查看留言', desc: `${contacts.length} 条消息`, icon: MessageSquare, action: () => setActiveTab('contact'), color: 'text-blue-400' },
+                  { label: '网站配置', desc: '修改信息', icon: Settings, action: () => setActiveTab('settings'), color: 'text-accent-gold' },
+                  { label: '数据分析', desc: '访问统计', icon: BarChart3, action: () => setActiveTab('analytics'), color: 'text-green-400' },
+                ].map(q => (
+                  <button key={q.label} onClick={q.action}
+                    className="p-4 rounded-xl bg-black/30 border border-white/5 text-left hover:border-white/15 hover:bg-white/[0.03] transition-all group">
+                    <q.icon className={`w-5 h-5 ${q.color} mb-2 group-hover:scale-110 transition-transform`} />
+                    <p className="text-sm font-medium text-white">{q.label}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">{q.desc}</p>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
-        </motion.div>
 
-        {/* 领先者 */}
-        {canvasStats && canvasStats.leader && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="bg-dark-800 rounded-lg border border-white/5 p-5">
-            <h3 className="text-lg font-medium text-white mb-3">当前领先</h3>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-accent-gold/20 flex items-center justify-center">
-                <Star className="w-5 h-5 text-accent-gold" />
+          {/* ===== WORKS ===== */}
+          {activeTab === 'works' && (
+            <div className="space-y-4">
+              {/* Filters */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex bg-black/30 rounded-lg p-0.5 border border-white/5">
+                  {(Object.keys({ ALL: 0, PENDING: 0, APPROVED: 0, REJECTED: 0 }) as StatusFilter[]).map(f => (
+                    <button key={f} onClick={() => setWorkFilter(f)}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                        workFilter === f ? 'bg-accent-gold text-dark-900 shadow-sm' : 'text-gray-400 hover:text-white'
+                      }`}>
+                      {f === 'ALL' ? '全部' : f === 'PENDING' ? '待审核' : f === 'APPROVED' ? '已通过' : '已拒绝'}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative flex-1 max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <input type="text" value={workSearch} onChange={e => setWorkSearch(e.target.value)} placeholder="搜索作品..."
+                    className="w-full pl-9 pr-3 py-1.5 bg-black/30 border border-white/5 rounded-lg text-sm text-white placeholder-gray-500 focus:border-accent-gold focus:outline-none" />
+                </div>
+                <span className="text-xs text-gray-500">共 {filteredWorks.length} 条</span>
               </div>
-              <div>
-                <p className="text-white font-medium">用户 {canvasStats.leader.userId.slice(-6)}</p>
-                <p className="text-sm text-accent-gold/70">{canvasStats.leader.count} 像素</p>
+
+              {/* Table */}
+              <div className="bg-black/30 rounded-xl border border-white/5 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b border-white/5">
+                    <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium">作品</th>
+                    <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium hidden md:table-cell">作者</th>
+                    <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium">状态</th>
+                    <th className="px-4 py-3 text-right text-[11px] text-gray-500 uppercase tracking-wider font-medium">操作</th>
+                  </tr></thead>
+                  <tbody>
+                    {filteredWorks.map((w: Work) => (
+                      <tr key={w.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                        <td className="px-4 py-3">
+                          <p className="text-sm text-white font-medium">{w.title}</p>
+                          <p className="text-[11px] text-gray-500">{w.category}</p>
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 text-sm hidden md:table-cell">
+                          {w.creatorName}<br/><span className="text-[11px] text-gray-600">{w.creatorPhone}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                            w.status === 'PENDING' ? 'bg-yellow-400/10 text-yellow-400' :
+                            w.status === 'APPROVED' ? 'bg-green-400/10 text-green-400' :
+                            'bg-red-400/10 text-red-400'
+                          }`}>
+                            {w.status === 'PENDING' ? '待审核' : w.status === 'APPROVED' ? '已通过' : '已拒绝'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {w.status === 'PENDING' && (
+                              <>
+                                <button onClick={() => reviewWork(w.id, 'APPROVED')} title="通过"
+                                  className="p-1.5 rounded-lg bg-green-400/8 text-green-400 hover:bg-green-400/15 transition-colors"><CheckCircle className="w-4 h-4"/></button>
+                                <button onClick={() => reviewWork(w.id, 'REJECTED')} title="拒绝"
+                                  className="p-1.5 rounded-lg bg-red-400/8 text-red-400 hover:bg-red-400/15 transition-colors"><X className="w-4 h-4"/></button>
+                              </>
+                            )}
+                            <button onClick={() => deleteWork(w.id)} title="删除"
+                              className="p-1.5 rounded-lg bg-red-400/8 text-red-400 hover:bg-red-400/15 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!filteredWorks.length && (
+                  <div className="py-16 text-center"><Film className="w-12 h-12 mx-auto mb-3 opacity-20"/><p className="text-sm text-gray-500">暂无数据</p></div>
+                )}
               </div>
             </div>
-          </motion.div>
-        )}
+          )}
 
-        {/* 历史画布列表 */}
-        {canvasStats?.archives && canvasStats.archives.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-            className="bg-dark-800 rounded-lg border border-white/5">
-            <div className="p-5 border-b border-white/5">
-              <h3 className="text-lg font-medium text-white">历史画布</h3>
+          {/* ===== USERS ===== */}
+          {activeTab === 'users' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1 max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <input type="text" value={userSearch} onChange={e => setUserSearch(e.target.value)} placeholder="搜索用户..."
+                    className="w-full pl-9 pr-3 py-1.5 bg-black/30 border border-white/5 rounded-lg text-sm text-white placeholder-gray-500 focus:border-accent-gold focus:outline-none" />
+                </div>
+                <span className="text-xs text-gray-500">共 {filteredUsers.length} 人</span>
+              </div>
+
+              <div className="bg-black/30 rounded-xl border border-white/5 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b border-white/5">
+                    <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium">用户</th>
+                    <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium hidden md:table-cell">联系方式</th>
+                    <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium hidden lg:table-cell">公司</th>
+                    <th className="px-4 py-3 text-center text-[11px] text-gray-500 uppercase tracking-wider font-medium">作品</th>
+                    <th className="px-4 py-3 text-right text-[11px] text-gray-500 uppercase tracking-wider font-medium">操作</th>
+                  </tr></thead>
+                  <tbody>
+                    {filteredUsers.map((u: User) => (
+                      <tr key={u.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                        <td className="px-4 py-3">
+                          <p className="text-sm text-white font-medium">{u.name}</p>
+                          <p className="text-[11px] text-gray-500">{u.createdAt?.substring(0, 10)}</p>
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 text-sm hidden md:table-cell">
+                          {u.phone}<br/><span className="text-[11px] text-gray-600">{u.email || '-'}</span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 text-sm hidden lg:table-cell">{u.company || '-'}</td>
+                        <td className="px-4 py-3 text-center text-gray-300 text-sm">{u._count?.works || 0}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button onClick={() => openUserEdit(u)} title="编辑"
+                            className="p-1.5 rounded-lg bg-blue-400/8 text-blue-400 hover:bg-blue-400/15 transition-colors"><Edit3 className="w-4 h-4"/></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!filteredUsers.length && (
+                  <div className="py-16 text-center"><Users className="w-12 h-12 mx-auto mb-3 opacity-20"/><p className="text-sm text-gray-500">暂无用户</p></div>
+                )}
+              </div>
             </div>
-            <div className="divide-y divide-white/5">
-              {canvasStats.archives.map((c: any) => (
-                <div key={c.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded bg-dark-700 flex items-center justify-center">
-                      <Palette className="w-4 h-4 text-gray-400" />
+          )}
+
+          {/* ===== SETTINGS ===== */}
+          {activeTab === 'settings' && config && editConfig && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              {/* Section tabs */}
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(SETTINGS_FIELDS).map(([key, { label, icon: Icon }]) => (
+                  <button key={key} onClick={() => setSettingsSection(key)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      settingsSection === key
+                        ? 'bg-accent-gold text-dark-900 shadow-sm'
+                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/8'
+                    }`}>
+                    <Icon className="w-3.5 h-3.5" />{label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Active section form */}
+              {(() => {
+                const sectionDef = SETTINGS_FIELDS[settingsSection]
+                if (!sectionDef) return null
+                const Icon = sectionDef.icon
+                const sectionData = settingsSection.includes('.')
+                  ? settingsSection.split('.').reduce((o: any, k) => o?.[k], editConfig)
+                  : editConfig[settingsSection]
+
+                /* ── Special: Brands ── */
+                if (sectionDef.special === 'brands') {
+                  const brands: BrandItem[] = editConfig.brands || []
+                  const addBrand = () => {
+                    setEditConfig(prev => prev ? { ...prev, brands: [...(prev.brands || []), { name: '', logo: '', slug: '' }] } : prev)
+                  }
+                  const removeBrand = (idx: number) => {
+                    setEditConfig(prev => prev ? { ...prev, brands: (prev.brands || []).filter((_: any, i: number) => i !== idx) } : prev)
+                  }
+                  const updateBrand = (idx: number, field: keyof BrandItem, value: string) => {
+                    setEditConfig(prev => {
+                      if (!prev) return prev
+                      const b = [...(prev.brands || [])]
+                      b[idx] = { ...b[idx], [field]: value }
+                      return { ...prev, brands: b }
+                    })
+                  }
+                  return (
+                    <div className="bg-black/30 rounded-xl border border-white/5 p-5 animate-in fade-in duration-200">
+                      <h3 className="text-base font-medium text-white mb-5 flex items-center gap-2">
+                        <Award className="w-5 h-5 text-accent-gold" />合作品牌
+                      </h3>
+                      <div className="space-y-3">
+                        {brands.map((b: BrandItem, idx: number) => (
+                          <div key={idx} className="flex items-start gap-3 p-3 bg-white/[0.02] rounded-lg border border-white/5">
+                            <div className="flex-1 space-y-2">
+                              <input type="text" value={b.name} onChange={e => updateBrand(idx, 'name', e.target.value)} placeholder="品牌名称"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+                              <input type="text" value={b.logo} onChange={e => updateBrand(idx, 'logo', e.target.value)} placeholder="Logo URL（图片链接）"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+                              {b.logo && <img src={b.logo} alt={b.name} className="h-8 object-contain opacity-75 mt-1" onError={e => (e.target as HTMLImageElement).style.display='none'} />}
+                              <input type="text" value={(b as any).slug || ''} onChange={e => updateBrand(idx, 'slug', e.target.value)} placeholder="文件名别名（如 mercedes）"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+                            </div>
+                            <button onClick={() => removeBrand(idx)} title="删除"
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/8 transition-colors mt-1">
+                              <Trash2 className="w-4 h-4"/>
+                            </button>
+                          </div>
+                        ))}
+                        <button onClick={addBrand}
+                          className="w-full py-2.5 border border-dashed border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-accent-gold/30 transition-colors flex items-center justify-center gap-2">
+                          <Plus className="w-4 h-4"/>添加品牌
+                        </button>
+                      </div>
+                      <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
+                        <span className="text-[11px] text-gray-600">共 {brands.length} 个合作品牌</span>
+                        <button onClick={() => saveSection('brands', editConfig.brands || [])}
+                          disabled={saveStatus === 'saving'}
+                          className="px-5 py-2 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 disabled:opacity-50 transition-colors">
+                          {saveStatus === 'saving' ? '保存中...' : '保存修改'}
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white font-medium">{c.name || '画布 #' + c.id.slice(-6)}</p>
-                      <p className="text-sm text-gray-400">{c.width}×{c.height} · {c.pixelCount}/{c.totalPixels} 像素 · {c.fillRate}%</p>
+                  )
+                }
+
+                /* ── Special: Navigation ── */
+                if (sectionDef.special === 'navigation') {
+                  const navItems: NavItem[] = editConfig.navigation?.items || []
+                  const updateNavItem = (idx: number, field: keyof NavItem, value: any) => {
+                    setEditConfig(prev => {
+                      if (!prev) return prev
+                      const items = [...(prev.navigation?.items || [])]
+                      items[idx] = { ...items[idx], [field]: value }
+                      return { ...prev, navigation: { ...prev.navigation, items } }
+                    })
+                  }
+                  const addNavItem = () => {
+                    setEditConfig(prev => {
+                      if (!prev) return prev
+                      const items = [...(prev.navigation?.items || [])]
+                      items.push({ id: `nav-${Date.now()}`, label: '新菜单', href: '/', visible: true, order: items.length })
+                      return { ...prev, navigation: { ...prev.navigation, items } }
+                    })
+                  }
+                  const removeNavItem = (idx: number) => {
+                    setEditConfig(prev => {
+                      if (!prev) return prev
+                      const items = (prev.navigation?.items || []).filter((_: any, i: number) => i !== idx)
+                      return { ...prev, navigation: { ...prev.navigation, items } }
+                    })
+                  }
+                  const moveNavItem = (idx: number, dir: -1 | 1) => {
+                    setEditConfig(prev => {
+                      if (!prev) return prev
+                      const items = [...(prev.navigation?.items || [])]
+                      const target = idx + dir
+                      if (target < 0 || target >= items.length) return prev
+                      ;[items[idx], items[target]] = [items[target], items[idx]]
+                      // Update order values
+                      items.forEach((item: NavItem, i: number) => { item.order = i })
+                      return { ...prev, navigation: { ...prev.navigation, items } }
+                    })
+                  }
+                  return (
+                    <div className="bg-black/30 rounded-xl border border-white/5 p-5 animate-in fade-in duration-200">
+                      <h3 className="text-base font-medium text-white mb-5 flex items-center gap-2">
+                        <Menu className="w-5 h-5 text-accent-gold" />导航菜单
+                      </h3>
+                      {/* Logo field */}
+                      <div className="mb-5">
+                        <label className="block text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider">Logo 文字</label>
+                        <input type="text" value={getConfigValue('navigation.logo')} onChange={e => updateConfigValue('navigation.logo', e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+                      </div>
+
+                      {/* Nav items */}
+                      <div className="space-y-2">
+                        <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-2">菜单项</p>
+                        {navItems.map((item: NavItem, idx: number) => (
+                          <div key={item.id} className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            item.visible ? 'bg-white/[0.02] border-white/5' : 'bg-white/[0.01] border-white/5 opacity-50'
+                          }`}>
+                            {/* Order controls */}
+                            <div className="flex flex-col gap-0.5">
+                              <button onClick={() => moveNavItem(idx, -1)} className="p-0.5 text-gray-500 hover:text-white disabled:opacity-20" disabled={idx === 0}>
+                                <ChevronUp className="w-3.5 h-3.5"/>
+                              </button>
+                              <button onClick={() => moveNavItem(idx, 1)} className="p-0.5 text-gray-500 hover:text-white disabled:opacity-20" disabled={idx === navItems.length - 1}>
+                                <ChevronDown className="w-3.5 h-3.5"/>
+                              </button>
+                            </div>
+                            {/* Visible toggle */}
+                            <ToggleSwitch checked={item.visible} onChange={v => updateNavItem(idx, 'visible', v)} />
+                            {/* Fields */}
+                            <div className="flex-1 flex gap-2">
+                              <input type="text" value={item.label} onChange={e => updateNavItem(idx, 'label', e.target.value)} placeholder="菜单名称"
+                                className="w-32 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+                              <input type="text" value={item.href} onChange={e => updateNavItem(idx, 'href', e.target.value)} placeholder="链接路径"
+                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none font-mono text-xs" />
+                            </div>
+                            {/* Remove */}
+                            <button onClick={() => removeNavItem(idx)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
+                              <X className="w-4 h-4"/>
+                            </button>
+                          </div>
+                        ))}
+                        <button onClick={addNavItem}
+                          className="w-full py-2 border border-dashed border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-accent-gold/30 transition-colors flex items-center justify-center gap-2">
+                          <Plus className="w-4 h-4"/>添加菜单项
+                        </button>
+                      </div>
+
+                      <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
+                        <span className="text-[11px] text-gray-600">共 {navItems.length} 个菜单项</span>
+                        <button onClick={() => saveSection('navigation', editConfig.navigation)}
+                          disabled={saveStatus === 'saving'}
+                          className="px-5 py-2 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 disabled:opacity-50 transition-colors">
+                          {saveStatus === 'saving' ? '保存中...' : '保存修改'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                }
+
+                /* ── Default section form ── */
+                return (
+                  <div className="bg-black/30 rounded-xl border border-white/5 p-5 animate-in fade-in duration-200">
+                    <h3 className="text-base font-medium text-white mb-5 flex items-center gap-2">
+                      <Icon className="w-5 h-5 text-accent-gold" />{sectionDef.label}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {sectionDef.fields.map(f => (
+                        <div key={f.path} className={f.type === 'textarea' ? 'md:col-span-2' : ''}>
+                          <label className="block text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider">{f.label}</label>
+                          {renderField(f)}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
+                      <span className="text-[11px] text-gray-600">修改 {sectionDef.label} 配置</span>
+                      <button onClick={() => saveSection(settingsSection, sectionData ?? editConfig[settingsSection])}
+                        disabled={saveStatus === 'saving'}
+                        className="px-5 py-2 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 disabled:opacity-50 transition-colors">
+                        {saveStatus === 'saving' ? '保存中...' : '保存修改'}
+                      </button>
                     </div>
                   </div>
-                  <span className="text-xs text-gray-500">
-                    {c.endTime ? new Date(c.endTime).toLocaleDateString('zh-CN') : '-'}
-                  </span>
+                )
+              })()}
+            </div>
+          )}
+
+          {/* ===== ANALYTICS ===== */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              {analyticsData ? (
+                <>
+                  {/* Summary cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      { label: '总浏览量(PV)', value: analyticsData.totalPv ?? 0, color: 'text-blue-400', bg: 'bg-blue-400/8', border: 'border-blue-400/15' },
+                      { label: '独立访客(UV)', value: analyticsData.totalUv ?? 0, color: 'text-green-400', bg: 'bg-green-400/8', border: 'border-green-400/15' },
+                      { label: '日均 PV', value: analyticsData.avgDailyPv ?? 0, color: 'text-purple-400', bg: 'bg-purple-400/8', border: 'border-purple-400/15' },
+                      { label: '统计天数', value: analyticsData.days ?? 30, color: 'text-accent-gold', bg: 'bg-accent-gold/8', border: 'border-accent-gold/15' },
+                    ].map(s => (
+                      <div key={s.label} className={`p-4 rounded-xl ${s.bg} ${s.border} border`}>
+                        <p className="text-[11px] text-gray-500 uppercase tracking-wider">{s.label}</p>
+                        <p className={`text-2xl font-bold mt-1 ${s.color}`}>{typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Extended metrics */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {(() => {
+                      const dl = analyticsData.dateList || []
+                      const ps = analyticsData.pageStats || []
+                      const peakDay = dl.reduce((max: any, d: any) => d.pv > (max?.pv || 0) ? d : max, null)
+                      const avgUv = dl.length > 0 ? Math.round(dl.reduce((s: number, d: any) => s + d.uv, 0) / dl.length) : 0
+                      const uvRatio = analyticsData.totalPv > 0 ? (analyticsData.totalUv / analyticsData.totalPv * 100).toFixed(1) : '0'
+                      const bounceEst = analyticsData.totalPv > 0 ? Math.max(0, (1 - analyticsData.totalUv / analyticsData.totalPv) * 100).toFixed(0) : '0'
+                      return [
+                        { label: '峰值日 PV', value: peakDay ? `${peakDay.pv.toLocaleString()}` : '-', sub: peakDay?.date || '', color: 'text-orange-400', icon: TrendingUp },
+                        { label: '日均 UV', value: avgUv.toLocaleString(), sub: '独立访客/天', color: 'text-cyan-400', icon: Users },
+                        { label: 'UV/PV 比', value: `${uvRatio}%`, sub: '访客深度', color: 'text-pink-400', icon: Eye },
+                        { label: '跳出率估算', value: `${bounceEst}%`, sub: '单页访问比例', color: 'text-red-400', icon: TrendingDown },
+                      ]
+                    })().map(m => (
+                      <div key={m.label} className="p-4 rounded-xl bg-black/30 border border-white/5">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[11px] text-gray-500 uppercase tracking-wider">{m.label}</p>
+                          <m.icon className="w-4 h-4 opacity-30"/>
+                        </div>
+                        <p className={`text-xl font-bold ${m.color}`}>{m.value}</p>
+                        <p className="text-[10px] text-gray-600 mt-0.5">{m.sub}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Daily trend chart */}
+                  {analyticsData.dateList?.length > 0 && (
+                    <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+                      <h3 className="text-sm font-medium text-white mb-4">每日访问趋势</h3>
+                      {(() => {
+                        const dl = analyticsData.dateList
+                        const maxPv = Math.max(...dl.map((d: any) => d.pv), 1)
+                        return (
+                          <div className="space-y-2">
+                            {/* PV bars */}
+                            <div className="flex items-end gap-[2px] h-40">
+                              {dl.map((d: any) => {
+                                const h = (d.pv / maxPv) * 100
+                                return (
+                                  <div key={d.date} className="flex-1 flex flex-col items-center group relative min-w-0">
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-dark-800 border border-white/10 rounded px-2 py-1 text-[10px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                                      {d.date}<br/>PV: {d.pv} / UV: {d.uv}
+                                    </div>
+                                    <div className="w-full rounded-t bg-blue-400/70 hover:bg-blue-400 transition-all duration-150"
+                                      style={{ height: `${Math.max(h, 2)}%`, minHeight: '2px' }} />
+                                  </div>
+                                )
+                              })}
+                            </div>
+                            {/* UV bars */}
+                            <div className="flex items-end gap-[2px] h-20">
+                              {dl.map((d: any) => {
+                                const h = (d.uv / maxPv) * 100
+                                return (
+                                  <div key={d.date} className="flex-1 min-w-0">
+                                    <div className="w-full rounded-t bg-green-400/50"
+                                      style={{ height: `${Math.max(h, 1)}%`, minHeight: '1px' }} />
+                                  </div>
+                                )
+                              })}
+                            </div>
+                            <div className="flex items-center gap-4 text-[10px] text-gray-500">
+                              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm bg-blue-400/70"/>PV 浏览量</span>
+                              <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm bg-green-400/50"/>UV 独立访客</span>
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Page stats table */}
+                  {analyticsData.pageStats?.length > 0 && (
+                    <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+                      <h3 className="text-sm font-medium text-white mb-3">页面访问排行</h3>
+                      <table className="w-full text-sm">
+                        <thead><tr className="border-b border-white/5">
+                          <th className="px-4 py-2 text-left text-[11px] text-gray-500 w-8">#</th>
+                          <th className="px-4 py-2 text-left text-[11px] text-gray-500">页面</th>
+                          <th className="px-4 py-2 text-right text-[11px] text-gray-500">PV</th>
+                          <th className="px-4 py-2 text-right text-[11px] text-gray-500 hidden md:table-cell">占比</th>
+                        </tr></thead>
+                        <tbody>
+                          {analyticsData.pageStats.map((ps: { path: string; pv: number }, i: number) => {
+                            const pct = analyticsData.totalPv > 0 ? (ps.pv / analyticsData.totalPv * 100).toFixed(1) : '0'
+                            return (
+                              <tr key={ps.path} className="border-b border-white/5 hover:bg-white/[0.02]">
+                                <td className="px-4 py-2.5 text-gray-600 text-xs">{i + 1}</td>
+                                <td className="px-4 py-2.5 text-sm text-white">
+                                  <div className="flex items-center gap-2">
+                                    <ChevronRight className="w-3 h-3 text-gray-600"/>
+                                    <span className="font-mono text-xs">{ps.path}</span>
+                                  </div>
+                                  {/* Progress bar */}
+                                  <div className="mt-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-full bg-accent-gold/40 rounded-full" style={{ width: `${pct}%` }} />
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2.5 text-right text-sm text-gray-300 font-mono">{ps.pv.toLocaleString()}</td>
+                                <td className="px-4 py-2.5 text-right text-xs text-gray-500 hidden md:table-cell">{pct}%</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500">
+                  <BarChart3 className="w-12 h-12 mb-3 opacity-20"/>
+                  <p className="text-sm">暂无分析数据</p>
+                  <p className="text-xs text-gray-600 mt-1">数据将在有访问记录后自动生成</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ===== CONTACT MESSAGES ===== */}
+          {activeTab === 'contact' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-white">留言列表</h3>
+                <span className="text-xs text-gray-500">共 {contacts.length} 条</span>
+              </div>
+              {contacts.length > 0 ? (
+                <div className="space-y-2">
+                  {contacts.map((msg: ContactMsg) => (
+                    <div key={msg.id} className={`p-4 rounded-xl border transition-colors ${!msg.read ? 'bg-accent-gold/5 border-accent-gold/15' : 'bg-black/30 border-white/5'}`}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-white">{msg.name}</span>
+                            {!msg.read && <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent-gold/20 text-accent-gold font-medium">新</span>}
+                            <span className="text-[11px] text-gray-500">{new Date(msg.createdAt).toLocaleString('zh-CN')}</span>
+                          </div>
+                          {msg.email && <p className="text-xs text-gray-400 flex items-center gap-1"><Mail className="w-3 h-3"/>{msg.email}</p>}
+                          {msg.phone && <p className="text-xs text-gray-400 flex items-center gap-1"><Phone className="w-3 h-3"/>{msg.phone}</p>}
+                          {msg.subject && <p className="text-xs text-gray-300 mt-1 font-medium">{msg.subject}</p>}
+                          <p className="text-sm text-gray-400 mt-2 line-clamp-2">{msg.message}</p>
+                        </div>
+                        <button onClick={() => deleteContact(msg.id)} title="删除"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/8 transition-colors flex-shrink-0">
+                          <Trash2 className="w-4 h-4"/>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500">
+                  <MessageSquare className="w-12 h-12 mb-3 opacity-20"/>
+                  <p className="text-sm">暂无留言</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ===== CANVAS ===== */}
+          {activeTab === 'canvas' && (
+            <CanvasAdmin />
+          )}
+
+          {/* ===== MEDIA ===== */}
+          {activeTab === 'media' && (
+            <MediaAdmin />
+          )}
+
+        </div>{/* end content area */}
+      </main>
+
+      {/* ── Mobile Sidebar Overlay ── */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex" onClick={() => setMobileOpen(false)}>
+          <div className="w-56 bg-black/95 border-r border-white/5 p-4 animate-in slide-in-from-left duration-200" onClick={e => e.stopPropagation()}>
+            <div className="mb-4 pb-4 border-b border-white/10">
+              <h1 className="text-lg font-semibold text-white">栖光文化</h1>
+              <p className="text-[11px] text-gray-500">管理后台</p>
+            </div>
+            <nav className="space-y-0.5">
+              {tabs.map(({ id, label, icon: Icon }) => (
+                <button key={id} onClick={() => { setActiveTab(id); setMobileOpen(false) }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
+                    activeTab === id ? 'bg-accent-gold text-dark-900 font-medium' : 'text-gray-400'
+                  }`}>
+                  <Icon className="w-4 h-4" />{label}
+                </button>
+              ))}
+            </nav>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400"><LogOut className="w-4 h-4"/>退出登录</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── User Edit Modal ── */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setEditingUser(null)}>
+          <div className="bg-dark-800 rounded-2xl border border-white/10 p-6 w-full max-w-md mx-4 shadow-2xl animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-medium text-white">编辑用户</h3>
+              <button onClick={() => setEditingUser(null)} className="p-1 text-gray-400 hover:text-white rounded-lg hover:bg-white/5"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="space-y-3">
+              {[['姓名','name'],['电话','phone'],['邮箱','email'],['公司','company'],['简介','bio'],['积分','points']].map(([label,key]) => (
+                <div key={key}>
+                  <label className="block text-[11px] text-gray-500 mb-1">{label}</label>
+                  <input type={key==='phone'?'tel':key==='email'?'email':'text'}
+                    value={(userForm as any)[key]}
+                    onChange={e => setUserForm((p:any)=>({...p,[key]:e.target.value}))}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"/>
                 </div>
               ))}
             </div>
-          </motion.div>
-        )}
-      </div>
-    )
-  }
-
-  // ==============================
-  // MEDIA MANAGEMENT
-  // ==============================
-  function renderMedia() {
-    const [uploading, setUploading] = useState(false)
-    const [uploadedUrl, setUploadedUrl] = useState<string | null>(null)
-    const [teamVideoUrl, setTeamVideoUrl] = useState<string | null>(null)
-    const [dragOver, setDragOver] = useState(false)
-    const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-
-    // Load current team video URL from site config
-    const loadTeamVideo = async () => {
-      try {
-        const res = await fetch('/api/site')
-        const data = await res.json()
-        if (data.aboutTeamVideo) setTeamVideoUrl(data.aboutTeamVideo)
-      } catch {}
-    }
-    useEffect(() => { loadTeamVideo() }, [])
-
-    const handleUpload = async (file: File) => {
-      if (!file.type.startsWith('video/') && !file.type.startsWith('image/')) {
-        setMsg({ type: 'error', text: '仅支持视频和图片文件' })
-        return
-      }
-      if (file.size > 100 * 1024 * 1024) {
-        setMsg({ type: 'error', text: '文件过大，最大100MB' })
-        return
-      }
-      setUploading(true)
-      setMsg(null)
-      try {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('subdir', 'media')
-        const res = await fetch('/api/upload', { method: 'POST', body: formData })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || '上传失败')
-        setUploadedUrl(data.url)
-        setMsg({ type: 'success', text: '上传成功！' })
-      } catch (err: any) {
-        setMsg({ type: 'error', text: err.message })
-      } finally {
-        setUploading(false)
-      }
-    }
-
-    const handleDrop = (e: React.DragEvent) => {
-      e.preventDefault()
-      setDragOver(false)
-      const file = e.dataTransfer.files[0]
-      if (file) handleUpload(file)
-    }
-
-    const setAsTeamVideo = async () => {
-      if (!uploadedUrl) return
-      try {
-        const res = await fetch('/api/admin/settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ section: 'aboutTeamVideo', data: uploadedUrl })
-        })
-        if (!res.ok) throw new Error('保存失败')
-        setTeamVideoUrl(uploadedUrl)
-        setMsg({ type: 'success', text: '已设置为团队视频！' })
-      } catch (err: any) {
-        setMsg({ type: 'error', text: err.message })
-      }
-    }
-
-    const removeTeamVideo = async () => {
-      if (!confirm('确定移除团队视频，恢复为图片？')) return
-      try {
-        const res = await fetch('/api/admin/settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },  
-          body: JSON.stringify({ section: 'aboutTeamVideo', data: '' })
-        })
-        if (!res.ok) throw new Error('删除失败')
-        setTeamVideoUrl(null)
-        setUploadedUrl(null)
-        setMsg({ type: 'success', text: '已移除团队视频' })
-      } catch (err: any) {
-        setMsg({ type: 'error', text: err.message })
-      }
-    }
-
-    return (
-      <div className="space-y-8">
-        {/* Current Team Video Status */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-dark-800 rounded-lg border border-white/5 p-6">
-          <h3 className="text-lg font-medium text-white mb-3">关于页 · 团队视频</h3>
-          {teamVideoUrl ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-green-400 text-sm">
-                <CheckCircle className="w-4 h-4" /> 团队视频已设置
-              </div>
-              <div className="relative aspect-video bg-dark-700 rounded overflow-hidden max-w-lg">
-                <video src={teamVideoUrl} controls className="w-full h-full object-contain" />
-              </div>
-              <div className="flex gap-3">
-                <span className="text-xs text-gray-500 truncate max-w-md">{teamVideoUrl}</span>
-                <button onClick={removeTeamVideo}
-                  className="px-3 py-1 rounded text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
-                  移除
-                </button>
-              </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setEditingUser(null)} className="flex-1 px-4 py-2 bg-white/5 text-gray-300 rounded-lg text-sm hover:bg-white/10 transition-colors">取消</button>
+              <button onClick={saveUserEdit} className="flex-1 px-4 py-2 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 transition-colors">保存</button>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <Info className="w-4 h-4" /> 当前未设置，页面使用 /team.jpg 默认图片
-            </div>
-          )}
-        </motion.div>
-
-        {/* Upload Area */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="bg-dark-800 rounded-lg border border-white/5 p-6">
-          <h3 className="text-lg font-medium text-white mb-4">上传视频</h3>
-          <div
-            onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors cursor-pointer ${
-              dragOver ? 'border-accent-gold bg-accent-gold/5' : 'border-white/10 hover:border-white/30'
-            }`}
-            onClick={() => document.getElementById('media-upload-input')?.click()}
-          >
-            <input id="media-upload-input" type="file" accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/webp"
-              className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f) }} />
-            <Upload className="w-10 h-10 mx-auto mb-4 text-gray-500" />
-            <p className="text-gray-400 text-sm">
-              {uploading ? '上传中...' : '点击或拖拽视频到此处上传'}
-            </p>
-            <p className="text-gray-600 text-xs mt-2">支持 MP4 / MOV / WebM，最大 100MB</p>
-          </div>
-
-          {msg && (
-            <div className={`mt-4 px-4 py-3 rounded-lg text-sm ${
-              msg.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-              'bg-red-500/10 text-red-400 border border-red-500/20'
-            }`}>
-              {msg.text}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Uploaded Preview */}
-        {uploadedUrl && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="bg-dark-800 rounded-lg border border-white/5 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-white">已上传</h3>
-              <button onClick={setAsTeamVideo}
-                className="flex items-center gap-2 px-5 py-2.5 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 transition-colors">
-                <Film className="w-4 h-4" /> 设为团队视频
-              </button>
-            </div>
-            <div className="relative aspect-video bg-dark-700 rounded overflow-hidden max-w-lg">
-              {uploadedUrl.match(/\.(mp4|mov|webm|quicktime)/i) ? (
-                <video src={uploadedUrl} controls className="w-full h-full object-contain" />
-              ) : (
-                <img src={uploadedUrl} alt="已上传" className="w-full h-full object-contain" />
-              )}
-            </div>
-            <div className="mt-2 text-xs text-gray-500 truncate">{uploadedUrl}</div>
-          </motion.div>
-        )}
-      </div>
-    )
-  }
-
-  // ==============================
-  // DASHBOARD
-  // ==============================
-  function renderDashboard() {
-    return (
-      <div className="space-y-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: '总作品数', value: stats?.totalWorks || 0, icon: Film, color: 'text-accent-gold' },
-            { label: '待审核', value: stats?.pendingWorks || 0, icon: Clock, color: 'text-yellow-400' },
-            { label: '已通过', value: stats?.approvedWorks || 0, icon: CheckCircle, color: 'text-green-400' },
-            { label: '注册用户', value: stats?.totalUsers || 0, icon: Users, color: 'text-blue-400' },
-          ].map(({ label, value, icon: Icon, color }, i) => (
-            <motion.div key={label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-              className="bg-dark-800 rounded-lg p-5 border border-white/5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">{label}</p>
-                  <p className={`text-3xl font-light ${color} mt-1`}>{value}</p>
-                </div>
-                <div className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center`}><Icon className={`w-5 h-5 ${color}`} /></div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="bg-dark-800 rounded-lg border border-white/5">
-          <div className="p-5 border-b border-white/5">
-            <h3 className="text-lg font-medium text-white">最新提交作品</h3>
-          </div>
-          <div className="divide-y divide-white/5">
-            {stats?.recentWorks?.slice(0, 5).map((work) => (
-              <div key={work.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded bg-dark-700 flex items-center justify-center"><Film className="w-4 h-4 text-gray-400" /></div>
-                  <div>
-                    <p className="text-white font-medium">{work.title}</p>
-                    <p className="text-sm text-gray-400">{work.creatorName} · {work.category}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-xs ${
-                    work.status === 'APPROVED' ? 'bg-green-400/20 text-green-400' :
-                    work.status === 'REJECTED' ? 'bg-red-400/20 text-red-400' :
-                    'bg-yellow-400/20 text-yellow-400'
-                  }`}>{work.status === 'APPROVED' ? '已通过' : work.status === 'REJECTED' ? '已拒绝' : '待审核'}</span>
-                  <button onClick={() => setSelectedWork(work)} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><Eye className="w-4 h-4 text-gray-400" /></button>
-                </div>
-              </div>
-            ))}
-            {(!stats?.recentWorks || stats.recentWorks.length === 0) && (
-              <div className="p-8 text-center text-gray-400">暂无作品提交</div>
-            )}
-          </div>
-        </motion.div>
-      </div>
-    )
-  }
-
-  // ==============================
-  // WORKS MANAGEMENT
-  // ==============================
-  function renderWorks() {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input type="text" placeholder="搜索作品或创作者..." value={workSearch}
-              onChange={e => setWorkSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-dark-800 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-accent-gold" />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {[['ALL','全部'],['PENDING','待审核'],['APPROVED','已通过'],['REJECTED','已拒绝']].map(([f, l]) => (
-              <button key={f} onClick={() => setWorkFilter(f)}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${workFilter === f ? 'bg-accent-gold text-dark-900' : 'bg-dark-800 text-gray-400 hover:text-white'}`}>{l}</button>
-            ))}
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredWorks.map(work => (
-            <motion.div key={work.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-dark-800 rounded-lg border border-white/5 overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-medium text-white mb-1">{work.title}</h3>
-                    <p className="text-sm text-gray-400">{work.creatorName} · {work.creatorPhone}</p>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs ${
-                    work.status === 'APPROVED' ? 'bg-green-400/20 text-green-400' :
-                    work.status === 'REJECTED' ? 'bg-red-400/20 text-red-400' :
-                    'bg-yellow-400/20 text-yellow-400'
-                  }`}>{work.status === 'APPROVED' ? '已通过' : work.status === 'REJECTED' ? '已拒绝' : '待审核'}</span>
-                </div>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-2">{work.description || '暂无描述'}</p>
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                  <span className="px-2 py-1 bg-dark-700 rounded">{work.category}</span>
-                  <span>·</span><span>{new Date(work.createdAt).toLocaleDateString('zh-CN')}</span>
-                </div>
-                {work.videoUrl && <a href={work.videoUrl} target="_blank" rel="noopener noreferrer" className="text-accent-gold text-sm hover:underline mb-4 inline-block">查看视频 →</a>}
-                <div className="flex gap-2 pt-4 border-t border-white/5">
-                  {work.status === 'PENDING' && <>
-                    <button onClick={() => handleReview(work.id, 'APPROVED')} className="flex-1 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 text-sm">通过</button>
-                    <button onClick={() => setSelectedWork(work)} className="flex-1 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-sm">拒绝</button>
-                  </>}
-                  <button onClick={() => handleDeleteWork(work.id)} className="px-4 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        {filteredWorks.length === 0 && <div className="text-center py-12 text-gray-400">没有找到符合条件的作品</div>}
-      </div>
-    )
-  }
+      )}
 
-  // ==============================
-  // USERS MANAGEMENT
-  // ==============================
-  function renderUsers() {
-    return (
-      <div className="space-y-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input type="text" placeholder="搜索用户名或手机号..." value={userSearch}
-            onChange={e => setUserSearch(e.target.value)}
-            className="w-full max-w-md pl-10 pr-4 py-3 bg-dark-800 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-accent-gold" />
-        </div>
-        <div className="bg-dark-800 rounded-lg border border-white/5 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/5">
-                  <th className="text-left p-4 text-gray-400 font-medium text-sm">用户</th>
-                  <th className="text-left p-4 text-gray-400 font-medium text-sm">手机号</th>
-                  <th className="text-left p-4 text-gray-400 font-medium text-sm">公司</th>
-                  <th className="text-left p-4 text-gray-400 font-medium text-sm">积分</th>
-                  <th className="text-left p-4 text-gray-400 font-medium text-sm">注册时间</th>
-                  <th className="text-left p-4 text-gray-400 font-medium text-sm">作品数</th>
-                  <th className="text-left p-4 text-gray-400 font-medium text-sm">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredUsers.map(user => (
-                  <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-accent-gold/20 flex items-center justify-center">
-                          <span className="text-accent-gold text-sm font-medium">{user.name[0]}</span>
-                        </div>
-                        <span className="text-white text-sm">{user.name}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-gray-400 text-sm">{user.phone}</td>
-                    <td className="p-4 text-gray-400 text-sm">{user.company || '-'}</td>
-                    <td className="p-4"><span className="text-accent-gold/70 font-mono">{(user as any).points || 0}</span></td>
-                    <td className="p-4 text-gray-400 text-sm">{new Date(user.createdAt).toLocaleDateString('zh-CN')}</td>
-                    <td className="p-4"><span className="px-2 py-1 bg-dark-700 rounded text-sm text-gray-300">{user._count?.works || 0}</span></td>
-                    <td className="p-4">
-                      <button onClick={() => openUserEdit(user.id)}
-                        className="px-3 py-1.5 bg-accent-gold/10 text-accent-gold/80 rounded text-xs hover:bg-accent-gold/20 transition">
-                        编辑
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {filteredUsers.length === 0 && <div className="text-center py-12 text-gray-400">没有找到符合条件的用户</div>}
-        </div>
-      </div>
-    )
-  }
-}
-
-// ==============================
-// SHARED SETTINGS COMPONENTS
-// ==============================
-
-function SettingsForm({ title, onSave, children }: { title: string; onSave: () => void; children: React.ReactNode }) {
-  return (
-    <motion.div key={title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-medium text-white">{title}</h3>
-        <button onClick={onSave}
-          className="flex items-center gap-2 px-5 py-2.5 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 transition-colors">
-          <Save className="w-4 h-4" /> 保存更改
-        </button>
-      </div>
-      <div className="bg-dark-800 rounded-lg border border-white/5 p-6 space-y-5">
-        {children}
-      </div>
-    </motion.div>
-  )
-}
-
-function Field({ label, value, onChange, multiline, prefix, type = 'text' }: {
-  label: string; value: string; onChange: (v: string) => void
-  multiline?: boolean; prefix?: React.ReactNode; type?: string
-}) {
-  return (
-    <div>
-      <label className="block text-gray-400 text-xs mb-2 tracking-wide">{label}</label>
-      <div className="relative">
-        {prefix && <div className="absolute left-3 top-1/2 -translate-y-1/2">{prefix}</div>}
-        {multiline ? (
-          <textarea value={value} onChange={e => onChange(e.target.value)}
-            className={`w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent-gold resize-none h-24 ${prefix ? 'pl-10' : ''}`} />
-        ) : (
-          <input type={type} value={value} onChange={e => onChange(e.target.value)}
-            className={`w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent-gold ${prefix ? 'pl-10' : ''}`} />
-        )}
-      </div>
     </div>
   )
 }
 
-function TagEditor({ label, tags, onChange }: { label: string; tags: string[]; onChange: (tags: string[]) => void }) {
-  const [newTag, setNewTag] = useState('')
-  return (
-    <div>
-      <label className="block text-gray-400 text-xs mb-2 tracking-wide">{label}</label>
-      <div className="flex flex-wrap gap-2 mb-3">
-        {tags.map((tag, i) => (
-          <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-dark-700 border border-white/10 rounded-full text-sm text-gray-300">
-            {tag}
-            <button onClick={() => onChange(tags.filter((_, j) => j !== i))} className="text-gray-500 hover:text-red-400 transition-colors">
-              <X className="w-3 h-3" />
-            </button>
-          </span>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <input value={newTag} onChange={e => setNewTag(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (newTag.trim()) { onChange([...tags, newTag.trim()]); setNewTag('') } } }}
-          placeholder="输入后按 Enter 添加" className="flex-1 px-4 py-2 bg-dark-700 border border-white/10 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-accent-gold" />
-        <button onClick={() => { if (newTag.trim()) { onChange([...tags, newTag.trim()]); setNewTag('') } }}
-          className="px-4 py-2 bg-white/5 border border-white/10 text-gray-400 rounded-lg hover:text-white hover:bg-white/10 text-sm transition-colors">
-          <Plus className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  )
-}
+/* ─── Canvas Admin Component ─── */
+function CanvasAdmin() {
+  const [activeCanvas, setActiveCanvas] = useState<any>(null)
+  const [history, setHistory] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-// ==============================
-// WORKS EDITOR
-// ==============================
-function WorksEditor({ config, onChange, onSave }: { config: SiteConfig; onChange: (c: SiteConfig) => void; onSave: () => void }) {
-  const works = [...(config.featuredWorks || [])].sort((a, b) => (a.homepageOrder || 999) - (b.homepageOrder || 999))
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', titleEn: '', category: '', categoryEn: '', image: '' })
-
-  const startEdit = (work: any) => {
-    setEditingId(work.id)
-    setEditForm({ title: work.title, titleEn: work.titleEn, category: work.category, categoryEn: work.categoryEn, image: work.image })
-  }
-
-  const saveEdit = () => {
-    onChange({
-      ...config,
-      featuredWorks: config.featuredWorks.map(w => w.id === editingId ? { ...w, ...editForm } : w)
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/canvas/current').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/canvas/history').then(r => r.ok ? r.json() : { canvases: [] }).catch(() => ({ canvases: [] })),
+    ]).then(([cur, hist]) => {
+      setActiveCanvas(cur?.canvas || null)
+      setHistory(hist.canvases || [])
+      setLoading(false)
     })
-    setEditingId(null)
-  }
+  }, [])
 
-  const removeWork = (id: string) => {
-    if (!confirm('删除这个作品？')) return
-    onChange({ ...config, featuredWorks: config.featuredWorks.filter(w => w.id !== id) })
-  }
+  if (loading) return <div className="text-center py-12 text-gray-500">加载中...</div>
 
-  const toggleHomepage = (id: string) => {
-    const work = config.featuredWorks.find(w => w.id === id)
-    if (!work) return
-    const maxOrder = Math.max(...config.featuredWorks.map(w => w.homepageOrder || 0), 0)
-    onChange({
-      ...config,
-      featuredWorks: config.featuredWorks.map(w =>
-        w.id === id
-          ? { ...w, homepageOrder: w.homepageOrder === null ? maxOrder + 1 : null }
-          : w
-      )
-    })
-  }
-
-  return (
-    <SettingsForm title="代表作品管理" onSave={onSave}>
-      <div className="space-y-4">
-        {works.map((work, i) => (
-          <div key={work.id} className="p-4 bg-dark-700 rounded-lg border border-white/5">
-            <div className="flex items-center gap-3 mb-3">
-              <GripVertical className="w-4 h-4 text-gray-600 cursor-grab" />
-              <span className="w-6 text-xs text-gray-600 text-center">#{i + 1}</span>
-              {editingId === work.id ? (
-                <div className="flex gap-2 flex-1">
-                  <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-                    placeholder="作品名称" className="flex-1 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-                  <input value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                    placeholder="分类" className="w-28 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-                  <button onClick={saveEdit} className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded text-sm hover:bg-green-500/30">保存</button>
-                  <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-gray-400 hover:text-white text-sm">取消</button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex-1">
-                    <span className="text-white text-sm font-medium">{work.title}</span>
-                    <span className="text-gray-500 text-xs ml-2">{work.category}</span>
-                    <span className={`text-xs ml-2 ${work.homepageOrder != null ? 'text-accent-gold' : 'text-gray-600'}`}>
-                      {work.homepageOrder != null ? '🏠首页' : ''}
-                    </span>
-                  </div>
-                  <div className="w-12 h-8 rounded overflow-hidden bg-dark-600 relative">
-                    {work.image && <img src={work.image} alt="" className="w-full h-full object-cover" />}
-                  </div>
-                  <button onClick={() => toggleHomepage(work.id)}
-                    className={`p-1.5 transition-colors ${work.homepageOrder != null ? 'text-accent-gold' : 'text-gray-600 hover:text-accent-gold'}`}>
-                    <svg className="w-3.5 h-3.5" fill={work.homepageOrder != null ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                  </button>
-                  <button onClick={() => startEdit(work)} className="p-1.5 text-gray-500 hover:text-accent-gold transition-colors"><Edit3 className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => removeWork(work.id)} className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                </>
-              )}
-            </div>
-            {editingId === work.id && (
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <input value={editForm.titleEn} onChange={e => setEditForm({ ...editForm, titleEn: e.target.value })}
-                  placeholder="英文名称" className="px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-                <input value={editForm.categoryEn} onChange={e => setEditForm({ ...editForm, categoryEn: e.target.value })}
-                  placeholder="英文分类" className="px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-                <div className="col-span-2 flex gap-3">
-                  <div className="relative flex-1">
-                    <Upload className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <input value={editForm.image} onChange={e => setEditForm({ ...editForm, image: e.target.value })}
-                      placeholder="图片路径，如 /works/image1.jpg" className="w-full pl-9 pr-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-                  </div>
-                  <a href={editForm.image} target="_blank" rel="noopener noreferrer"
-                    className="px-3 py-1.5 text-gray-400 hover:text-accent-gold text-sm flex items-center gap-1"><ExternalLink className="w-3.5 h-3.5" />预览</a>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </SettingsForm>
-  )
-}
-
-// ==============================
-// SERVICES EDITOR
-// ==============================
-function ServicesEditor({ config, onChange, onSave }: { config: SiteConfig; onChange: (c: SiteConfig) => void; onSave: () => void }) {
-  const [editForm, setEditForm] = useState<Record<string, any>>({})
-
-  const updateService = (id: string, field: string, value: string) => {
-    const updated = config.services.map(s => s.id === id ? { ...s, [field]: value } : s)
-    onChange({ ...config, services: updated })
-  }
-
-  return (
-    <SettingsForm title="服务领域管理" onSave={onSave}>
-      <div className="space-y-4">
-        {config.services.sort((a, b) => a.order - b.order).map((service) => (
-          <div key={service.id} className="p-5 bg-dark-700 rounded-lg border border-white/5 grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-500 text-xs mb-1.5">中文名称</label>
-              <input value={service.title} onChange={e => updateService(service.id, 'title', e.target.value)}
-                className="w-full px-3 py-2 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-            </div>
-            <div>
-              <label className="block text-gray-500 text-xs mb-1.5">英文名称</label>
-              <input value={service.titleEn} onChange={e => updateService(service.id, 'titleEn', e.target.value)}
-                className="w-full px-3 py-2 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-            </div>
-            <div>
-              <label className="block text-gray-500 text-xs mb-1.5">中文描述</label>
-              <input value={service.desc} onChange={e => updateService(service.id, 'desc', e.target.value)}
-                className="w-full px-3 py-2 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-            </div>
-            <div>
-              <label className="block text-gray-500 text-xs mb-1.5">英文描述</label>
-              <input value={service.descEn} onChange={e => updateService(service.id, 'descEn', e.target.value)}
-                className="w-full px-3 py-2 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </SettingsForm>
-  )
-}
-
-// ==============================
-// BRANDS EDITOR
-// ==============================
-function BrandsEditor({ config, onChange, onSave }: { config: SiteConfig; onChange: (c: SiteConfig) => void; onSave: () => void }) {
-  const [newBrand, setNewBrand] = useState({ name: '', slug: '' })
-  const [editingId, setEditingId] = useState<string | null>(null)
-
-  const addBrand = () => {
-    if (!newBrand.name.trim()) return
-    const id = Date.now().toString()
-    onChange({ ...config, brands: [...config.brands, { id, ...newBrand, order: config.brands.length + 1 }] })
-    setNewBrand({ name: '', slug: '' })
-  }
-
-  const removeBrand = (id: string) => {
-    if (!confirm('移除此品牌？')) return
-    onChange({ ...config, brands: config.brands.filter(b => b.id !== id) })
-  }
-
-  const updateBrand = (id: string, field: string, value: string) => {
-    onChange({ ...config, brands: config.brands.map(b => b.id === id ? { ...b, [field]: value } : b) })
-  }
-
-  return (
-    <SettingsForm title="合作品牌管理" onSave={onSave}>
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        {['汽车', '科技', '奢侈品', '运动', '美妆'].map(cat => (
-          <span key={cat} className="px-3 py-1.5 bg-dark-700 border border-white/10 rounded text-gray-400 text-sm text-center">{cat}</span>
-        ))}
-      </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-6">
-        {config.brands.sort((a, b) => a.order - b.order).map(brand => (
-          <div key={brand.id} className="flex items-center gap-2 px-3 py-2.5 bg-dark-700 border border-white/5 rounded-lg group">
-            {editingId === brand.id ? (
-              <input value={brand.name} onChange={e => updateBrand(brand.id, 'name', e.target.value)}
-                onBlur={() => setEditingId(null)} autoFocus
-                className="flex-1 px-2 py-1 bg-dark-600 border border-white/20 rounded text-white text-xs focus:outline-none focus:border-accent-gold" />
-            ) : (
-              <span className="flex-1 text-sm text-gray-300 truncate">{brand.name}</span>
-            )}
-            <button onClick={() => setEditingId(brand.id)} className="text-gray-600 hover:text-accent-gold opacity-0 group-hover:opacity-100 transition-opacity">
-              <Edit3 className="w-3 h-3" />
-            </button>
-            <button onClick={() => removeBrand(brand.id)} className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-3 border-t border-white/5 pt-5">
-        <input value={newBrand.name} onChange={e => setNewBrand({ ...newBrand, name: e.target.value })}
-          placeholder="品牌名称" className="flex-1 px-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-        <input value={newBrand.slug} onChange={e => setNewBrand({ ...newBrand, slug: e.target.value })}
-          placeholder="slug（用于logo路径）" className="w-48 px-4 py-2.5 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-        <button onClick={addBrand}
-          className="px-5 py-2.5 bg-accent-gold/10 border border-accent-gold/30 text-accent-gold rounded-lg text-sm hover:bg-accent-gold/20 transition-colors flex items-center gap-2">
-          <Plus className="w-4 h-4" /> 添加品牌
-        </button>
-      </div>
-    </SettingsForm>
-  )
-}
-
-// ==============================
-// SECURITY SETTINGS
-// ==============================
-function SecuritySettings() {
-  const [showPasswordForm, setShowPasswordForm] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [changing, setChanging] = useState(false)
+  const totalPixels = history.reduce((s: number, c: any) => s + (c.pixelCount || 0), 0)
+  const totalCanvases = history.length
 
   return (
     <div className="space-y-6">
-      <div className="bg-dark-800 rounded-lg border border-white/5 p-6">
-        <h3 className="text-lg font-medium text-white mb-1 flex items-center gap-2"><Shield className="w-5 h-5 text-accent-gold" /> 安全设置</h3>
-        <p className="text-gray-500 text-sm mb-6">管理管理员账号凭据</p>
-
-        <div className="space-y-5">
-          <div>
-            <label className="block text-gray-400 text-xs mb-2 tracking-wide">当前管理员账号</label>
-            <div className="px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-gray-400 text-sm">admin</div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: '总画布数', value: totalCanvases, color: 'text-blue-400', bg: 'bg-blue-400/8', border: 'border-blue-400/15' },
+          { label: '总像素数', value: totalPixels.toLocaleString(), color: 'text-purple-400', bg: 'bg-purple-400/8', border: 'border-purple-400/15' },
+          { label: '当前大小', value: activeCanvas ? `${activeCanvas.width}×${activeCanvas.height}` : '-', color: 'text-green-400', bg: 'bg-green-400/8', border: 'border-green-400/15' },
+          { label: '填充率', value: activeCanvas ? `${activeCanvas.fillRate}%` : '-', color: 'text-accent-gold', bg: 'bg-accent-gold/8', border: 'border-accent-gold/15' },
+        ].map(s => (
+          <div key={s.label} className={`p-4 rounded-xl ${s.bg} ${s.border} border`}>
+            <p className="text-[11px] text-gray-500 uppercase tracking-wider">{s.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
           </div>
+        ))}
+      </div>
 
-          <div className="pt-4 border-t border-white/5">
-            <h4 className="text-white text-sm font-medium mb-4 flex items-center gap-2"><Key className="w-4 h-4" /> 修改密码</h4>
-            {msg && (
-              <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${msg.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                {msg.text}
-              </div>
-            )}
-            <div className="space-y-4 max-w-md">
-              <Field label="当前密码" value={currentPassword} onChange={setCurrentPassword} type="password" />
-              <Field label="新密码" value={newPassword} onChange={setNewPassword} type="password" />
-              <Field label="确认新密码" value={confirmPassword} onChange={setConfirmPassword} type="password" />
-              <div className="pt-2">
-                {newPassword && newPassword !== confirmPassword && confirmPassword && (
-                  <p className="text-red-400 text-xs mb-3">两次输入的密码不一致</p>
-                )}
-                <button
-                  onClick={async () => {
-                    if (!currentPassword || !newPassword || !confirmPassword) {
-                      setMsg({ type: 'error', text: '请填写所有字段' }); return
-                    }
-                    if (newPassword !== confirmPassword) {
-                      setMsg({ type: 'error', text: '两次密码不一致' }); return
-                    }
-                    if (newPassword.length < 6) {
-                      setMsg({ type: 'error', text: '密码至少6位' }); return
-                    }
-                    setChanging(true)
-                    setMsg(null)
-                    try {
-                      const res = await fetch('/api/admin/change-password', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ currentPassword, newPassword })
-                      })
-                      const data = await res.json()
-                      if (!res.ok) throw new Error(data.error || '修改失败')
-                      setMsg({ type: 'success', text: '密码已修改成功（下次登录生效）' })
-                      setCurrentPassword('')
-                      setNewPassword('')
-                      setConfirmPassword('')
-                      setShowPasswordForm(false)
-                    } catch (err: any) {
-                      setMsg({ type: 'error', text: err.message })
-                    } finally {
-                      setChanging(false)
-                    }
-                  }}
-                  className="px-6 py-2.5 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 transition-colors">
-                  {changing ? '修改中...' : '修改密码'}
-                </button>
-              </div>
+      {/* Active Canvas */}
+      {activeCanvas && (
+        <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+          <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2"><Palette className="w-4 h-4 text-accent-gold/60"/>当前活跃画布</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div><p className="text-gray-500 text-xs">画布 ID</p><p className="text-white font-mono text-xs mt-1">{activeCanvas.id.slice(0, 12)}...</p></div>
+            <div><p className="text-gray-500 text-xs">尺寸</p><p className="text-white mt-1">{activeCanvas.width} × {activeCanvas.height}</p></div>
+            <div><p className="text-gray-500 text-xs">像素数</p><p className="text-white mt-1">{activeCanvas.placedPixels} / {activeCanvas.totalPixels}</p></div>
+            <div><p className="text-gray-500 text-xs">领先者</p><p className="text-accent-gold mt-1">{activeCanvas.leader ? `${activeCanvas.leader.count}px` : '-'}</p></div>
+          </div>
+          <div className="mt-4">
+            <div className="flex justify-between text-xs text-gray-600 mb-1">
+              <span>填充进度</span><span>{activeCanvas.fillRate}%</span>
+            </div>
+            <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
+              <div className="h-full bg-accent-gold/50 rounded-full transition-all" style={{ width: activeCanvas.fillRate + '%' }} />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Canvas History */}
+      <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+        <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2"><FileText className="w-4 h-4 text-accent-gold/60"/>画布历史（最近 20 张）</h3>
+        {history.length > 0 ? (
+          <div className="space-y-1">
+            {history.slice(-20).reverse().map((c: any) => (
+              <div key={c.id} className="flex items-center justify-between py-2 px-3 bg-white/[0.02] rounded-lg hover:bg-white/[0.04] text-sm">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-gray-400 font-mono text-xs">{c.width}×{c.height}</span>
+                  <span className="text-white truncate">{c.name || `画布 #${c.id.slice(0, 8)}`}</span>
+                  <span className="text-gray-600 text-xs">{c.pixelCount || 0}px</span>
+                </div>
+                <span className="text-xs text-gray-500">
+                  {c.status === 'ACTIVE' ? '🟢 活跃' : c.ownerId ? `👤 ${c.ownerId.slice(0, 8)}` : '⚪ 无主'}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600 py-8 text-center">暂无画布数据</p>
+        )}
+      </div>
+
+      {/* Settlement Info */}
+      <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+        <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2"><Clock className="w-4 h-4 text-accent-gold/60"/>结算规则</h3>
+        <div className="text-sm text-gray-400 space-y-1">
+          <p>• 每日 <span className="text-accent-gold/70">00:00</span> 自动结算</p>
+          <p>• 画布生命周期 24 小时</p>
+          <p>• 结算时像素数最多的用户获得画布所有权</p>
+          <p>• 画布满后自动扩张（2×尺寸，最大 480px）</p>
+          <p>• 每 10 分钟系统自动在随机空位放置彩色像素</p>
         </div>
       </div>
     </div>
   )
-
-  // ==============================
 }
 
-// ==============================
-// NAVIGATION EDITOR
-// ==============================
-function NavigationEditor({ config, onChange, onSave }: { config: any; onChange: (c: any) => void; onSave: () => void }) {
-  const nav = config.navigation || { logo: '栖光', items: [] }
+/* ─── Media Admin Component ─── */
+function MediaAdmin() {
+  const [media, setMedia] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploadUrl, setUploadUrl] = useState('')
 
-  const updateItems = (items: any[]) => {
-    onChange({ ...config, navigation: { ...nav, items } })
-  }
-
-  const addItem = () => {
-    const id = 'nav_' + Date.now()
-    const items = [...(nav.items || [])]
-    items.push({ id, label: '新页面', href: '/', visible: true, order: items.length })
-    updateItems(items)
-  }
-
-  const removeItem = (id: string) => {
-    const items = nav.items.filter((i: any) => i.id !== id)
-    updateItems(items)
-  }
-
-  const updateItem = (id: string, field: string, value: any) => {
-    const items = nav.items.map((i: any) => i.id === id ? { ...i, [field]: value } : i)
-    updateItems(items)
-  }
-
-  const moveItem = (id: string, direction: -1 | 1) => {
-    const items = [...(nav.items || [])].sort((a, b) => a.order - b.order)
-    const idx = items.findIndex(i => i.id === id)
-    if (idx < 0) return
-    const target = idx + direction
-    if (target < 0 || target >= items.length) return
-    ;[items[idx].order, items[target].order] = [items[target].order, items[idx].order]
-    updateItems(items)
-  }
+  useEffect(() => {
+    fetch('/api/admin/works')
+      .then(r => r.ok ? r.json() : [])
+      .then((works: any[]) => {
+        const items = works
+          .filter((w: any) => w.coverUrl)
+          .map((w: any) => ({
+            id: w.id,
+            title: w.title,
+            url: w.coverUrl,
+            type: 'image',
+            createdAt: w.createdAt,
+          }))
+        setMedia(items)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
 
   return (
-    <SettingsForm title="导航菜单" onSave={onSave}>
-      <div className="mb-4">
-        <label className="block text-gray-400 text-xs mb-2">Logo 文字</label>
-        <input value={nav.logo || ''} onChange={e => onChange({ ...config, navigation: { ...nav, logo: e.target.value } })}
-          className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-      </div>
-
-      <div className="space-y-2">
-        {[...(nav.items || [])].sort((a, b) => a.order - b.order).map((item: any, i: number) => (
-          <div key={item.id} className="flex items-center gap-3 p-3 bg-dark-700 rounded-lg border border-white/5">
-            <div className="flex flex-col gap-0.5">
-              <button onClick={() => moveItem(item.id, -1)} disabled={i === 0} className="text-gray-500 hover:text-white disabled:opacity-30"><ChevronUp className="w-3 h-3" /></button>
-              <button onClick={() => moveItem(item.id, 1)} disabled={i === nav.items.length - 1} className="text-gray-500 hover:text-white disabled:opacity-30"><ChevronDown className="w-3 h-3" /></button>
-            </div>
-            <input value={item.label} onChange={e => updateItem(item.id, 'label', e.target.value)}
-              className="flex-1 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" placeholder="名称" />
-            <input value={item.href} onChange={e => updateItem(item.id, 'href', e.target.value)}
-              className="w-36 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" placeholder="/路径" />
-            <button onClick={() => updateItem(item.id, 'visible', !item.visible)}
-              className={`p-1.5 rounded ${item.visible ? 'text-green-400' : 'text-gray-600'}`}>
-              {item.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-            </button>
-            <button onClick={() => removeItem(item.id)} className="p-1.5 text-gray-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
-          </div>
-        ))}
-      </div>
-
-      <button onClick={addItem} className="mt-3 w-full py-2.5 border-2 border-dashed border-white/10 rounded-lg text-gray-400 hover:border-accent-gold/50 hover:text-accent-gold transition-colors text-sm flex items-center justify-center gap-2">
-        <Plus className="w-4 h-4" /> 添加导航项
-      </button>
-    </SettingsForm>
-  )
-}
-
-// ==============================
-// FOOTER EDITOR
-// ==============================
-function FooterEditor({ config, onChange, onSave }: { config: any; onChange: (c: any) => void; onSave: () => void }) {
-  const footer = config.footer || {}
-  const setFooter = (updates: any) => onChange({ ...config, footer: { ...footer, ...updates } })
-
-  const addColumn = () => {
-    const cols = [...(footer.columns || [])]
-    cols.push({ id: 'col_' + Date.now(), title: '新栏目', type: 'text', items: ['项目1'] })
-    setFooter({ columns: cols })
-  }
-
-  const removeColumn = (id: string) => {
-    setFooter({ columns: footer.columns.filter((c: any) => c.id !== id) })
-  }
-
-  const updateColumn = (id: string, field: string, value: any) => {
-    const cols = footer.columns.map((c: any) => c.id === id ? { ...c, [field]: value } : c)
-    setFooter({ columns: cols })
-  }
-
-  const addLink = (colId: string) => {
-    const cols = footer.columns.map((c: any) => {
-      if (c.id !== colId || c.type !== 'links') return c
-      return { ...c, links: [...(c.links || []), { label: '新链接', href: '/', order: (c.links || []).length }] }
-    })
-    setFooter({ columns: cols })
-  }
-
-  const updateLink = (colId: string, linkIdx: number, field: string, value: string) => {
-    const cols = footer.columns.map((c: any) => {
-      if (c.id !== colId || c.type !== 'links') return c
-      const links = [...(c.links || [])]
-      links[linkIdx] = { ...links[linkIdx], [field]: value }
-      return { ...c, links }
-    })
-    setFooter({ columns: cols })
-  }
-
-  const removeLink = (colId: string, linkIdx: number) => {
-    const cols = footer.columns.map((c: any) => {
-      if (c.id !== colId || c.type !== 'links') return c
-      return { ...c, links: (c.links || []).filter((_: any, i: number) => i !== linkIdx) }
-    })
-    setFooter({ columns: cols })
-  }
-
-  const addItem = (colId: string) => {
-    const cols = footer.columns.map((c: any) => {
-      if (c.id !== colId || (c.type !== 'text' && c.type !== 'contact')) return c
-      return { ...c, items: [...(c.items || []), '新项目'] }
-    })
-    setFooter({ columns: cols })
-  }
-
-  const updateItem = (colId: string, itemIdx: number, value: string) => {
-    const cols = footer.columns.map((c: any) => {
-      if (c.id !== colId || (c.type !== 'text' && c.type !== 'contact')) return c
-      const items = [...(c.items || [])]
-      items[itemIdx] = value
-      return { ...c, items }
-    })
-    setFooter({ columns: cols })
-  }
-
-  const removeItem = (colId: string, itemIdx: number) => {
-    const cols = footer.columns.map((c: any) => {
-      if (c.id !== colId || (c.type !== 'text' && c.type !== 'contact')) return c
-      return { ...c, items: (c.items || []).filter((_: any, i: number) => i !== itemIdx) }
-    })
-    setFooter({ columns: cols })
-  }
-
-  return (
-    <SettingsForm title="页脚配置" onSave={onSave}>
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Field label="Logo 文字" value={footer.logo || ''} onChange={v => setFooter({ logo: v })} />
-        <Field label="副标题" value={footer.tagline || ''} onChange={v => setFooter({ tagline: v })} />
-        <Field label="版权声明" value={footer.copyright || ''} onChange={v => setFooter({ copyright: v })} />
-        <Field label="底部文字" value={footer.bottomText || ''} onChange={v => setFooter({ bottomText: v })} />
-      </div>
-
-      <div className="border-t border-white/5 pt-6">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-white">栏目</h4>
-          <button onClick={addColumn} className="flex items-center gap-1 px-3 py-1.5 bg-accent-gold/10 border border-accent-gold/30 text-accent-gold rounded-lg text-xs hover:bg-accent-gold/20 transition-colors">
-            <Plus className="w-3 h-3" /> 添加栏目
-          </button>
+    <div className="space-y-6">
+      {/* Upload */}
+      <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+        <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2"><Upload className="w-4 h-4 text-accent-gold/60"/>添加媒体资源</h3>
+        <div className="flex gap-2">
+          <input type="text" value={uploadUrl} onChange={e => setUploadUrl(e.target.value)}
+            placeholder="输入图片 URL 或从作品封面引入..."
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+          <button onClick={() => { if (uploadUrl) { setMedia(prev => [{ id: 'upload-' + Date.now(), title: '手动添加', url: uploadUrl, type: 'image', createdAt: new Date().toISOString() }, ...prev]); setUploadUrl('') } }}
+            className="px-4 py-2 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 transition-colors">添加</button>
         </div>
-        <div className="space-y-4">
-          {(footer.columns || []).map((col: any) => (
-            <div key={col.id} className="p-4 bg-dark-700 rounded-lg border border-white/5">
-              <div className="flex items-center gap-3 mb-3">
-                <input value={col.title || ''} onChange={e => updateColumn(col.id, 'title', e.target.value)}
-                  className="flex-1 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" placeholder="栏目标题" />
-                <select value={col.type || 'text'} onChange={e => updateColumn(col.id, 'type', e.target.value)}
-                  className="px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold">
-                  <option value="links">链接列表</option>
-                  <option value="text">纯文本</option>
-                  <option value="contact">联系信息</option>
-                </select>
-                <button onClick={() => removeColumn(col.id)} className="p-1.5 text-gray-500 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+      </div>
+
+      {/* Media Grid */}
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">加载中...</div>
+      ) : media.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {media.map((item: any) => (
+            <div key={item.id} className="group bg-black/30 border border-white/5 rounded-lg overflow-hidden hover:border-white/15 transition-colors">
+              <div className="aspect-[4/3] bg-dark-900 relative overflow-hidden">
+                <img src={item.url} alt={item.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
               </div>
-
-              {col.type === 'links' && (
-                <div className="space-y-2">
-                  {(col.links || []).map((link: any, i: number) => (
-                    <div key={i} className="flex gap-2">
-                      <input value={link.label || ''} onChange={e => updateLink(col.id, i, 'label', e.target.value)}
-                        className="flex-1 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-xs focus:outline-none focus:border-accent-gold" placeholder="链接名称" />
-                      <input value={link.href || ''} onChange={e => updateLink(col.id, i, 'href', e.target.value)}
-                        className="w-32 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-xs focus:outline-none focus:border-accent-gold" placeholder="/路径" />
-                      <button onClick={() => removeLink(col.id, i)} className="p-1.5 text-gray-500 hover:text-red-400"><X className="w-3 h-3" /></button>
-                    </div>
-                  ))}
-                  <button onClick={() => addLink(col.id)} className="text-xs text-accent-gold hover:text-white transition-colors flex items-center gap-1">
-                    <Plus className="w-3 h-3" /> 添加链接
-                  </button>
-                </div>
-              )}
-
-              {(col.type === 'text' || col.type === 'contact') && (
-                <div className="space-y-2">
-                  {(col.items || []).map((item: string, i: number) => (
-                    <div key={i} className="flex gap-2">
-                      <input value={item} onChange={e => updateItem(col.id, i, e.target.value)}
-                        className="flex-1 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-xs focus:outline-none focus:border-accent-gold" placeholder="文本内容" />
-                      <button onClick={() => removeItem(col.id, i)} className="p-1.5 text-gray-500 hover:text-red-400"><X className="w-3 h-3" /></button>
-                    </div>
-                  ))}
-                  <button onClick={() => addItem(col.id)} className="text-xs text-accent-gold hover:text-white transition-colors flex items-center gap-1">
-                    <Plus className="w-3 h-3" /> 添加项目
-                  </button>
-                </div>
-              )}
+              <div className="p-3">
+                <p className="text-xs text-gray-300 truncate">{item.title}</p>
+                <p className="text-[10px] text-gray-600 mt-1">{new Date(item.createdAt).toLocaleDateString('zh-CN')}</p>
+              </div>
             </div>
           ))}
         </div>
-      </div>
-    </SettingsForm>
-  )
-}
-
-// ==============================
-// THEME EDITOR
-// ==============================
-function ThemeEditor({ config, onChange, onSave }: { config: any; onChange: (c: any) => void; onSave: () => void }) {
-  const theme = config.theme || {}
-  const setTheme = (updates: any) => onChange({ ...config, theme: { ...theme, ...updates } })
-
-  return (
-    <SettingsForm title="主题样式" onSave={onSave}>
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block text-gray-400 text-xs mb-2">主色调 / 金色</label>
-          <div className="flex gap-3">
-            <input type="color" value={theme.primaryColor || '#c9a962'} onChange={e => setTheme({ primaryColor: e.target.value })}
-              className="w-12 h-12 rounded cursor-pointer bg-transparent border border-white/10" />
-            <input value={theme.primaryColor || '#c9a962'} onChange={e => setTheme({ primaryColor: e.target.value })}
-              className="flex-1 px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-          </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500 bg-black/20 rounded-xl border border-dashed border-white/10">
+          <Image className="w-12 h-12 mb-3 opacity-20"/>
+          <p className="text-sm font-medium">暂无媒体文件</p>
+          <p className="text-xs text-gray-600 mt-1">上传图片后媒体库会自动更新</p>
         </div>
-
-        <div>
-          <label className="block text-gray-400 text-xs mb-2">背景色</label>
-          <div className="flex gap-3">
-            <input type="color" value={theme.bgColor || '#0a0a0a'} onChange={e => setTheme({ bgColor: e.target.value })}
-              className="w-12 h-12 rounded cursor-pointer bg-transparent border border-white/10" />
-            <input value={theme.bgColor || '#0a0a0a'} onChange={e => setTheme({ bgColor: e.target.value })}
-              className="flex-1 px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-gray-400 text-xs mb-2">文字颜色</label>
-          <div className="flex gap-3">
-            <input type="color" value={theme.textColor || '#ffffff'} onChange={e => setTheme({ textColor: e.target.value })}
-              className="w-12 h-12 rounded cursor-pointer bg-transparent border border-white/10" />
-            <input value={theme.textColor || '#ffffff'} onChange={e => setTheme({ textColor: e.target.value })}
-              className="flex-1 px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-gray-400 text-xs mb-2">圆角 (px)</label>
-          <div className="flex items-center gap-4">
-            <input type="range" min="0" max="24" value={parseInt(theme.borderRadius || '0')}
-              onChange={e => setTheme({ borderRadius: e.target.value })}
-              className="flex-1 h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-accent-gold" />
-            <span className="text-white text-sm w-10 text-right">{theme.borderRadius || '0'}px</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block text-gray-400 text-xs mb-2">正文字体</label>
-          <select value={theme.fontFamily || 'Inter'} onChange={e => setTheme({ fontFamily: e.target.value })}
-            className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold">
-            <option value="Inter">Inter (默认)</option>
-            <option value="system-ui">System UI</option>
-            <option value="sans-serif">Sans Serif</option>
-            <option value="serif">Serif</option>
-            <option value="monospace">Monospace</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-gray-400 text-xs mb-2">展示字体</label>
-          <select value={theme.fontDisplay || 'Playfair Display'} onChange={e => setTheme({ fontDisplay: e.target.value })}
-            className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold">
-            <option value="Playfair Display">Playfair Display (默认)</option>
-            <option value="Georgia">Georgia</option>
-            <option value="serif">Serif</option>
-            <option value="sans-serif">Sans Serif</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-gray-400 text-xs mb-2">自定义 CSS</label>
-        <div className="text-xs text-gray-500 mb-2">输入 CSS 代码，会注入到页面 &lt;head&gt; 中。例如：.my-class {'{'} color: red; {'}'}</div>
-        <textarea value={theme.customCSS || ''} onChange={e => setTheme({ customCSS: e.target.value })}
-          className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-accent-gold resize-none h-32"
-          placeholder={'.some-element { color: #c9a962; }'} />
-      </div>
-
-      <div className="p-4 bg-dark-700 rounded-lg border border-dark-600">
-        <h5 className="text-xs text-gray-400 mb-2">实时预览</h5>
-        <div className="flex gap-3">
-          <span className="px-3 py-1 text-xs rounded" style={{ backgroundColor: theme.primaryColor || '#c9a962', color: '#000' }}>主色调</span>
-          <span className="px-3 py-1 text-xs rounded" style={{ backgroundColor: theme.bgColor || '#0a0a0a', border: '1px solid #333' }}>背景</span>
-          <span className="px-3 py-1 text-xs rounded" style={{ backgroundColor: '#1a1a1a', color: theme.textColor || '#fff' }}>文字示例</span>
-        </div>
-      </div>
-    </SettingsForm>
-  )
-}
-
-// ==============================
-// PAGE MANAGER
-// ==============================
-function PageManager({ config, onChange, onSave }: { config: any; onChange: (c: any) => void; onSave: () => void }) {
-  const pages = config.pages || {}
-  const pageKeys = Object.keys(pages)
-
-  const updatePage = (key: string, field: string, value: any) => {
-    onChange({ ...config, pages: { ...pages, [key]: { ...pages[key], [field]: value } } })
-  }
-
-  return (
-    <SettingsForm title="页面管理" onSave={onSave}>
-      <p className="text-gray-500 text-sm mb-4">控制网站各页面的可见性与名称</p>
-      <div className="space-y-3">
-        {pageKeys.map(key => {
-          const page = pages[key]
-          return (
-            <div key={key} className="flex items-center gap-3 p-3 bg-dark-700 rounded-lg border border-white/5">
-              <div className={`w-2 h-2 rounded-full ${page.visible ? 'bg-green-400' : 'bg-gray-600'}`} />
-              <span className="text-xs text-gray-500 w-16 font-mono">{key}</span>
-              <input value={page.label || ''} onChange={e => updatePage(key, 'label', e.target.value)}
-                className="flex-1 px-3 py-1.5 bg-dark-600 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-accent-gold" />
-              <span className="text-xs text-gray-500 font-mono">{page.path}</span>
-              <button onClick={() => updatePage(key, 'visible', !page.visible)}
-                className={`px-3 py-1 rounded text-xs ${page.visible ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                {page.visible ? '显示' : '隐藏'}
-              </button>
-            </div>
-          )
-        })}
-      </div>
-    </SettingsForm>
-  )
-}
-
-// ==============================
-// ANNOUNCEMENT EDITOR
-// ==============================
-function AnnouncementEditor({ config, onChange, onSave }: { config: any; onChange: (c: any) => void; onSave: () => void }) {
-  const ann = config.announcement || {}
-  const setAnn = (updates: any) => onChange({ ...config, announcement: { ...ann, ...updates } })
-
-  return (
-    <SettingsForm title="通知公告" onSave={onSave}>
-      <div className="flex items-center justify-between mb-6 p-4 bg-dark-700 rounded-lg border border-white/5">
-        <div>
-          <p className="text-white text-sm font-medium">启用公告栏</p>
-          <p className="text-gray-500 text-xs mt-0.5">在页面顶部显示通知横幅</p>
-        </div>
-        <button onClick={() => setAnn({ enabled: !ann.enabled })}
-          className={`relative w-12 h-6 rounded-full transition-colors ${ann.enabled ? 'bg-accent-gold' : 'bg-dark-600'}`}>
-          <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${ann.enabled ? 'left-7' : 'left-1'}`} />
-        </button>
-      </div>
-
-      {ann.enabled && (
-        <>
-          <div className="mb-4">
-            <label className="block text-gray-400 text-xs mb-2">公告内容</label>
-            <input value={ann.text || ''} onChange={e => setAnn({ text: e.target.value })}
-              className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" placeholder="输入公告文字..." />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-400 text-xs mb-2">样式类型</label>
-              <select value={ann.type || 'info'} onChange={e => setAnn({ type: e.target.value })}
-                className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold">
-                <option value="info">信息 (蓝色)</option>
-                <option value="warning">警告 (黄色)</option>
-                <option value="success">成功 (绿色)</option>
-                <option value="alert">紧急 (红色)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-gray-400 text-xs mb-2">链接（可选）</label>
-              <input value={ann.link || ''} onChange={e => setAnn({ link: e.target.value })}
-                className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold" placeholder="https://..." />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg border border-white/5 mt-4">
-            <div>
-              <p className="text-white text-sm">允许关闭</p>
-              <p className="text-gray-500 text-xs">用户可点击关闭按钮隐藏</p>
-            </div>
-            <button onClick={() => setAnn({ dismissible: !ann.dismissible })}
-              className={`relative w-12 h-6 rounded-full transition-colors ${ann.dismissible ? 'bg-accent-gold' : 'bg-dark-600'}`}>
-              <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${ann.dismissible ? 'left-7' : 'left-1'}`} />
-            </button>
-          </div>
-
-          <div className={`mt-4 p-3 rounded-lg text-sm ${
-            ann.type === 'info' ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20' :
-            ann.type === 'warning' ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20' :
-            ann.type === 'success' ? 'bg-green-500/10 text-green-300 border border-green-500/20' :
-            'bg-red-500/10 text-red-300 border border-red-500/20'
-          }`}>
-            <strong>预览：</strong> {ann.text || '（公告文字为空）'}
-          </div>
-        </>
       )}
-    </SettingsForm>
+    </div>
   )
-}
-
-// ==============================
-// CODE INJECTION EDITOR
-// ==============================
-function CodeInjectionEditor({ config, onChange, onSave }: { config: any; onChange: (c: any) => void; onSave: () => void }) {
-  const code = config.codeInjection || {}
-  const setCode = (updates: any) => onChange({ ...config, codeInjection: { ...code, ...updates } })
-
-  return (
-    <SettingsForm title="代码注入" onSave={onSave}>
-      <p className="text-gray-500 text-sm mb-4">在页面中注入自定义 HTML / CSS / JS 代码。高级功能，谨慎使用。</p>
-
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded">&lt;head&gt;</span>
-          <span className="text-gray-400 text-xs">注入到页面 &lt;head&gt; 标签末尾</span>
-        </div>
-        <textarea value={code.headHTML || ''} onChange={e => setCode({ headHTML: e.target.value })}
-          className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-accent-gold resize-none h-24"
-          placeholder={'<meta name="custom" content="..." />\n<style>/* custom styles */</style>'} />
-      </div>
-
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">&lt;body&gt; 开头</span>
-          <span className="text-gray-400 text-xs">注入到 &lt;body&gt; 标签开头</span>
-        </div>
-        <textarea value={code.bodyStartHTML || ''} onChange={e => setCode({ bodyStartHTML: e.target.value })}
-          className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-accent-gold resize-none h-24"
-          placeholder={'<div class="custom-banner">...</div>'} />
-      </div>
-
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded">&lt;/body&gt; 结尾</span>
-          <span className="text-gray-400 text-xs">注入到 &lt;/body&gt; 标签之前</span>
-        </div>
-        <textarea value={code.footerHTML || ''} onChange={e => setCode({ footerHTML: e.target.value })}
-          className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-accent-gold resize-none h-24"
-          placeholder={'<script>console.log(\"site loaded\")</script>'} />
-      </div>
-    </SettingsForm>
-  )
-}
-
-// ==============================
-// SOCIAL LINKS EDITOR
-// ==============================
-function SocialLinksEditor({ config, onChange, onSave }: { config: any; onChange: (c: any) => void; onSave: () => void }) {
-  const links = config.socialLinks || {}
-  const setLinks = (updates: any) => onChange({ ...config, socialLinks: { ...links, ...updates } })
-
-  const platforms = [
-    { key: 'wechat', label: '微信', placeholder: '微信号或二维码链接' },
-    { key: 'weibo', label: '微博', placeholder: 'https://weibo.com/...' },
-    { key: 'xiaohongshu', label: '小红书', placeholder: 'https://xiaohongshu.com/...' },
-    { key: 'bilibili', label: 'B站', placeholder: 'https://space.bilibili.com/...' },
-    { key: 'douyin', label: '抖音', placeholder: '抖音号或链接' },
-    { key: 'github', label: 'GitHub', placeholder: 'https://github.com/...' },
-  ]
-
-  return (
-    <SettingsForm title="社交链接" onSave={onSave}>
-      <div className="space-y-3">
-        {platforms.map(p => (
-          <div key={p.key}>
-            <label className="block text-gray-400 text-xs mb-1.5">{p.label}</label>
-            <input value={links[p.key] || ''} onChange={e => setLinks({ [p.key]: e.target.value })}
-              className="w-full px-4 py-3 bg-dark-700 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
-              placeholder={p.placeholder} />
-          </div>
-        ))}
-      </div>
-    </SettingsForm>
-  )
-}
 }

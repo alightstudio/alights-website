@@ -11,7 +11,17 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [loggedIn, setLoggedIn] = useState(false)
   const [userName, setUserName] = useState('')
-  const [navItems, setNavItems] = useState<NavItem[]>([])
+  const DEFAULT_NAV_ITEMS: NavItem[] = [
+  { id: 'home', label: '首页', href: '/', visible: true, order: 0 },
+  { id: 'works', label: '作品集', href: '/works', visible: true, order: 1 },
+  { id: 'gallery', label: '佳片欣赏', href: '/gallery', visible: true, order: 2 },
+  { id: 'canvas', label: '像素画布', href: '/canvas', visible: true, order: 3 },
+  { id: 'community', label: '社区', href: '/community', visible: true, order: 4 },
+  { id: 'about', label: '关于我们', href: '/about', visible: true, order: 5 },
+  { id: 'contact', label: '联系合作', href: '/contact', visible: true, order: 6 },
+]
+
+const [navItems, setNavItems] = useState<NavItem[]>(DEFAULT_NAV_ITEMS)
   const [logo, setLogo] = useState('栖光')
   const router = useRouter()
   const pathname = usePathname()

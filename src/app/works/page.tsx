@@ -47,8 +47,36 @@ export default function WorksPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-900 pt-24 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-gold" />
+      <div className="pt-24 pb-32 px-6 md:px-12 lg:px-24">
+        <div className="max-w-7xl mx-auto">
+          {/* Header skeleton */}
+          <div className="text-center mb-20 space-y-4 animate-pulse">
+            <div className="h-14 w-32 bg-white/5 rounded mx-auto" />
+            <div className="w-24 h-px bg-white/5 mx-auto" />
+          </div>
+          {/* Filter skeleton */}
+          <div className="flex justify-center gap-4 mb-16 animate-pulse">
+            {[1,2,3,4].map(i => <div key={i} className="h-4 w-16 bg-white/5 rounded" />)}
+          </div>
+          {/* Grid skeleton */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="aspect-video bg-white/5 rounded" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!loading && allWorks.length === 0) {
+    return (
+      <div className="pt-24 pb-32 px-6 md:px-12 lg:px-24">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="font-display text-5xl md:text-6xl font-light mb-6">作品集</h1>
+          <div className="w-24 h-px bg-accent-gold/40 mx-auto mb-8" />
+          <p className="text-gray-500 py-20 border border-dark-700">暂无作品</p>
+        </div>
       </div>
     )
   }

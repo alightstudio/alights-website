@@ -10,6 +10,16 @@ import stash173Raw from '@/data/stash173.json'
 import stash172Raw from '@/data/stash172.json'
 import stash171Raw from '@/data/stash171.json'
 import stash170Raw from '@/data/stash170.json'
+import stash169Raw from '@/data/stash169.json'
+import stash168Raw from '@/data/stash168.json'
+import stash167Raw from '@/data/stash167.json'
+import stash166Raw from '@/data/stash166.json'
+import stash165Raw from '@/data/stash165.json'
+import stash164Raw from '@/data/stash164.json'
+import stash163Raw from '@/data/stash163.json'
+import stash162Raw from '@/data/stash162.json'
+import stash161Raw from '@/data/stash161.json'
+import stash160Raw from '@/data/stash160.json'
 
 interface StashWork {
   id: string
@@ -51,6 +61,38 @@ const stash173Data: StashWork[] = stash173Raw.map(transform).sort(sortByHeat)
 const stash172Data: StashWork[] = stash172Raw.map(transform).sort(sortByHeat)
 const stash171Data: StashWork[] = stash171Raw.map(transform).sort(sortByHeat)
 const stash170Data: StashWork[] = stash170Raw.map(transform).sort(sortByHeat)
+const stash169Data: StashWork[] = stash169Raw.map(transform).sort(sortByHeat)
+const stash168Data: StashWork[] = stash168Raw.map(transform).sort(sortByHeat)
+const stash167Data: StashWork[] = stash167Raw.map(transform).sort(sortByHeat)
+const stash166Data: StashWork[] = stash166Raw.map(transform).sort(sortByHeat)
+const stash165Data: StashWork[] = stash165Raw.map(transform).sort(sortByHeat)
+const stash164Data: StashWork[] = stash164Raw.map(transform).sort(sortByHeat)
+const stash163Data: StashWork[] = stash163Raw.map(transform).sort(sortByHeat)
+const stash162Data: StashWork[] = stash162Raw.map(transform).sort(sortByHeat)
+const stash161Data: StashWork[] = stash161Raw.map(transform).sort(sortByHeat)
+const stash160Data: StashWork[] = stash160Raw.map(transform).sort(sortByHeat)
+
+const allStashes = [
+  { id: '176', label: 'Stash 176', data: stash176Data },
+  { id: '175', label: 'Stash 175', data: stash175Data },
+  { id: '174', label: 'Stash 174', data: stash174Data },
+  { id: '173', label: 'Stash 173', data: stash173Data },
+  { id: '172', label: 'Stash 172', data: stash172Data },
+  { id: '171', label: 'Stash 171', data: stash171Data },
+  { id: '170', label: 'Stash 170', data: stash170Data },
+  { id: '169', label: 'Stash 169', data: stash169Data },
+  { id: '168', label: 'Stash 168', data: stash168Data },
+  { id: '167', label: 'Stash 167', data: stash167Data },
+  { id: '166', label: 'Stash 166', data: stash166Data },
+  { id: '165', label: 'Stash 165', data: stash165Data },
+  { id: '164', label: 'Stash 164', data: stash164Data },
+  { id: '163', label: 'Stash 163', data: stash163Data },
+  { id: '162', label: 'Stash 162', data: stash162Data },
+  { id: '161', label: 'Stash 161', data: stash161Data },
+  { id: '160', label: 'Stash 160', data: stash160Data },
+]
+
+const totalWorks = allStashes.reduce((s, st) => s + st.data.length, 0)
 
 function TabBtn({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
   return (
@@ -168,7 +210,7 @@ export default function GalleryPage() {
             </h1>
             <div className="w-24 h-px bg-accent-gold/40 mb-4" />
             <p className="text-sm text-gray-600 tracking-wide mb-4">
-              两个收藏集 · 共 <span className="text-accent-gold/60">{(stash176Data.length + stash175Data.length).toString()}</span> 部作品
+              {allStashes.length} 个收藏集 · 共 <span className="text-accent-gold/60">{totalWorks.toString()}</span> 部作品
             </p>
             <p className="text-xl text-gray-400 max-w-3xl leading-relaxed">
               汇聚优秀创作者的视觉作品，激发无限灵感
@@ -182,23 +224,15 @@ export default function GalleryPage() {
         <div className="max-w-7xl mx-auto">
           {/* Tab Bar */}
           <div className="flex gap-1 mb-12 border-b border-dark-700 overflow-x-auto">
-            <TabBtn label="Stash 176" count={stash176Data.length} active={activeTab==='176'} onClick={()=>setActiveTab('176')} />
-            <TabBtn label="Stash 175" count={stash175Data.length} active={activeTab==='175'} onClick={()=>setActiveTab('175')} />
-            <TabBtn label="Stash 174" count={stash174Data.length} active={activeTab==='174'} onClick={()=>setActiveTab('174')} />
-            <TabBtn label="Stash 173" count={stash173Data.length} active={activeTab==='173'} onClick={()=>setActiveTab('173')} />
-            <TabBtn label="Stash 172" count={stash172Data.length} active={activeTab==='172'} onClick={()=>setActiveTab('172')} />
-            <TabBtn label="Stash 171" count={stash171Data.length} active={activeTab==='171'} onClick={()=>setActiveTab('171')} />
-            <TabBtn label="Stash 170" count={stash170Data.length} active={activeTab==='170'} onClick={()=>setActiveTab('170')} />
+            {allStashes.map(st => (
+              <TabBtn key={st.id} label={st.label} count={st.data.length} active={activeTab===st.id} onClick={()=>setActiveTab(st.id)} />
+            ))}
           </div>
 
           {/* Tab Content */}
-          {activeTab === '176' && <StashSection key="176" works={stash176Data} label="Stash 176" totalViews={0} />}
-          {activeTab === '175' && <StashSection key="175" works={stash175Data} label="Stash 175" totalViews={0} />}
-          {activeTab === '174' && <StashSection key="174" works={stash174Data} label="Stash 174" totalViews={0} />}
-          {activeTab === '173' && <StashSection key="173" works={stash173Data} label="Stash 173" totalViews={0} />}
-          {activeTab === '172' && <StashSection key="172" works={stash172Data} label="Stash 172" totalViews={0} />}
-          {activeTab === '171' && <StashSection key="171" works={stash171Data} label="Stash 171" totalViews={0} />}
-          {activeTab === '170' && <StashSection key="170" works={stash170Data} label="Stash 170" totalViews={0} />}
+          {allStashes.map(st => activeTab === st.id && (
+            <StashSection key={st.id} works={st.data} label={st.label} totalViews={0} />
+          ))}
         </div>
       </section>
 

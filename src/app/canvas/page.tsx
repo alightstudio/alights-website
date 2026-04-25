@@ -38,7 +38,7 @@ interface PixelInfo {
 }
 
 export default function CanvasPage() {
-  const [tab, setTab] = useState<'canvas' | 'leaderboard' | 'marketplace'>('canvas')
+  const [tab, setTab] = useState<'canvas' | 'leaderboard' | 'marketplace' | 'points'>('canvas')
   const [canvasInfo, setCanvasInfo] = useState<CanvasInfo | null>(null)
   const [pixelMap, setPixelMap] = useState<Map<string, string>>(new Map())
   const [pixelMeta, setPixelMeta] = useState<Map<string, PixelInfo>>(new Map())
@@ -67,6 +67,7 @@ export default function CanvasPage() {
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const panStartRef = useRef({ x: 0, y: 0 })
+  const touchStartRef = useRef({ x: 0, y: 0, dist: 0 })
   const wheelTimeoutRef = useRef<number>(0)
   const infoTimeoutRef = useRef<number>(0)
 
@@ -316,6 +317,55 @@ export default function CanvasPage() {
     setPixelInfo(null)
   }
 
+  // 触摸事件（移动端）
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      // 单指 — 开始拖拽平移
+      setIsPanning(true)
+      touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dist: 0 }
+      panStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    } else if (e.touches.length === 2) {
+      // 双指 — 记录距离用于缩放
+      const dx = e.touches[0].clientX - e.touches[1].clientX
+      const dy = e.touches[0].clientY - e.touches[1].clientY
+      touchStartRef.current = { x: 0, y: 0, dist: Math.sqrt(dx * dx + dy * dy) }
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && isPanning) {
+      const dx = e.touches[0].clientX - panStartRef.current.x
+      const dy = e.touches[0].clientY - panStartRef.current.y
+      setOffset(o => ({ x: o.x + dx, y: o.y + dy }))
+      panStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    } else if (e.touches.length === 2) {
+      // 双指缩放
+      const dx = e.touches[0].clientX - e.touches[1].clientX
+      const dy = e.touches[0].clientY - e.touches[1].clientY
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (touchStartRef.current.dist > 0) {
+        const scale = dist / touchStartRef.current.dist
+        const newZoom = Math.max(0.5, Math.min(10, zoom * scale))
+        const rect = canvasRef.current?.getBoundingClientRect()
+        if (rect) {
+          const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left
+          const my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top
+          const ratio = newZoom / zoom
+          setOffset(o => ({ x: mx - (mx - o.x) * ratio, y: my - (my - o.y) * ratio }))
+        }
+        setZoom(newZoom)
+      }
+      touchStartRef.current.dist = dist
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      setIsPanning(false)
+      setHoverPos(null)
+    }
+  }
+
   const handleRightClick = (e: React.MouseEvent) => {
     e.preventDefault()
     const pos = screenToCanvas(e.clientX, e.clientY)
@@ -434,11 +484,21 @@ export default function CanvasPage() {
           <button onClick={() => setTab('marketplace')}
             className={`py-3 text-sm tracking-wide transition-colors border-b-2 ${tab === 'marketplace' ? 'text-white border-accent-gold' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
           >🛒 市场</button>
+          <button onClick={() => setTab('points')}
+            className={`py-3 text-sm tracking-wide transition-colors border-b-2 ${tab === 'points' ? 'text-white border-accent-gold' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+          >💎 获取积分</button>
         </div>
       </div>
 
       {/* 画板 Tab */}
       {tab === 'canvas' && (<>
+      {/* 画布描述 */}
+      <div className="px-6 md:px-12 mb-3">
+        <p className="text-xs text-gray-500 leading-relaxed">
+          在空白画布上点击放置像素,与所有用户协作共创一幅作品。
+          每 24 小时结算一次,放置最多像素的用户成为画布所有者。
+        </p>
+      </div>
       {/* 顶部信息栏 */}
       <div className="px-6 md:px-12 mb-3 flex items-center justify-between flex-wrap gap-2">
         <div>
@@ -511,6 +571,9 @@ export default function CanvasPage() {
         onMouseLeave={handleMouseLeave}
         onWheel={handleWheel}
         onContextMenu={handleRightClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <canvas ref={canvasRef} className="w-full h-full" />
 
@@ -554,10 +617,11 @@ export default function CanvasPage() {
       {/* 提示 */}
       <div className="px-6 md:px-12 mt-3 flex items-center gap-4 text-xs text-gray-600">
         <span>{'\uD83D\uDDB1'} 点击像素</span>
-        <span>{'\u21E7'}+拖拽 平移</span>
-        <span>滚轮 缩放</span>
+        <span>拖拽 平移</span>
+        <span>滚轮/双指 缩放</span>
         <span>右键 取色</span>
         <span>1像素 = 1积分</span>
+        <span className="hidden md:inline">{'\u21E7'}+拖拽 平移</span>
       </div>
 
       {/* 历史作品链接 */}
@@ -579,6 +643,124 @@ export default function CanvasPage() {
       {tab === 'marketplace' && (
         <div className="flex-1 px-6 md:px-12">
           <CanvasMarketplace userId={userId} points={userPoints} />
+        </div>
+      )}
+
+      {/* 积分获取说明 Tab */}
+      {tab === 'points' && (
+        <div className="flex-1 px-6 md:px-12 max-w-3xl">
+          <div className="py-6 space-y-8">
+            {/* 说明标题 */}
+            <div>
+              <h2 className="font-display text-2xl text-white mb-2">💎 积分获取指南</h2>
+              <p className="text-sm text-gray-500">了解如何获取和使用积分,参与像素画布创作</p>
+            </div>
+
+            {/* 每日获取 */}
+            <div className="bg-dark-800/30 border border-dark-700 rounded-xl p-6">
+              <h3 className="text-base font-medium text-white mb-4 flex items-center gap-2">📅 每日签到</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
+                  <div>
+                    <p className="text-sm text-white">每日免费积分</p>
+                    <p className="text-xs text-gray-500">每天 00:00 自动发放</p>
+                  </div>
+                  <span className="text-accent-gold font-mono text-lg">+100</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
+                  <div>
+                    <p className="text-sm text-white">放置像素可消耗</p>
+                    <p className="text-xs text-gray-500">每放置 1 个像素消耗 1 积分</p>
+                  </div>
+                  <span className="text-gray-400 font-mono text-lg">-1/px</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 画布结算奖励 */}
+            <div className="bg-dark-800/30 border border-dark-700 rounded-xl p-6">
+              <h3 className="text-base font-medium text-white mb-4 flex items-center gap-2">🏆 画布结算奖励</h3>
+              <p className="text-sm text-gray-400 mb-4">
+                每张画布的寿命为 <span className="text-accent-gold/70">24 小时</span>，
+                每天 <span className="text-accent-gold/70">00:00</span> 自动结算。
+                画布归档后,放置像素最多的用户成为画布所有者。
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
+                  <div>
+                    <p className="text-sm text-white">画布所有者奖励</p>
+                    <p className="text-xs text-gray-500">成为画布所有者可获得积分奖励</p>
+                  </div>
+                  <span className="text-accent-gold font-mono text-lg">+50</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
+                  <div>
+                    <p className="text-sm text-white">亚军奖励</p>
+                    <p className="text-xs text-gray-500">像素数第二的用户</p>
+                  </div>
+                  <span className="text-gray-400 font-mono text-lg">+20</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
+                  <div>
+                    <p className="text-sm text-white">季军奖励</p>
+                    <p className="text-xs text-gray-500">像素数第三的用户</p>
+                  </div>
+                  <span className="text-gray-400 font-mono text-lg">+10</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 交易市场 */}
+            <div className="bg-dark-800/30 border border-dark-700 rounded-xl p-6">
+              <h3 className="text-base font-medium text-white mb-4 flex items-center gap-2">🛒 交易市场</h3>
+              <p className="text-sm text-gray-400 mb-4">
+                拥有已归档画布的用户可以上架到交易市场。其他用户可以购买画布所有权。
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
+                  <div>
+                    <p className="text-sm text-white">上架画布</p>
+                    <p className="text-xs text-gray-500">可将你拥有的归档画布出售</p>
+                  </div>
+                  <span className="text-accent-gold font-mono text-lg">自由定价</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
+                  <div>
+                    <p className="text-sm text-white">购买画布</p>
+                    <p className="text-xs text-gray-500">购买时燃烧 5% 积分（通缩机制）</p>
+                  </div>
+                  <span className="text-red-400/70 font-mono text-lg">5% 燃烧</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 说明 */}
+            <div className="bg-dark-800/30 border border-dark-700 rounded-xl p-6">
+              <h3 className="text-base font-medium text-white mb-4 flex items-center gap-2">💡 小贴士</h3>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li className="flex items-start gap-2">
+                  <span className="text-accent-gold/70 mt-0.5">•</span>
+                  <span>每天 00:00 积分重置,记得按时使用</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-accent-gold/70 mt-0.5">•</span>
+                  <span>多用户协作创作,共同完成一幅像素画</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-accent-gold/70 mt-0.5">•</span>
+                  <span>画布填满后自动扩张（2×尺寸）,作品延续</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-accent-gold/70 mt-0.5">•</span>
+                  <span>右键点击已有像素可吸取颜色（桌面端）</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-accent-gold/70 mt-0.5">•</span>
+                  <span>每 10 分钟系统自动在随机空位填充彩色像素</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       )}
     </div>

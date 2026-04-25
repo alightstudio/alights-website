@@ -76,16 +76,15 @@ export async function POST(request: NextRequest) {
 
     // 登录成功
     loginAttempts.delete(ip)
-    const cookieStore = await cookies()
-    cookieStore.set('admin_session', 'authenticated', {
+    const response = NextResponse.json({ success: true })
+    response.cookies.set('admin_session', 'authenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/'
     })
-
-    return NextResponse.json({ success: true })
+    return response
   } catch (error) {
     console.error('登录失败:', error)
     return NextResponse.json({ error: '登录失败' }, { status: 500 })

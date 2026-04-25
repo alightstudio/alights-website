@@ -5,16 +5,33 @@ import Link from 'next/link'
 import { getSiteConfig } from '@/lib/siteConfig'
 import type { FooterConfig } from '@/lib/siteConfig'
 
+const DEFAULT_FOOTER: FooterConfig = {
+  logo: '栖光',
+  tagline: '专业视效制作 · 光影叙事艺术',
+  columns: [
+    { id: 'nav', title: '导航', type: 'links', links: [
+      { label: '作品集', href: '/works', order: 0 },
+      { label: '佳片欣赏', href: '/gallery', order: 1 },
+      { label: '像素画布', href: '/canvas', order: 2 },
+      { label: '社区', href: '/community', order: 3 },
+      { label: '关于我们', href: '/about', order: 4 },
+      { label: '联系方式', href: '/contact', order: 5 },
+    ]},
+    { id: 'services', title: '服务', type: 'text', items: ['TVC广告', '产品动画', '发布会', '影视剧'] },
+    { id: 'contact', title: '联系', type: 'contact', items: ['电话：15091855505', '邮箱：184436962@qq.com', '地址：西安市'] },
+  ],
+  copyright: '© 2024-2026 西安栖光文化传播有限公司. All rights reserved.',
+  bottomText: 'alights.cn',
+}
+
 export default function Footer() {
-  const [cfg, setCfg] = useState<FooterConfig | null>(null)
+  const [cfg, setCfg] = useState<FooterConfig>(DEFAULT_FOOTER)
 
   useEffect(() => {
     getSiteConfig().then(c => {
       if (c?.footer) setCfg(c.footer)
     })
   }, [])
-
-  if (!cfg) return null
 
   return (
     <footer className="bg-dark-900 border-t border-dark-700 py-16 px-6 md:px-12 lg:px-24" style={{ fontFamily: 'var(--font-family, unset)' }}>

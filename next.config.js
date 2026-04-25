@@ -4,6 +4,19 @@ const nextConfig = {
     domains: ['localhost'],
     unoptimized: true,
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Disable all chunk splitting to inline everything
+      config.optimization.splitChunks = {
+        chunks: 'async',  // Only split async (dynamic import) chunks, not initial
+        cacheGroups: {
+          default: false,
+          vendors: false,
+        },
+      }
+    }
+    return config
+  },
   async headers() {
     return [
       {

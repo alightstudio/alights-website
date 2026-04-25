@@ -28,7 +28,7 @@ type StatusFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
 /* ─── Reusable field config for settings forms ─── */
 interface FieldDef { label: string; path: string; type?: 'text' | 'textarea' | 'color' | 'toggle' | 'select'; placeholder?: string; toggleLabels?: [string, string]; options?: { value: string; label: string }[] }
 
-const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; fields: FieldDef[]; special?: 'navigation' | 'brands' }> = {
+const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; fields: FieldDef[]; special?: 'navigation' | 'brands'; isAction?: boolean }> = {
   company: {
     icon: Globe, label: '公司信息',
     fields: [
@@ -116,6 +116,7 @@ const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; 
       { label: '连线粗细', path: 'particle.lineWidth', placeholder: '0.3' },
       { label: '连线粗度增幅', path: 'particle.lineWidthBoost', placeholder: '0.8' },
       { label: '背景星光数', path: 'particle.starCount', placeholder: '60' },
+      { label: '拖尾强度', path: 'particle.trailOpacity', placeholder: '0' },
     ],
   },
   spotlight: {
@@ -174,6 +175,12 @@ const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; 
       { label: '允许作品提交', path: 'security.allowSubmissions', type: 'toggle', toggleLabels: ['禁止', '允许'] },
     ],
   },
+  /* ── 数据管理（按钮） ── */
+  refreshStash: {
+    icon: Upload, label: '数据管理',
+    fields: [],
+    isAction: true,
+  },
 }
 
 /* ─── Toggle Switch Component ─── */
@@ -210,6 +217,45 @@ function Toast({ show, message, type }: { show: boolean; message: string; type: 
   )
 }
 
+/* ─── Font Select with Preview ─── */
+function FontSelect({ value, options, onChange }: { value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }) {
+  const [open, setOpen] = React.useState(false)
+  const selected = options.find(o => o.value === value)
+  const allFontDefs = React.useMemo(() => {
+    const map: Record<string, { name: string; id: string; category: string }> = {}
+    for (const f of [...DISPLAY_FONTS, ...SANS_FONTS]) map[f.id] = f
+    return map
+  }, [])
+
+  return (
+    <div className="relative">
+      <button type="button" onClick={() => setOpen(!open)}
+        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white text-left flex items-center justify-between gap-2 hover:border-accent-gold/30 transition-colors">
+        <span className="truncate">{selected?.label || '请选择...'}</span>
+        <ChevronDown className={"w-3.5 h-3.5 text-gray-500 transition-transform " + (open ? 'rotate-180' : '')} />
+      </button>
+      {open && <>
+        <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+        <div className="absolute z-20 top-full mt-1 left-0 right-0 bg-dark-800 border border-white/10 rounded-xl shadow-2xl max-h-72 overflow-y-auto">
+          {options.map(o => {
+            const fd = allFontDefs[o.value]
+            const family = fd?.name || o.value
+            return (
+              <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false) }}
+                className={"w-full text-left px-4 py-3 text-sm transition-colors border-b border-white/5 last:border-0 hover:bg-white/5 " + (value === o.value ? 'bg-accent-gold/10 text-accent-gold' : 'text-gray-300')}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-gray-500 w-16 shrink-0 truncate">{o.label}</span>
+                  <span style={{ fontFamily: `'${family}', serif` }} className="text-base truncate">栖光 ALIGHTS</span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </>}
+    </div>
+  )
+}
+
 /* ─── Main Component ─── */
 export default function AdminPage() {
   /* ── State ── */
@@ -222,6 +268,8 @@ export default function AdminPage() {
 
   // Toast
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({ show: false, message: '', type: 'success' })
+  const [refreshStatus, setRefreshStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [refreshMsg, setRefreshMsg] = useState('')
 
   // Data
   const [stats, setStats] = useState<Stats | null>(null)
@@ -382,6 +430,25 @@ export default function AdminPage() {
     window.location.href = '/admin/login'
   }
 
+  const doRefresh = async () => {
+    setRefreshStatus('loading')
+    setRefreshMsg('')
+    try {
+      const res = await fetch('/api/admin/refresh-stash', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setRefreshStatus('done')
+        setRefreshMsg(data.message || '刷新任务已触发')
+      } else {
+        setRefreshStatus('error')
+        setRefreshMsg(data.error || data.message || '刷新失败')
+      }
+    } catch {
+      setRefreshStatus('error')
+      setRefreshMsg('网络错误')
+    }
+  }
+
   const fetchWorks = () => fetch('/api/admin/works').then(r => r.ok ? r.json() : []).then(setWorks).catch(() => {})
   const fetchStats = () => fetch('/api/admin/stats').then(r => r.ok ? r.json() : null).then(setStats).catch(() => {})
 
@@ -475,6 +542,10 @@ export default function AdminPage() {
       </div>
     }
     if (f.type === 'select' && f.options) {
+      const isFontSelect = f.path.includes('font') || f.path.includes('Font')
+      if (isFontSelect) {
+        return <FontSelect key={f.path} value={val} options={f.options} onChange={v => updateConfigValue(f.path, v)} />
+      }
       return <select key={f.path} value={val || ''} onChange={e => updateConfigValue(f.path, e.target.value)}
         className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none cursor-pointer">
         {!f.options.some(o => o.value === val) && <option value="" disabled className="bg-dark-900">请选择...</option>}
@@ -919,6 +990,31 @@ export default function AdminPage() {
                           className="px-5 py-2 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 disabled:opacity-50 transition-colors">
                           {saveStatus === 'saving' ? '保存中...' : '保存修改'}
                         </button>
+                      </div>
+                    </div>
+                  )
+                }
+
+                /* ── Action section (e.g. refresh stash) ── */
+                if ((sectionDef as any).isAction) {
+                  return (
+                    <div className="bg-black/30 rounded-xl border border-white/5 p-5 animate-in fade-in duration-200">
+                      <h3 className="text-base font-medium text-white mb-5 flex items-center gap-2">
+                        <Upload className="w-5 h-5 text-accent-gold" />数据管理
+                      </h3>
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm text-gray-400 mb-1">刷新新片场热度数据</p>
+                          <p className="text-xs text-gray-600">从新片场重新拉取所有作品的播放量/点赞/收藏数据，更新主页和作品集的排序。需要本地 Chrome CDP（端口 9222）。</p>
+                        </div>
+                        <button onClick={doRefresh} disabled={refreshStatus === 'loading'}
+                          className="px-6 py-3 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 disabled:opacity-50 transition-colors flex items-center gap-2">
+                          <Upload className={"w-4 h-4 " + (refreshStatus === 'loading' ? 'animate-spin' : '')} />
+                          {refreshStatus === 'loading' ? '刷新中...' : '同步新片场数据'}
+                        </button>
+                        {refreshMsg && (
+                          <pre className="text-xs text-gray-400 bg-white/5 p-3 rounded-lg whitespace-pre-wrap font-sans">{refreshMsg}</pre>
+                        )}
                       </div>
                     </div>
                   )

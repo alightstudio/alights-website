@@ -289,7 +289,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {works.length > 0 ? works.map((work: any) => (
-              <Link key={work.id} href={`/works?id=${work.id}`} className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
+              <a key={work.id} href={work.videoUrl || '/gallery'} target="_blank" rel="noopener noreferrer" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
                 <Image src={work.coverUrl || ''} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                 <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
@@ -300,7 +300,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                     <span>{work.category}</span><span className="text-gray-700">·</span><span className="text-gray-600">{work.categoryEn || ''}</span>
                   </div>
                 </div>
-              </Link>
+              </a>
             )) : DEFAULT_WORKS_PLACEHOLDER.map((work, i) => (
               <Link key={i} href="/works" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
                 <Image src={work.image} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />

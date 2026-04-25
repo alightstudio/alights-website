@@ -88,6 +88,7 @@ const DEFAULT_CONFIG = {
     opacity: 0.6,
     lineOpacity: 0.25,
     starCount: 60,
+    trailOpacity: 0,
   },
   theme: {
     primaryColor: '#c9a962',

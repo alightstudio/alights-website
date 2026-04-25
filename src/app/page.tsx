@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import HomeClient from './HomeClient'
+import { stash176, stash175 } from '@/lib/stash-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,27 +83,45 @@ async function getInitialConfig() {
   }
 }
 
-/** 服务端读取精选作品（按热度排序） */
+/** 服务端读取精选作品（从新片场数据按热度排序） */
 async function getInitialWorks() {
   try {
-    const works = await prisma.work.findMany({
-      where: { status: 'APPROVED' },
-      orderBy: { viewCount: 'desc' },
-      take: 6,
-      select: { id: true, title: true, description: true, category: true, coverUrl: true, createdAt: true, viewCount: true },
-    })
-    return works.map(w => ({
+    // 合并所有新片场作品，按热度排序
+    const all = [...stash176, ...stash175]
+    all.sort((a, b) => b.heat - a.heat)
+    return all.slice(0, 6).map(w => ({
       id: w.id,
       title: w.title,
       titleEn: '',
-      coverUrl: w.coverUrl || '',
-      category: w.category || '',
+      coverUrl: w.thumbnail,
+      category: mapCategory(w.categories),
       categoryEn: '',
-      views: w.viewCount || 0,
+      views: w.views || 0,
+      videoUrl: w.videoUrl,
+      heat: w.heat,
     }))
   } catch {
     return []
   }
+}
+
+function mapCategory(cat: string): string {
+  const map: Record<string, string> = {
+    '广告片': 'TVC广告',
+    '宣传片': 'TVC广告',
+    '竖屏广告': 'TVC广告',
+    '剧情短片': '影视剧',
+    '纪录片': '影视剧',
+    '电影': '影视剧',
+    '三维CG': '产品动画',
+    '二维动画': '产品动画',
+    'AIGC': '产品动画',
+    '视觉探索': '产品动画',
+    '学习分享': 'TVC广告',
+    '自媒体': 'TVC广告',
+    '其他': 'TVC广告',
+  }
+  return map[cat] || 'TVC广告'
 }
 
 export default async function HomePage() {

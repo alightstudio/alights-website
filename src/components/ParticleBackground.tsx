@@ -14,6 +14,7 @@ interface ParticleConfig {
   lineWidth: number
   lineWidthBoost: number
   starCount: number
+  trailOpacity: number
 }
 
 const DEFAULTS: ParticleConfig = {
@@ -28,6 +29,7 @@ const DEFAULTS: ParticleConfig = {
   lineWidth: 0.3,
   lineWidthBoost: 0.8,
   starCount: 60,
+  trailOpacity: 0,
 }
 
 function getResponsiveScale(): number {
@@ -231,8 +233,8 @@ export default function ParticleBackground({ config: userConfig }: { config?: Pa
 
     // 动画
     function animate() {
-      // 半透明拖尾
-      ctx!.fillStyle = 'rgba(8,8,8,0.18)'
+      // 半透明拖尾（管理后台可调）
+      ctx!.fillStyle = `rgba(8,8,8,${cfg.trailOpacity})`
       ctx!.fillRect(0, 0, W, H)
 
       // 星光

@@ -17,8 +17,8 @@ const DEFAULTS: Required<SpotlightConfig> = {
   enabled: true,
   glowColor: '#f5f0e8',
   darkColor: '#1a1a1a',
-  glowSize: 160,
-  glowSpread: 60,
+  glowSize: 220,       // 径向光圈半径（像素）
+  glowSpread: 80,     // 衰减距离
   accentGlow: true,
   accentColor: '#c9a962',
   textShadowGlow: 40,

@@ -195,6 +195,12 @@ function formatDuration(seconds: number) {
 export default function GalleryPage() {
   const [activeTab, setActiveTab] = useState('176')
 
+  // 按年代分组
+  const stashGroups = [
+    { label: '最新收藏 (170-176)', stashes: allStashes.filter(s => parseInt(s.id) >= 170) },
+    { label: '早期收藏 (160-169)', stashes: allStashes.filter(s => parseInt(s.id) < 170) },
+  ]
+
   return (
     <div className="pt-24 pb-32">
       {/* Header */}
@@ -206,14 +212,17 @@ export default function GalleryPage() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="font-display text-5xl md:text-6xl font-light mb-6">
-              佳片欣赏
+              创意灵感
             </h1>
             <div className="w-24 h-px bg-accent-gold/40 mb-4" />
             <p className="text-sm text-gray-600 tracking-wide mb-4">
-              {allStashes.length} 个收藏集 · 共 <span className="text-accent-gold/60">{totalWorks.toString()}</span> 部作品
+              {allStashes.length} 个收藏集 · 共 <span className="text-accent-gold/60">{totalWorks.toLocaleString()}</span> 部作品
             </p>
-            <p className="text-xl text-gray-400 max-w-3xl leading-relaxed">
+            <p className="text-lg text-gray-400 max-w-3xl leading-relaxed">
               汇聚优秀创作者的视觉作品，激发无限灵感
+            </p>
+            <p className="text-sm text-gray-500 max-w-3xl leading-relaxed mt-1">
+              Curated visual inspiration from outstanding creators
             </p>
           </motion.div>
         </div>
@@ -222,8 +231,8 @@ export default function GalleryPage() {
       {/* Works Grid */}
       <section className="px-6 md:px-12 lg:px-24">
         <div className="max-w-7xl mx-auto">
-          {/* Tab Bar */}
-          <div className="flex gap-1 mb-12 border-b border-dark-700 overflow-x-auto">
+          {/* Tab Bar - 统一滑动选择 */}
+          <div className="flex gap-1 mb-12 border-b border-dark-700 overflow-x-auto scrollbar-none">
             {allStashes.map(st => (
               <TabBtn key={st.id} label={st.label} count={st.data.length} active={activeTab===st.id} onClick={()=>setActiveTab(st.id)} />
             ))}
@@ -241,7 +250,7 @@ export default function GalleryPage() {
         <div className="max-w-7xl mx-auto">
           <div className="border border-dark-700 p-12 text-center">
             <h3 className="font-display text-2xl mb-4">有优秀作品想展示？</h3>
-            <p className="text-gray-500 mb-8">注册账号后上传作品，通过审核即可在佳片欣赏页面展示</p>
+            <p className="text-gray-500 mb-8">注册账号后上传作品，通过审核即可在创意灵感页面展示</p>
             <a
               href="/register"
               className="inline-block bg-accent-gold/20 border border-accent-gold/40 text-accent-gold px-8 py-4 text-sm tracking-widest uppercase hover:bg-accent-gold/30 transition-all"

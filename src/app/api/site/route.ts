@@ -19,14 +19,14 @@ const DEFAULT_COMPANY = {
 
 const DEFAULT_CONTACT = { phone: "15091855505", email: "184436962@qq.com", address: "陕西省西安市", wechat: "" }
 const DEFAULT_SEO = { title: "栖光文化 | ALIGHTS - 专业视效制作", description: "专业视效制作领域。TVC广告、产品动画、发布会、影视剧。", keywords: "栖光,视效,TVC广告" }
-const DEFAULT_HERO = { title: "栖光", titleEn: "ALIGHTS", subtitle: "专业视效制作 · 光影叙事艺术", subtitleEn: "Professional Visual Effects · Cinematic Storytelling", tags: ["TVC广告", "产品动画", "发布会", "影视剧"] }
+const DEFAULT_HERO = { title: "栖光", titleEn: "ALIGHTS", subtitle: "光栖之处 · 自有答案", subtitleEn: "Where light alights · Truth resides", tags: ["TVC广告", "产品动画", "AIGC", "发布会", "影视剧"] }
 
 const DEFAULT_NAVIGATION = {
   logo: "栖光",
   items: [
     { id: "home", label: "首页", href: "/", visible: true, order: 0 },
     { id: "works", label: "作品集", href: "/works", visible: true, order: 1 },
-    { id: "gallery", label: "佳片欣赏", href: "/gallery", visible: true, order: 2 },
+    { id: "gallery", label: "创意灵感", href: "/gallery", visible: true, order: 2 },
     { id: "canvas", label: "像素画布", href: "/canvas", visible: true, order: 3 },
     { id: "community", label: "社区", href: "/community", visible: true, order: 4 },
     { id: "about", label: "关于我们", href: "/about", visible: true, order: 5 },
@@ -42,7 +42,7 @@ const DEFAULT_FOOTER = {
       id: "nav", title: "导航", type: "links",
       links: [
         { label: "作品集", href: "/works", order: 0 },
-        { label: "佳片欣赏", href: "/gallery", order: 1 },
+        { label: "创意灵感", href: "/gallery", order: 1 },
         { label: "像素画布", href: "/canvas", order: 2 },
         { label: "社区", href: "/community", order: 3 },
         { label: "关于我们", href: "/about", order: 4 },
@@ -83,7 +83,7 @@ const DEFAULT_ANNOUNCEMENT = {
 const DEFAULT_PAGES = {
   home: { label: "首页", path: "/", visible: true },
   works: { label: "作品集", path: "/works", visible: true },
-  gallery: { label: "佳片欣赏", path: "/gallery", visible: true },
+  gallery: { label: "创意灵感", path: "/gallery", visible: true },
   canvas: { label: "像素画布", path: "/canvas", visible: true },
   community: { label: "社区", path: "/community", visible: true },
   about: { label: "关于我们", path: "/about", visible: true },
@@ -124,14 +124,14 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      company: configMap.company || DEFAULT_COMPANY,
+      company: (() => { const c = configMap.company || DEFAULT_COMPANY; return c; })(),
       contact: { phone: configMap.contact?.phone || DEFAULT_CONTACT.phone, email: configMap.contact?.email || DEFAULT_CONTACT.email, address: configMap.contact?.address || DEFAULT_CONTACT.address, wechat: configMap.contact?.wechat || "" },
       seo: configMap.seo || DEFAULT_SEO,
-      hero: configMap.hero || DEFAULT_HERO,
+      hero: (() => { const h = configMap.hero || DEFAULT_HERO; if (h && typeof h.tags === 'string') h.tags = h.tags.split(',').map((t: string) => t.trim()); return h; })(),
       featuredWorks: configMap.featuredWorks || [],
       services: configMap.services || [],
       brands: configMap.brands || [],
-      brandDisplay: configMap.brandDisplay || { opacity: 0.75, opacityHover: 1, grayscale: false, grayscaleHover: false },
+      brandDisplay: configMap.brandDisplay || { opacity: 0.75, opacityHover: 1, grayscale: true, grayscaleHover: true },
       navigation: configMap.navigation || DEFAULT_NAVIGATION,
       footer: configMap.footer || DEFAULT_FOOTER,
       theme: configMap.theme || DEFAULT_THEME,
@@ -152,7 +152,7 @@ export async function GET() {
       featuredWorks: [],
       services: [],
       brands: [],
-      brandDisplay: { opacity: 0.75, opacityHover: 1, grayscale: false, grayscaleHover: false },
+      brandDisplay: { opacity: 0.75, opacityHover: 1, grayscale: true, grayscaleHover: true },
       aboutTeamVideo: '',
     })
   }

@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useEffect, useState, useCallback } from 'react'
+import { DISPLAY_FONTS, SANS_FONTS } from '@/lib/fonts'
+import { changeFontsSafe } from '@/lib/siteConfig'
 import {
   LayoutDashboard, Film, Users, Settings, BarChart3,
   MessageSquare, Palette, Image, LogOut, Menu, X,
@@ -8,7 +10,7 @@ import {
   Mail, Type, Languages, Megaphone,
   Share2, Shield, Eye, ChevronRight, Award,
   Plus, ChevronUp, ChevronDown, TrendingUp, TrendingDown, Minus,
-  FileText, Clock, Upload
+  FileText, Clock, Upload, Key
 } from 'lucide-react'
 
 /* ─── Types ─── */
@@ -24,7 +26,7 @@ type Tab = 'dashboard' | 'works' | 'users' | 'settings' | 'analytics' | 'contact
 type StatusFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
 
 /* ─── Reusable field config for settings forms ─── */
-interface FieldDef { label: string; path: string; type?: 'text' | 'textarea' | 'color' | 'toggle'; placeholder?: string; toggleLabels?: [string, string] }
+interface FieldDef { label: string; path: string; type?: 'text' | 'textarea' | 'color' | 'toggle' | 'select'; placeholder?: string; toggleLabels?: [string, string]; options?: { value: string; label: string }[] }
 
 const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; fields: FieldDef[]; special?: 'navigation' | 'brands' }> = {
   company: {
@@ -94,10 +96,35 @@ const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; 
       { label: '主题色', path: 'theme.primaryColor', type: 'color', placeholder: '#c9a962' },
       { label: '背景色', path: 'theme.bgColor', type: 'color', placeholder: '#0a0a0a' },
       { label: '文字色', path: 'theme.textColor', type: 'color', placeholder: '#ffffff' },
-      { label: '正文字体', path: 'theme.fontFamily' },
-      { label: '展示字体', path: 'theme.fontDisplay' },
+      { label: '正文字体', path: 'theme.fontFamily', type: 'select', options: SANS_FONTS.map(f => ({ value: f.id, label: `${f.name} ${f.chineseSupport ? '· 中文' : ''}` })) },
+      { label: '展示字体', path: 'theme.fontDisplay', type: 'select', options: DISPLAY_FONTS.map(f => ({ value: f.id, label: `${f.name} ${f.category === 'serif' ? '· 衬线' : f.chineseSupport ? '· 中文' : ''}` })) },
       { label: '圆角大小', path: 'theme.borderRadius', placeholder: '0' },
       { label: '自定义 CSS', path: 'theme.customCSS', type: 'textarea', placeholder: '额外 CSS 样式...' },
+    ],
+  },
+  particle: {
+    icon: BarChart3, label: '粒子背景',
+    fields: [
+      { label: '粒子数量', path: 'particle.count', placeholder: '200' },
+      { label: '粒子大小', path: 'particle.size', placeholder: '1.2' },
+      { label: '连线距离', path: 'particle.connectDist', placeholder: '120' },
+      { label: '鼠标半径', path: 'particle.mouseRadius', placeholder: '140' },
+      { label: '移动速度', path: 'particle.speed', placeholder: '0.4' },
+      { label: '粒子颜色', path: 'particle.color', type: 'color', placeholder: '#c9a962' },
+      { label: '粒子透明度', path: 'particle.opacity', placeholder: '0.6' },
+      { label: '连线透明度', path: 'particle.lineOpacity', placeholder: '0.25' },
+      { label: '连线粗细', path: 'particle.lineWidth', placeholder: '0.3' },
+      { label: '连线粗度增幅', path: 'particle.lineWidthBoost', placeholder: '0.8' },
+      { label: '背景星光数', path: 'particle.starCount', placeholder: '60' },
+    ],
+  },
+  spotlight: {
+    icon: Eye, label: '聚光效果',
+    fields: [
+      { label: '启用', path: 'spotlight.enabled', type: 'toggle', toggleLabels: ['禁用', '启用'] },
+      { label: '光晕颜色', path: 'spotlight.glowColor', type: 'color', placeholder: '#f5f0e8' },
+      { label: '光晕大小(px)', path: 'spotlight.glowSize', placeholder: '180' },
+      { label: '边缘扩散(px)', path: 'spotlight.glowSpread', placeholder: '40' },
     ],
   },
   navigation: {
@@ -211,6 +238,37 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [userForm, setUserForm] = useState({ name: '', phone: '', email: '', company: '', bio: '', points: 0 })
 
+  // Password change
+  const [showPwdModal, setShowPwdModal] = useState(false)
+  const [pwdForm, setPwdForm] = useState({ current: '', newPwd: '' })
+  const [pwdLoading, setPwdLoading] = useState(false)
+  const [pwdError, setPwdError] = useState('')
+
+  const changePassword = async () => {
+    setPwdError('')
+    if (!pwdForm.current || !pwdForm.newPwd) { setPwdError('请输入当前密码和新密码'); return }
+    if (pwdForm.newPwd.length < 6) { setPwdError('新密码至少6位'); return }
+    setPwdLoading(true)
+    try {
+      const res = await fetch('/api/admin/change-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: pwdForm.current, newPassword: pwdForm.newPwd }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast('密码修改成功')
+        setShowPwdModal(false)
+        setPwdForm({ current: '', newPwd: '' })
+      } else {
+        setPwdError(data.error || '修改失败')
+      }
+    } catch {
+      setPwdError('网络错误')
+    } finally {
+      setPwdLoading(false)
+    }
+  }
+
   /* ── Helpers ── */
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type })
@@ -236,7 +294,19 @@ export default function AdminPage() {
     ]).then(([s, w, u, c]) => {
       if (s) setStats(s)
       setWorks(w); setUsers(u)
-      if (c) { setConfig(c); setEditConfig(c) }
+      if (c) {
+        // 兼容旧数据：将 CSS 字体名转为字体 ID（大小写不敏感）
+        const theme = c.theme || {}
+        const allFonts = [...SANS_FONTS, ...DISPLAY_FONTS]
+        const normalizeFont = (v: string) => {
+          if (!v) return v
+          const match = allFonts.find(f => f.name.toLowerCase() === v.toLowerCase() || f.id === v)
+          return match?.id || v
+        }
+        if (theme.fontFamily) theme.fontFamily = normalizeFont(theme.fontFamily)
+        if (theme.fontDisplay) theme.fontDisplay = normalizeFont(theme.fontDisplay)
+        setConfig(c); setEditConfig(c)
+      }
     })
   }, [authed])
 
@@ -262,6 +332,10 @@ export default function AdminPage() {
         setSaveStatus('saved'); setConfig(prev => prev ? { ...prev, [section]: data } : prev)
         showToast('保存成功')
         setTimeout(() => setSaveStatus('idle'), 2000)
+        // 保存字体时预加载 Google Fonts，避免切换页面时闪烁
+        if (section === 'theme' && data?.fontFamily) {
+          changeFontsSafe(data).catch(() => {})
+        }
       } else {
         showToast('保存失败', 'error')
       }
@@ -386,6 +460,13 @@ export default function AdminPage() {
           className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none font-mono" />
       </div>
     }
+    if (f.type === 'select' && f.options) {
+      return <select key={f.path} value={val || ''} onChange={e => updateConfigValue(f.path, e.target.value)}
+        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none cursor-pointer">
+        {!f.options.some(o => o.value === val) && <option value="" disabled className="bg-dark-900">请选择...</option>}
+        {f.options.map(o => <option key={o.value} value={o.value} className="bg-dark-900">{o.label}</option>)}
+      </select>
+    }
     return <input key={f.path} type={f.type || 'text'} value={val} onChange={e => updateConfigValue(f.path, e.target.value)}
       placeholder={f.placeholder || ''}
       className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
@@ -433,8 +514,12 @@ export default function AdminPage() {
           ))}
         </nav>
         <div className="p-3 border-t border-white/5">
+          <button onClick={() => setShowPwdModal(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+            <Key className="w-4 h-4" />修改密码
+          </button>
           <button onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-400/5 transition-colors">
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-400/5 transition-colors mt-1">
             <LogOut className="w-4 h-4" />退出登录
           </button>
         </div>
@@ -1065,6 +1150,7 @@ export default function AdminPage() {
               ))}
             </nav>
             <div className="mt-4 pt-4 border-t border-white/10">
+              <button onClick={() => { setShowPwdModal(true); setMobileOpen(false) }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400"><Key className="w-4 h-4" />修改密码</button>
               <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400"><LogOut className="w-4 h-4"/>退出登录</button>
             </div>
           </div>
@@ -1098,6 +1184,43 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ── Password Change Modal ── */}
+      {showPwdModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => { setShowPwdModal(false); setPwdError(''); setPwdForm({ current: '', newPwd: '' }) }}>
+          <div className="bg-dark-800 rounded-2xl border border-white/10 p-6 w-full max-w-md mx-4 shadow-2xl animate-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-medium text-white flex items-center gap-2"><Key className="w-5 h-5 text-accent-gold" />修改管理员密码</h3>
+              <button onClick={() => { setShowPwdModal(false); setPwdError(''); setPwdForm({ current: '', newPwd: '' }) }} className="p-1 text-gray-400 hover:text-white rounded-lg hover:bg-white/5"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider">当前密码</label>
+                <input type="password" value={pwdForm.current}
+                  onChange={e => setPwdForm(p => ({ ...p, current: e.target.value }))}
+                  placeholder="输入当前密码"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider">新密码</label>
+                <input type="password" value={pwdForm.newPwd}
+                  onChange={e => setPwdForm(p => ({ ...p, newPwd: e.target.value }))}
+                  placeholder="输入新密码（至少6位）"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-accent-gold focus:outline-none" />
+              </div>
+              {pwdError && <p className="text-xs text-red-400 bg-red-400/5 rounded-lg px-3 py-2">{pwdError}</p>}
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => { setShowPwdModal(false); setPwdError(''); setPwdForm({ current: '', newPwd: '' }) }}
+                className="flex-1 px-4 py-2 bg-white/5 text-gray-300 rounded-lg text-sm hover:bg-white/10 transition-colors">取消</button>
+              <button onClick={changePassword} disabled={pwdLoading}
+                className="flex-1 px-4 py-2 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 disabled:opacity-50 transition-colors">
+                {pwdLoading ? '修改中...' : '确认修改'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
@@ -1107,8 +1230,10 @@ function CanvasAdmin() {
   const [activeCanvas, setActiveCanvas] = useState<any>(null)
   const [history, setHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [settling, setSettling] = useState(false)
 
-  useEffect(() => {
+  const fetchData = () => {
+    setLoading(true)
     Promise.all([
       fetch('/api/canvas/current').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/canvas/history').then(r => r.ok ? r.json() : { canvases: [] }).catch(() => ({ canvases: [] })),
@@ -1117,7 +1242,28 @@ function CanvasAdmin() {
       setHistory(hist.canvases || [])
       setLoading(false)
     })
-  }, [])
+  }
+
+  useEffect(() => { fetchData() }, [])
+
+  const manualSettle = async () => {
+    if (!confirm('确定手动结算？将归档24小时以上的画布并创建新画布。')) return
+    setSettling(true)
+    try {
+      const res = await fetch('/api/cron/daily-settle', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        alert(`成功结算 ${data.settled} 张画布`)
+        fetchData()
+      } else {
+        alert('结算失败: ' + (data.error || '未知错误'))
+      }
+    } catch {
+      alert('网络错误')
+    } finally {
+      setSettling(false)
+    }
+  }
 
   if (loading) return <div className="text-center py-12 text-gray-500">加载中...</div>
 
@@ -1139,6 +1285,18 @@ function CanvasAdmin() {
             <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Manual Settle */}
+      <div className="flex items-center justify-between p-4 bg-accent-gold/5 border border-accent-gold/15 rounded-xl">
+        <div>
+          <p className="text-sm text-white font-medium">手动结算</p>
+          <p className="text-xs text-gray-500 mt-0.5">系统每天 00:00 自动结算。若未正常执行，可手动触发。</p>
+        </div>
+        <button onClick={manualSettle} disabled={settling}
+          className="px-4 py-2 bg-accent-gold text-dark-900 rounded-lg text-sm font-medium hover:bg-accent-gold/90 disabled:opacity-50 transition-colors shrink-0">
+          {settling ? '结算中...' : '立即结算'}
+        </button>
       </div>
 
       {/* Active Canvas */}

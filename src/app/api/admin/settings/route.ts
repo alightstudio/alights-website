@@ -30,9 +30,9 @@ const DEFAULT_CONFIG = {
   hero: {
     title: "栖光",
     titleEn: "ALIGHTS",
-    subtitle: "专业视效制作 · 光影叙事艺术",
-    subtitleEn: "Professional Visual Effects · Cinematic Storytelling",
-    tags: ["TVC广告", "产品动画", "发布会", "影视剧"]
+    subtitle: "光栖之处 · 自有答案",
+    subtitleEn: "Where light alights · Truth resides",
+    tags: ["TVC广告", "产品动画", "AIGC", "发布会", "影视剧"]
   },
   featuredWorks: [],
   services: [
@@ -53,7 +53,7 @@ const DEFAULT_CONFIG = {
     items: [
       { id: 'home', label: '首页', href: '/', visible: true, order: 0 },
       { id: 'works', label: '作品集', href: '/works', visible: true, order: 1 },
-      { id: 'gallery', label: '佳片欣赏', href: '/gallery', visible: true, order: 2 },
+      { id: 'gallery', label: '创意灵感', href: '/gallery', visible: true, order: 2 },
       { id: 'community', label: '社区', href: '/community', visible: true, order: 3 },
       { id: 'about', label: '关于我们', href: '/about', visible: true, order: 4 },
       { id: 'contact', label: '联系合作', href: '/contact', visible: true, order: 5 },
@@ -65,7 +65,7 @@ const DEFAULT_CONFIG = {
     columns: [
       { id: 'nav', title: '导航', type: 'links', links: [
         { label: '作品集', href: '/works', order: 0 },
-        { label: '佳片欣赏', href: '/gallery', order: 1 },
+        { label: '创意灵感', href: '/gallery', order: 1 },
         { label: '社区', href: '/community', order: 2 },
         { label: '关于我们', href: '/about', order: 3 },
         { label: '联系方式', href: '/contact', order: 4 },
@@ -75,6 +75,17 @@ const DEFAULT_CONFIG = {
     ],
     copyright: '© 2024-2026 西安栖光文化传播有限公司. All rights reserved.',
     bottomText: 'alights.cn'
+  },
+  particle: {
+    count: 200,
+    size: 1.2,
+    connectDist: 120,
+    mouseRadius: 140,
+    speed: 0.4,
+    color: '#c9a962',
+    opacity: 0.6,
+    lineOpacity: 0.25,
+    starCount: 60,
   },
   theme: {
     primaryColor: '#c9a962',
@@ -88,7 +99,7 @@ const DEFAULT_CONFIG = {
   pages: {
     home: { label: '首页', path: '/', visible: true },
     works: { label: '作品集', path: '/works', visible: true },
-    gallery: { label: '佳片欣赏', path: '/gallery', visible: true },
+    gallery: { label: '创意灵感', path: '/gallery', visible: true },
     community: { label: '社区', path: '/community', visible: true },
     about: { label: '关于我们', path: '/about', visible: true },
     contact: { label: '联系合作', path: '/contact', visible: true },

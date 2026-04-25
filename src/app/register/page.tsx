@@ -84,7 +84,7 @@ export default function RegisterPage() {
           </Link>
 
           <h1 className="font-display text-4xl font-light mb-4">用户注册</h1>
-          <p className="text-gray-400 mb-12">注册后可上传作品参与审核，有机会在佳片欣赏页展示</p>
+          <p className="text-gray-400 mb-12">注册后可上传作品参与审核，有机会在创意灵感页展示</p>
 
           {error && (
             <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 mb-6 text-sm">

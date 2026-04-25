@@ -210,7 +210,7 @@ export default function DashboardPage() {
               href="/gallery"
               className="border border-dark-600 text-gray-400 px-6 py-3 text-sm tracking-widest uppercase hover:border-gray-600 hover:text-white transition-all"
             >
-              佳片欣赏
+              创意灵感
             </Link>
           </div>
 
@@ -410,7 +410,7 @@ export default function DashboardPage() {
                   {uploading ? '处理中...' : '提交审核'}
                 </button>
                 <p className="text-xs text-gray-600 text-center mt-4">
-                  提交后管理员将在24小时内完成审核，通过后作品将在"佳片欣赏"页面展示
+                  提交后管理员将在24小时内完成审核，通过后作品将在"创意灵感"页面展示
                 </p>
               </div>
             </form>

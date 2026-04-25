@@ -1,12 +1,11 @@
 'use client'
 import { useEffect } from 'react'
-import { usePathname } from 'next/navigation'
 
 export default function AnalyticsTracker() {
-  const pathname = usePathname()
-
+  // ⚠️ usePathname 在 SSR 时返回 ''，客户端水合时返回实际路径
+  // 放在 useEffect 里确保只在浏览器执行，避免 React 水合错误
   useEffect(() => {
-    // 生成访客ID（存localStorage，30天有效期）
+    const pathname = window.location.pathname
     const visitorId = localStorage.getItem('alights_visitor_id')
       || (() => {
         const id = Math.random().toString(36).slice(2)
@@ -18,8 +17,8 @@ export default function AnalyticsTracker() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path: pathname, visitorId }),
-    }).catch(() => {}) // 不阻塞UI
-  }, [pathname])
+    }).catch(() => {})
+  }, [])
 
   return null
 }

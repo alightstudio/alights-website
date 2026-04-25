@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-const COLORS = ['#000000', '#FF0000', '#00FF00', '#FFFF00', '#0000FF', '#800080', '#808080', '#A52A2A', '#D2B48C', '#00FFFF']
+const COLORS = ['#FFFFFF','#000000','#333333','#666666','#999999','#C9A962','#A0895C','#8B7355','#8B2500','#722F37','#2F4F4F','#4A766E','#1B3A5C','#1C3A5C','#4A3B5C','#A0895C','#C3A86C','#F5F0E0','#CC3333','#CC7733','#CCAA33','#33AA55','#33AAAA','#3366CC','#CC6699','#8844AA']
 
 // GET /api/cron/random-pixel — Vercel Cron 每10分钟触发
 // 在活跃画布的随机空位放置一个新像素

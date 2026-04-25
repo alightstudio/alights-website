@@ -5,17 +5,34 @@ import CanvasLeaderboard from '@/components/CanvasLeaderboard'
 import CanvasMarketplace from '@/components/CanvasMarketplace'
 
 const BASE_COLORS = [
-  { name: '白', hex: '#FFFFFF' },
-  { name: '黑', hex: '#000000' },
-  { name: '红', hex: '#FF0000' },
-  { name: '绿', hex: '#00FF00' },
-  { name: '黄', hex: '#FFFF00' },
-  { name: '蓝', hex: '#0000FF' },
-  { name: '紫', hex: '#800080' },
-  { name: '灰', hex: '#808080' },
-  { name: '棕', hex: '#A52A2A' },
-  { name: '褐', hex: '#D2B48C' },
-  { name: '青', hex: '#00FFFF' },
+  { name: '白色', hex: '#FFFFFF' },
+  { name: '黑色', hex: '#000000' },
+  { name: '深灰', hex: '#333333' },
+  { name: '中灰', hex: '#666666' },
+  { name: '浅灰', hex: '#999999' },
+  { name: '金色', hex: '#C9A962' },
+  { name: '暗金', hex: '#A0895C' },
+  { name: '青铜', hex: '#8B7355' },
+  // 暗彩色
+  { name: '暗红', hex: '#8B2500' },
+  { name: '酒红', hex: '#722F37' },
+  { name: '墨绿', hex: '#2F4F4F' },
+  { name: '松绿', hex: '#4A766E' },
+  { name: '藏蓝', hex: '#1B3A5C' },
+  { name: '普鲁士蓝', hex: '#1C3A5C' },
+  { name: '暗紫', hex: '#4A3B5C' },
+  { name: '驼色', hex: '#A0895C' },
+  { name: '卡其', hex: '#C3A86C' },
+  { name: '米白', hex: '#F5F0E0' },
+  // 亮色
+  { name: '红', hex: '#CC3333' },
+  { name: '橙', hex: '#CC7733' },
+  { name: '黄', hex: '#CCAA33' },
+  { name: '绿', hex: '#33AA55' },
+  { name: '青', hex: '#33AAAA' },
+  { name: '蓝', hex: '#3366CC' },
+  { name: '粉', hex: '#CC6699' },
+  { name: '紫', hex: '#8844AA' },
 ]
 
 const CELL_BASE = 20
@@ -547,6 +564,20 @@ export default function CanvasPage() {
             title={c.name + ' | 右键像素取色'}
           />
         ))}
+        {/* 色轮自定义颜色 */}
+        <label className="relative cursor-pointer ml-1" title="选择任意颜色">
+          <input
+            type="color"
+            value={selectedColor}
+            onChange={e => setSelectedColor(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+          <div className={'w-7 h-7 rounded-sm border border-dashed flex items-center justify-center transition-all ' + (BASE_COLORS.some(c => c.hex === selectedColor) ? 'border-dark-600 text-gray-600' : 'border-accent-gold text-accent-gold')}
+            style={{ backgroundColor: BASE_COLORS.some(c => c.hex === selectedColor) ? 'transparent' : selectedColor }}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="10"/></svg>
+          </div>
+        </label>
         {recentColors.length > 0 && (
           <>
             <span className="text-xs text-gray-600 mx-1">|</span>

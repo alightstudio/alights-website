@@ -22,8 +22,8 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Playfair Display', 'serif'],
+        sans: ['var(--font-family)', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'Playfair Display', 'Noto Serif SC', 'serif'],
       },
     },
   },

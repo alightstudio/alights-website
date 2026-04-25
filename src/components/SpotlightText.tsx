@@ -97,14 +97,7 @@ export default function SpotlightText({
     span.style.webkitTextFillColor = 'transparent'
     span.style.color = 'transparent'
 
-    // 文字光晕跟随 intensity
-    if (t > 0.1) {
-      const g = cfg.textShadowGlow * t
-      const alpha = Math.round(t * 0.35 * 255).toString(16).padStart(2, '0')
-      span.style.textShadow = `0 0 ${g}px ${cfg.glowColor}${alpha}`
-    } else {
-      span.style.textShadow = 'none'
-    }
+
 
     // 金色环境光
     if (accent) {

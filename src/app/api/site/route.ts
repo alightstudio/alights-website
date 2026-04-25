@@ -67,7 +67,7 @@ const DEFAULT_THEME = {
   bgColor: "#0a0a0a",
   textColor: "#ffffff",
   fontFamily: "Inter",
-  fontDisplay: "Playfair Display",
+  fontDisplay: "noto-serif-sc",
   borderRadius: "0",
   customCSS: ""
 }

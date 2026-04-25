@@ -117,7 +117,7 @@ export async function changeFontsSafe(theme: ThemeConfig): Promise<void> {
 
   // 3. 再更新 CSS 变量
   root.style.setProperty('--font-family', resolveFontFamily(theme.fontFamily, 'Inter'))
-  root.style.setProperty('--font-display', resolveFontFamily(theme.fontDisplay, "'Playfair Display'"))
+  root.style.setProperty('--font-display', resolveFontFamily(theme.fontDisplay, "'Noto Serif SC'"))
 }
 
 // Apply theme CSS vars to document
@@ -128,8 +128,8 @@ export function applyTheme(theme: ThemeConfig) {
   root.style.setProperty('--color-bg', theme.bgColor || '#0a0a0a')
   root.style.setProperty('--color-text', theme.textColor || '#ffffff')
   root.style.setProperty('--font-family', resolveFontFamily(theme.fontFamily, 'Inter'))
-  root.style.setProperty('--font-display', resolveFontFamily(theme.fontDisplay, "'Playfair Display'"))
-  root.style.setProperty('--border-radius', (theme.borderRadius || '0') + 'px')
+  root.style.setProperty('--font-display', resolveFontFamily(theme.fontDisplay, "'Noto Serif SC'"))
+  root.style.setProperty('--border-radius'), (theme.borderRadius || '0') + 'px')
 
   // 动态加载 Google Fonts
   const bodyFont = theme.fontFamily ? findFont(theme.fontFamily) : null

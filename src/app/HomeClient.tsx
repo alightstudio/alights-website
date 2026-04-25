@@ -113,7 +113,12 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                 glowClassName="font-display text-6xl md:text-8xl font-black tracking-wider"
               />
             </div>
-            <p className="text-xl md:text-3xl text-gray-500 font-light tracking-[0.3em]">{hero.titleEn}</p>
+            <SpotlightText
+              text={hero.titleEn}
+              config={spotlightConfig}
+              className="text-xl md:text-3xl font-display font-light tracking-[0.3em]"
+              glowClassName="text-xl md:text-3xl font-display font-light tracking-[0.3em]"
+            />
           </div>
           <div className="mt-12">
             <SpotlightText

@@ -61,6 +61,15 @@ export const DISPLAY_FONTS: FontOption[] = [
     category: 'serif',
     chineseSupport: false,
   },
+  {
+    id: 'noto-serif-sc',
+    name: 'Noto Serif SC',
+    family: "'Noto Serif SC'",
+    googleFontName: 'Noto+Serif+SC',
+    weights: '300;400;500;600;700;900',
+    category: 'serif',
+    chineseSupport: true,
+  },
   ...SANS_FONTS,
   {
     id: 'plus-jakarta',

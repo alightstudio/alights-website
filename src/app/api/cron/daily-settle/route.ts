@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 // Vercel Cron 鉴权：验证 CRON_SECRET header
-function isAuthorized(req: NextRequest): boolean {
+function isCronAuthorized(req: NextRequest): boolean {
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
@@ -12,10 +13,13 @@ function isAuthorized(req: NextRequest): boolean {
   return authHeader === `Bearer ${cronSecret}`
 }
 
-// POST /api/cron/daily-settle — Vercel Cron 每日 00:00 触发
-// 检查所有超过24h的活跃画布，归档并创建新画布
+// POST /api/cron/daily-settle — Vercel Cron 每日 00:00 触发 / 管理员手动触发
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  // 两种鉴权方式：1) CRON_SECRET  2) 管理员 session（用于后台手动结算）
+  const isCron = isCronAuthorized(req)
+  const isAdmin = await verifyAdminSession()
+
+  if (!isCron && !isAdmin) {
     return NextResponse.json({ error: '未授权' }, { status: 401 })
   }
 

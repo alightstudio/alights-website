@@ -231,6 +231,7 @@ export default function AdminPage() {
   const [editConfig, setEditConfig] = useState<SiteConfig | null>(null)
   const [contacts, setContacts] = useState<ContactMsg[]>([])
   const [analyticsData, setAnalyticsData] = useState<any>(null)
+  const [analyticsDays, setAnalyticsDays] = useState(30)
 
   // Filters
   const [workFilter, setWorkFilter] = useState<StatusFilter>('ALL')
@@ -320,8 +321,18 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!authed || activeTab !== 'analytics') return
-    fetch('/api/analytics?days=30').then(r => r.ok ? r.json() : null).catch(() => null).then(setAnalyticsData)
+    fetch('/api/analytics?days=30').then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
+      setAnalyticsData(d)
+      setAnalyticsDays(30)
+    })
   }, [authed, activeTab])
+
+  const refreshAnalytics = (days: number) => {
+    fetch(`/api/analytics?days=${days}`).then(r => r.ok ? r.json() : null).catch(() => null).then(d => {
+      setAnalyticsData(d)
+      setAnalyticsDays(days)
+    })
+  }
 
   /* ── Actions ── */
   const saveSection = async (section: string, data: any) => {
@@ -944,6 +955,20 @@ export default function AdminPage() {
           {/* ===== ANALYTICS ===== */}
           {activeTab === 'analytics' && (
             <div className="space-y-6">
+              {/* Time Period Selector */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-xs text-gray-500">时间范围：</span>
+                {[{ label: '7天', days: 7 }, { label: '30天', days: 30 }, { label: '90天', days: 90 }, { label: '180天', days: 180 }, { label: '365天', days: 365 }].map(p => (
+                  <button key={p.days} onClick={() => refreshAnalytics(p.days)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      analyticsDays === p.days ? 'bg-accent-gold text-dark-900 shadow-sm' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/8'
+                    }`}>
+                    {p.label}
+                  </button>
+                ))}
+                <span className="text-[10px] text-gray-600 ml-auto">统计周期：最近 {analyticsDays} 天</span>
+              </div>
+
               {analyticsData ? (
                 <>
                   {/* Summary cards */}
@@ -1043,10 +1068,11 @@ export default function AdminPage() {
                           <th className="px-4 py-2 text-left text-[11px] text-gray-500 w-8">#</th>
                           <th className="px-4 py-2 text-left text-[11px] text-gray-500">页面</th>
                           <th className="px-4 py-2 text-right text-[11px] text-gray-500">PV</th>
+                          <th className="px-4 py-2 text-right text-[11px] text-gray-500 hidden md:table-cell">UV</th>
                           <th className="px-4 py-2 text-right text-[11px] text-gray-500 hidden md:table-cell">占比</th>
                         </tr></thead>
                         <tbody>
-                          {analyticsData.pageStats.map((ps: { path: string; pv: number }, i: number) => {
+                          {analyticsData.pageStats.map((ps: { path: string; pv: number; uv: number }, i: number) => {
                             const pct = analyticsData.totalPv > 0 ? (ps.pv / analyticsData.totalPv * 100).toFixed(1) : '0'
                             return (
                               <tr key={ps.path} className="border-b border-white/5 hover:bg-white/[0.02]">
@@ -1056,18 +1082,69 @@ export default function AdminPage() {
                                     <ChevronRight className="w-3 h-3 text-gray-600"/>
                                     <span className="font-mono text-xs">{ps.path}</span>
                                   </div>
-                                  {/* Progress bar */}
                                   <div className="mt-1 h-1 bg-white/5 rounded-full overflow-hidden">
                                     <div className="h-full bg-accent-gold/40 rounded-full" style={{ width: `${pct}%` }} />
                                   </div>
                                 </td>
                                 <td className="px-4 py-2.5 text-right text-sm text-gray-300 font-mono">{ps.pv.toLocaleString()}</td>
+                                <td className="px-4 py-2.5 text-right text-sm text-gray-400 font-mono hidden md:table-cell">{(ps.uv || 0).toLocaleString()}</td>
                                 <td className="px-4 py-2.5 text-right text-xs text-gray-500 hidden md:table-cell">{pct}%</td>
                               </tr>
                             )
                           })}
                         </tbody>
                       </table>
+                    </div>
+                  )}
+
+                  {/* Weekly summary */}
+                  {analyticsData.weeklyStats?.length > 1 && (
+                    <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+                      <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2"><FileText className="w-4 h-4 text-accent-gold/60"/>周度趋势</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead><tr className="border-b border-white/5">
+                            <th className="px-4 py-2 text-left text-[11px] text-gray-500">周起始</th>
+                            <th className="px-4 py-2 text-right text-[11px] text-gray-500">PV</th>
+                            <th className="px-4 py-2 text-right text-[11px] text-gray-500">UV</th>
+                            <th className="px-4 py-2 text-right text-[11px] text-gray-500">日均PV</th>
+                          </tr></thead>
+                          <tbody>
+                            {analyticsData.weeklyStats.map((w: { week: string; pv: number; uv: number }, i: number) => (
+                              <tr key={w.week} className="border-b border-white/5 hover:bg-white/[0.02]">
+                                <td className="px-4 py-2.5 text-sm text-white">{w.week}</td>
+                                <td className="px-4 py-2.5 text-right text-sm text-blue-400 font-mono">{w.pv.toLocaleString()}</td>
+                                <td className="px-4 py-2.5 text-right text-sm text-green-400 font-mono">{w.uv.toLocaleString()}</td>
+                                <td className="px-4 py-2.5 text-right text-xs text-gray-400">{Math.round(w.pv / 7).toLocaleString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Day of week analysis */}
+                  {analyticsData.dayOfWeekStats && (
+                    <div className="bg-black/30 rounded-xl border border-white/5 p-5">
+                      <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2"><Clock className="w-4 h-4 text-accent-gold/60"/>星期分布（近7天）</h3>
+                      <div className="grid grid-cols-7 gap-2">
+                        {analyticsData.dayOfWeekStats.map((d: { day: number; label: string; labelEn: string; pv: number; uv: number }) => {
+                          const maxPv = Math.max(...analyticsData.dayOfWeekStats.map((x: any) => x.pv), 1)
+                          const barH = (d.pv / maxPv) * 100
+                          const isToday = new Date().getDay() === d.day
+                          return (
+                            <div key={d.day} className={`text-center p-2 rounded-lg ${isToday ? 'bg-accent-gold/10 border border-accent-gold/20' : 'bg-white/[0.02]'}`}>
+                              <p className={`text-[10px] ${isToday ? 'text-accent-gold font-medium' : 'text-gray-500'}`}>{d.labelEn}</p>
+                              <div className="h-16 flex items-end justify-center mt-2">
+                                <div className="w-full max-w-[20px] rounded-t bg-blue-400/50" style={{ height: `${Math.max(barH, 4)}%` }} />
+                              </div>
+                              <p className="text-[10px] text-gray-400 mt-1">{d.label}</p>
+                              <p className="text-xs text-gray-300 font-mono mt-0.5">{d.pv}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )}
                 </>

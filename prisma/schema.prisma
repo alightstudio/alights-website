@@ -40,6 +40,7 @@ model Work {
   videoUrl    String?  // 视频链接
   coverUrl    String?  // 封面图
   status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  viewCount   Int      @default(0) // 浏览量(热度)
   
   // 创作者信息
   creatorName  String
@@ -52,6 +53,17 @@ model Work {
   user    User?  @relation(fields: [userId], references: [id])
   
   reviews Review[]
+  viewLogs WorkView[]
+}
+
+model WorkView {
+  id        String   @id @default(cuid())
+  workId    String
+  work      Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+  visitorId String   // 匿名访客标识
+  createdAt DateTime @default(now())
+
+  @@unique([workId, visitorId]) // 同一访客只计一次
 }
 
 model Review {

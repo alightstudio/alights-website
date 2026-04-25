@@ -82,14 +82,14 @@ async function getInitialConfig() {
   }
 }
 
-/** 服务端读取精选作品（与 /api/featured-works 一致） */
+/** 服务端读取精选作品（按热度排序） */
 async function getInitialWorks() {
   try {
     const works = await prisma.work.findMany({
       where: { status: 'APPROVED' },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { viewCount: 'desc' },
       take: 6,
-      select: { id: true, title: true, description: true, category: true, coverUrl: true, createdAt: true },
+      select: { id: true, title: true, description: true, category: true, coverUrl: true, createdAt: true, viewCount: true },
     })
     return works.map(w => ({
       id: w.id,
@@ -98,6 +98,7 @@ async function getInitialWorks() {
       coverUrl: w.coverUrl || '',
       category: w.category || '',
       categoryEn: '',
+      views: w.viewCount || 0,
     }))
   } catch {
     return []

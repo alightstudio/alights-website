@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import SpotlightText, { resolveSpotlightConfig, SpotlightConfig } from '@/components/SpotlightText'
+import topInspirations from '@/data/top-inspirations.json'
 
 // 禁用 SSR 以避免水合不匹配（Canvas 组件在服务端无 DOM）
 const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), { ssr: false })
@@ -193,6 +194,56 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                 <p className="text-gray-600 text-xs">{service.descEn}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Creative Inspiration — Top 9 Hot Videos */}
+      <section className="py-32 px-6 md:px-12 lg:px-24 relative">
+        <NoiseBg />
+        <div className="max-w-7xl mx-auto relative">
+          <div className="text-center mb-20">
+            <p className="text-xs text-accent-gold/60 tracking-[0.3em] uppercase mb-4">Inspiration</p>
+            <h2 className="font-display text-4xl md:text-5xl font-light mb-2">创意灵感</h2>
+            <p className="text-sm text-gray-500 tracking-wider mb-6">CREATIVE SPARK · 热门灵感</p>
+            <div className="w-24 h-px bg-accent-gold/40 mx-auto" />
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topInspirations.map((work: any, i: number) => (
+              <Link key={work.id} href={work.videoUrl} target="_blank" rel="noopener noreferrer"
+                className="group cursor-pointer block">
+                <div className="relative aspect-video bg-dark-800 border border-dark-700 overflow-hidden mb-3">
+                  <img
+                    src={work.thumbnail}
+                    alt={work.title}
+                    className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+                  <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
+                  <div className="absolute top-2 right-2 bg-black/70 text-xs text-gray-400 px-2 py-0.5">
+                    {Math.floor(work.duration / 60)}:{String(work.duration % 60).padStart(2, '0')}
+                  </div>
+                  <div className="absolute top-2 left-2 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5">
+                    🔥 {work.views.toLocaleString()}
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-4xl">▶</span>
+                  </div>
+                </div>
+                <h3 className="text-sm font-light mb-1 group-hover:text-accent-gold/80 transition-colors leading-snug">{work.title}</h3>
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                  <span>{work.categories}</span>
+                  <span>·</span>
+                  <span>{work.views.toLocaleString()} 播放</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-16">
+            <Link href="/gallery" className="inline-block text-accent-gold text-sm tracking-wide hover:text-accent-silver transition-colors">
+              查看全部灵感 · View All Inspiration →
+            </Link>
           </div>
         </div>
       </section>

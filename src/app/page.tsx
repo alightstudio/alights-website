@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import HomeClient from './HomeClient'
-import { stash176, stash175 } from '@/lib/stash-data'
+import { stash176 } from '@/lib/stash-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,8 +86,8 @@ async function getInitialConfig() {
 /** 服务端读取精选作品（从新片场数据按热度排序） */
 async function getInitialWorks() {
   try {
-    // 合并所有新片场作品，按热度排序
-    const all = [...stash176, ...stash175]
+    // 仅取自己的作品 (stash-works.json)，按热度排序取前6
+    const all = [...stash176]
     all.sort((a, b) => b.heat - a.heat)
     return all.slice(0, 6).map(w => ({
       id: w.id,

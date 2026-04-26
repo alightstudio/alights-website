@@ -38,6 +38,7 @@ export interface ThemeConfig {
   textColor: string
   fontFamily: string
   fontDisplay: string
+  fontHero: string
   borderRadius: string
   customCSS: string
 }
@@ -107,6 +108,8 @@ export async function changeFontsSafe(theme: ThemeConfig): Promise<void> {
   if (bodyFont) loadPromises.push(loadFontWithPromise(theme.fontFamily!))
   const displayFont = theme.fontDisplay ? findFont(theme.fontDisplay) : null
   if (displayFont && displayFont.id !== bodyFont?.id) loadPromises.push(loadFontWithPromise(theme.fontDisplay!))
+  const heroFont = theme.fontHero ? findFont(theme.fontHero) : null
+  if (heroFont && heroFont.id !== bodyFont?.id && heroFont.id !== displayFont?.id) loadPromises.push(loadFontWithPromise(theme.fontHero!))
 
   await Promise.all(loadPromises)
 
@@ -118,6 +121,7 @@ export async function changeFontsSafe(theme: ThemeConfig): Promise<void> {
   // 3. 再更新 CSS 变量
   root.style.setProperty('--font-family', resolveFontFamily(theme.fontFamily, 'Inter'))
   root.style.setProperty('--font-display', resolveFontFamily(theme.fontDisplay, "'Noto Serif SC'"))
+  root.style.setProperty('--font-hero', resolveFontFamily(theme.fontHero, "'Playfair Display'"))
 }
 
 // Apply theme CSS vars to document
@@ -129,6 +133,7 @@ export function applyTheme(theme: ThemeConfig) {
   root.style.setProperty('--color-text', theme.textColor || '#ffffff')
   root.style.setProperty('--font-family', resolveFontFamily(theme.fontFamily, 'Inter'))
   root.style.setProperty('--font-display', resolveFontFamily(theme.fontDisplay, "'Noto Serif SC'"))
+  root.style.setProperty('--font-hero', resolveFontFamily(theme.fontHero, "'Playfair Display'"))
   root.style.setProperty('--border-radius', (theme.borderRadius || '0') + 'px')
 
   // 动态加载 Google Fonts
@@ -136,6 +141,8 @@ export function applyTheme(theme: ThemeConfig) {
   if (bodyFont) loadGoogleFont(theme.fontFamily!)
   const displayFont = theme.fontDisplay ? findFont(theme.fontDisplay) : null
   if (displayFont && displayFont.id !== bodyFont?.id) loadGoogleFont(theme.fontDisplay!)
+  const heroFont = theme.fontHero ? findFont(theme.fontHero) : null
+  if (heroFont && heroFont.id !== bodyFont?.id && heroFont.id !== displayFont?.id) loadGoogleFont(theme.fontHero!)
 }
 
 // Apply custom CSS

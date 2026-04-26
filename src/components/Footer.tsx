@@ -48,7 +48,7 @@ export default function Footer({ initialFooter, initialContact }: FooterProps) {
   }) || []
 
   return (
-    <footer className="bg-dark-900 border-t border-dark-700 py-16 px-6 md:px-12 lg:px-24" style={{ fontFamily: 'var(--font-family, unset)' }}>
+    <footer className="bg-dark-900 border-t border-dark-700 py-16 px-6 md:px-12 lg:px-24 relative z-20" style={{ fontFamily: 'var(--font-family, unset)' }}>
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand */}

@@ -62,7 +62,7 @@ export default function AboutPage() {
           <div className="aspect-video bg-white/5 rounded" />
         </div>
       </section>
-      <section className="px-6 md:px-12 lg:px-24 mb-32 bg-dark-800 py-32 animate-pulse">
+      <section className="px-6 md:px-12 lg:px-24 mb-32 py-32 animate-pulse" style={{ backgroundColor: 'rgba(18,18,18,0.4)' }}>
         <div className="max-w-7xl mx-auto text-center space-y-6">
           <div className="h-10 w-32 bg-white/5 rounded mx-auto" />
           <div className="w-24 h-px bg-white/5 mx-auto" />
@@ -87,12 +87,18 @@ export default function AboutPage() {
   const aboutDesc = company?.description || ''
 
   return (
-    <div className="pt-24 pb-32 relative overflow-hidden">
-      {/* Particle Background */}
-      {config?.particle && <ParticleBackground config={config.particle} />}
-      {/* Hero */}
-      <section className="px-6 md:px-12 lg:px-24 mb-32">
-        <div className="max-w-7xl mx-auto">
+    <>
+      {/* Fixed full-viewport particle background */}
+      {config?.particle && (
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+          <ParticleBackground config={config.particle} />
+        </div>
+      )}
+      {/* Content with semi-transparent backdrop for readability */}
+      <div className="relative z-10 pt-24 pb-32" style={{ backgroundColor: 'rgba(10,10,10,0.55)' }}>
+        {/* Hero */}
+        <section className="px-6 md:px-12 lg:px-24 mb-32">
+          <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -155,7 +161,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="px-6 md:px-12 lg:px-24 mb-32 bg-dark-800 py-32">
+      <section className="px-6 md:px-12 lg:px-24 mb-32 py-32" style={{ backgroundColor: 'rgba(18,18,18,0.4)' }}>
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -230,5 +236,6 @@ export default function AboutPage() {
         </div>
       </section>
     </div>
+    </>
   )
 }

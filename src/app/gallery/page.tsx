@@ -19,6 +19,16 @@ import stash164Raw from '@/data/stash164.json'
 import stash163Raw from '@/data/stash163.json'
 import stash162Raw from '@/data/stash162.json'
 import stash161Raw from '@/data/stash161.json'
+import stash159Raw from '@/data/stash159.json'
+import stash158Raw from '@/data/stash158.json'
+import stash157Raw from '@/data/stash157.json'
+import stash156Raw from '@/data/stash156.json'
+import stash155Raw from '@/data/stash155.json'
+import stash154Raw from '@/data/stash154.json'
+import stash153Raw from '@/data/stash153.json'
+import stash152Raw from '@/data/stash152.json'
+import stash151Raw from '@/data/stash151.json'
+import stash150Raw from '@/data/stash150.json'
 import stash160Raw from '@/data/stash160.json'
 
 interface StashWork {
@@ -71,6 +81,16 @@ const stash163Data: StashWork[] = stash163Raw.map(transform).sort(sortByHeat)
 const stash162Data: StashWork[] = stash162Raw.map(transform).sort(sortByHeat)
 const stash161Data: StashWork[] = stash161Raw.map(transform).sort(sortByHeat)
 const stash160Data: StashWork[] = stash160Raw.map(transform).sort(sortByHeat)
+const stash159Data: StashWork[] = stash159Raw.map(transform).sort(sortByHeat)
+const stash158Data: StashWork[] = stash158Raw.map(transform).sort(sortByHeat)
+const stash157Data: StashWork[] = stash157Raw.map(transform).sort(sortByHeat)
+const stash156Data: StashWork[] = stash156Raw.map(transform).sort(sortByHeat)
+const stash155Data: StashWork[] = stash155Raw.map(transform).sort(sortByHeat)
+const stash154Data: StashWork[] = stash154Raw.map(transform).sort(sortByHeat)
+const stash153Data: StashWork[] = stash153Raw.map(transform).sort(sortByHeat)
+const stash152Data: StashWork[] = stash152Raw.map(transform).sort(sortByHeat)
+const stash151Data: StashWork[] = stash151Raw.map(transform).sort(sortByHeat)
+const stash150Data: StashWork[] = stash150Raw.map(transform).sort(sortByHeat)
 
 const allStashes = [
   { id: '176', label: 'Stash 176', data: stash176Data },
@@ -90,6 +110,16 @@ const allStashes = [
   { id: '162', label: 'Stash 162', data: stash162Data },
   { id: '161', label: 'Stash 161', data: stash161Data },
   { id: '160', label: 'Stash 160', data: stash160Data },
+  { id: '159', label: 'Stash 159', data: stash159Data },
+  { id: '158', label: 'Stash 158', data: stash158Data },
+  { id: '157', label: 'Stash 157', data: stash157Data },
+  { id: '156', label: 'Stash 156', data: stash156Data },
+  { id: '155', label: 'Stash 155', data: stash155Data },
+  { id: '154', label: 'Stash 154', data: stash154Data },
+  { id: '153', label: 'Stash 153', data: stash153Data },
+  { id: '152', label: 'Stash 152', data: stash152Data },
+  { id: '151', label: 'Stash 151', data: stash151Data },
+  { id: '150', label: 'Stash 150', data: stash150Data },
 ]
 
 const totalWorks = allStashes.reduce((s, st) => s + st.data.length, 0)
@@ -209,7 +239,8 @@ export default function GalleryPage() {
   // 按年代分组
   const stashGroups = [
     { label: '最新收藏 (170-176)', stashes: allStashes.filter(s => parseInt(s.id) >= 170) },
-    { label: '早期收藏 (160-169)', stashes: allStashes.filter(s => parseInt(s.id) < 170) },
+    { label: '中期收藏 (160-169)', stashes: allStashes.filter(s => parseInt(s.id) >= 160 && parseInt(s.id) < 170) },
+    { label: '早期收藏 (150-159)', stashes: allStashes.filter(s => parseInt(s.id) >= 150 && parseInt(s.id) < 160) },
   ]
 
   return (

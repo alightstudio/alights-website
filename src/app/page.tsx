@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
 import HomeClient from './HomeClient'
-import { stash176 } from '@/lib/stash-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,45 +82,29 @@ async function getInitialConfig() {
   }
 }
 
-/** 服务端读取精选作品（从新片场数据按热度排序） */
+/** 服务端读取精选作品（从数据库 featuredWorks 配置按热度排序） */
 async function getInitialWorks() {
   try {
-    // 仅取自己的作品 (stash-works.json)，按热度排序取前6
-    const all = [...stash176]
-    all.sort((a, b) => b.heat - a.heat)
-    return all.slice(0, 6).map(w => ({
+    const config = await prisma.siteConfig.findUnique({ where: { key: 'featuredWorks' } })
+    if (!config?.value) return []
+    const works = JSON.parse(config.value) as any[]
+    // 按热度(views)降序，取前6
+    works.sort((a, b) => (b.views || 0) - (a.views || 0))
+    return works.slice(0, 6).map(w => ({
       id: w.id,
       title: w.title,
-      titleEn: '',
-      coverUrl: w.thumbnail,
-      category: mapCategory(w.categories),
-      categoryEn: '',
+      titleEn: w.titleEn || '',
+      coverUrl: w.image || '',
+      thumbnail: w.image || '', // 兼容 HomeClient 中同时使用 coverUrl 和 thumbnail
+      category: w.category || '',
+      categoryEn: w.categoryEn || '',
       views: w.views || 0,
-      videoUrl: w.videoUrl,
-      heat: w.heat,
+      videoUrl: w.videoUrl || '',
+      heat: w.views || 0,
     }))
   } catch {
     return []
   }
-}
-
-function mapCategory(cat: string): string {
-  const map: Record<string, string> = {
-    '广告片': 'TVC广告',
-    '宣传片': 'TVC广告',
-    '竖屏广告': 'TVC广告',
-    '剧情短片': '影视剧',
-    '纪录片': '影视剧',
-    '电影': '影视剧',
-    '三维CG': '产品动画',
-    '二维动画': '产品动画',
-    'AIGC': '产品动画',
-    '视觉探索': '产品动画',
-    '学习分享': 'TVC广告',
-    '自媒体': 'TVC广告',
-    '其他': 'TVC广告',
-  }
-  return map[cat] || 'TVC广告'
 }
 
 export default async function HomePage() {

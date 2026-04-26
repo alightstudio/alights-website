@@ -1,66 +1,69 @@
 import { cookies } from 'next/headers'
-import { randomBytes } from 'crypto'
+import { createHmac, randomBytes } from 'crypto'
 
-// ===== Session 管理 =====
-// 使用内存存储 session token → 真实 secret 的映射
-// 生产环境建议替换为 Redis，重启后 session 会失效（可接受）
+// ===== 无状态 Session（HMAC 签名，不依赖内存，适配 Vercel 无服务器）=====
+// Token 格式: base64url({admin,exp}) . base64url(hmac)
+// 所有 Lambda 实例共享同一 SECRET，无需内存 Map
 
-const sessions = new Map<string, { secret: string; createdAt: number }>()
-const SESSION_TTL = 7 * 24 * 60 * 60 * 1000 // 7天
-const SESSION_PREFIX = 'sess_'
-const MAX_SESSIONS = 100
+// JWT 签名密钥：优先用环境变量（跨 Lambda 共享），否则随机生成（单实例）
+const SECRET = process.env.ADMIN_JWT_SECRET || randomBytes(32).toString('hex')
 
-// 定期清理过期 session
-function cleanExpiredSessions() {
-  const now = Date.now()
-  const toDelete: string[] = []
-  sessions.forEach((data, key) => {
-    if (now - data.createdAt > SESSION_TTL) {
-      toDelete.push(key)
-    }
-  })
-  toDelete.forEach(key => sessions.delete(key))
+const SESSION_TTL = 7 * 24 * 60 * 60 * 1000 // 7 天
+
+function b64url(str: string): string {
+  return Buffer.from(str).toString('base64url')
 }
 
-// 生成新 session token
+function b64urlDecode(str: string): string {
+  return Buffer.from(str, 'base64url').toString()
+}
+
+// 生成一个带 HMAC 签名的 session token（无状态）
 export function createSessionToken(): string {
-  cleanExpiredSessions()
-  if (sessions.size >= MAX_SESSIONS) {
-    // 移除最旧的 session
-    let oldestKey: string | null = null
-    let oldestTime = Infinity
-    sessions.forEach((data, key) => {
-      if (data.createdAt < oldestTime) {
-        oldestTime = data.createdAt
-        oldestKey = key
-      }
-    })
-    if (oldestKey) sessions.delete(oldestKey)
-  }
-  const token = SESSION_PREFIX + randomBytes(32).toString('hex')
-  const secret = randomBytes(16).toString('hex')
-  sessions.set(token, { secret, createdAt: Date.now() })
-  return token
+  const payload = JSON.stringify({ 
+    admin: true, 
+    exp: Date.now() + SESSION_TTL,
+    nonce: randomBytes(8).toString('hex')
+  })
+  const enc = b64url(payload)
+  const sig = createHmac('sha256', SECRET).update(enc).digest('base64url')
+  return enc + '.' + sig
 }
 
-// 验证 session
+// 验证 session token（纯函数，无副作用）
 export function isValidSession(token: string | undefined): boolean {
-  if (!token || !token.startsWith(SESSION_PREFIX)) return false
-  const data = sessions.get(token)
-  if (!data) return false
-  if (Date.now() - data.createdAt > SESSION_TTL) {
-    sessions.delete(token)
+  if (!token) return false
+  const dot = token.lastIndexOf('.')
+  if (dot < 1) return false
+  const enc = token.substring(0, dot)
+  const sig = token.substring(dot + 1)
+  
+  // 验证签名
+  const expected = createHmac('sha256', SECRET).update(enc).digest('base64url')
+  if (sig.length !== expected.length) return false
+  // 恒定时间比较
+  let match = true
+  for (let i = 0; i < expected.length; i++) {
+    if (sig.charCodeAt(i) !== expected.charCodeAt(i)) match = false
+  }
+  if (!match) return false
+  
+  // 验证过期
+  try {
+    const payload = JSON.parse(b64urlDecode(enc))
+    if (!payload.admin || Date.now() > payload.exp) return false
+    return true
+  } catch {
     return false
   }
-  return true
 }
 
-// 撤销 session（登出）
+// 撤销 session（无状态 JWT 无法真正撤销，登出只需清除 cookie）
 export function revokeSession(token: string): void {
-  sessions.delete(token)
+  // 无状态：什么都不做，清除 cookie 即可
 }
 
-// 兼容旧接口：从 cookie 读取并验证
+// 从 cookie 读取并验证（主入口）
 export async function verifyAdminSession(): Promise<boolean> {
   const cookieStore = await cookies()
   const session = cookieStore.get('admin_session')

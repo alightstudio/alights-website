@@ -31,6 +31,10 @@ const DEFAULT_NAVIGATION = {
     { id: "community", label: "社区", href: "/community", visible: true, order: 4 },
     { id: "about", label: "关于我们", href: "/about", visible: true, order: 5 },
     { id: "contact", label: "联系合作", href: "/contact", visible: true, order: 6 },
+    { id: "login", label: "登录", href: "/login", visible: false, order: 7 },
+    { id: "register", label: "注册", href: "/register", visible: false, order: 8 },
+    { id: "profile", label: "个人中心", href: "/profile", visible: false, order: 9 },
+    { id: "dashboard", label: "创作中心", href: "/dashboard", visible: false, order: 10 },
   ]
 }
 
@@ -65,8 +69,9 @@ const DEFAULT_THEME = {
   primaryColor: "#c9a962",
   bgColor: "#0a0a0a",
   textColor: "#ffffff",
-  fontFamily: "Inter",
-  fontDisplay: "noto-serif-sc",
+  fontFamily: "inter",
+  fontDisplay: "inter",
+  fontHero: "playfair",
   borderRadius: "0",
   customCSS: ""
 }
@@ -138,6 +143,8 @@ export async function GET() {
       pages: configMap.pages || DEFAULT_PAGES,
       codeInjection: configMap.codeInjection || DEFAULT_CODE_INJECTION,
       socialLinks: configMap.socialLinks || DEFAULT_SOCIAL_LINKS,
+      particle: configMap.particle || null,
+      spotlight: configMap.spotlight || null,
       aboutTeamVideo: configMap.aboutTeamVideo || '',
     })
   } catch (error) {
@@ -152,6 +159,8 @@ export async function GET() {
       services: [],
       brands: [],
       brandDisplay: { opacity: 0.75, opacityHover: 1, grayscale: true, grayscaleHover: true },
+      particle: null,
+      spotlight: null,
       aboutTeamVideo: '',
     })
   }

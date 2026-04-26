@@ -52,13 +52,18 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="pt-24 pb-32 relative overflow-hidden">
-      {/* Particle Background */}
-      {particleConfig && <ParticleBackground config={particleConfig} />}
-
-      {/* Header */}
-      <section className="px-6 md:px-12 lg:px-24 mb-32">
-        <div className="max-w-7xl mx-auto">
+    <>
+      {/* Fixed full-viewport particle background */}
+      {particleConfig && (
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+          <ParticleBackground config={particleConfig} />
+        </div>
+      )}
+      {/* Content with semi-transparent backdrop */}
+      <div className="relative z-10 pt-24 pb-32" style={{ backgroundColor: 'rgba(10,10,10,0.55)' }}>
+        {/* Header */}
+        <section className="px-6 md:px-12 lg:px-24 mb-32">
+          <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -216,5 +221,6 @@ export default function ContactPage() {
 
 
     </div>
+    </>
   )
 }

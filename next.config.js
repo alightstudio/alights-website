@@ -17,6 +17,20 @@ const nextConfig = {
     }
     return config
   },
+  async redirects() {
+    return [
+      {
+        source: '/canvas',
+        destination: '/lab/canvas',
+        permanent: true,
+      },
+      {
+        source: '/canvas/:path*',
+        destination: '/lab/canvas/:path*',
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     return [
       {

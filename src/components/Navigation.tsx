@@ -7,6 +7,7 @@ import Image from 'next/image'
 interface NavItem {
   id: string
   label: string
+  labelEn?: string
   href: string
   visible?: boolean
   order: number
@@ -65,7 +66,7 @@ export default function Navigation({ initialLogo, initialNavItems }: NavigationP
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center">
-              <Image src="/logo.png" alt={logo} width={32} height={32} className="h-8 w-auto" />
+              <Image src="/logo.png" alt={logo} width={2864} height={526} className="h-[20px] w-auto" />
               <span className="font-display text-xl tracking-wider ml-2">{logo}</span>
             </Link>
 
@@ -131,6 +132,11 @@ export default function Navigation({ initialLogo, initialNavItems }: NavigationP
                 className="text-2xl transition-colors tracking-wide text-gray-400 hover:text-white"
               >
                 {item.label}
+                {item.labelEn && (
+                  <span className="block text-xs tracking-[0.2em] text-gray-600 mt-0.5">
+                    {item.labelEn}
+                  </span>
+                )}
               </Link>
             ))}
             {mounted && loggedIn ? (

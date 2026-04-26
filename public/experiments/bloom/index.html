@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta content="telephone=no" name="format-detection">
+  <meta content="yes" name="apple-mobile-web-app-capable">
+  <meta content="width=device-width, initial-scale=1, minimal-ui, maximum-scale=1, user-scalable=no" name="viewport">
+  <title>光影 | Light & Shadow</title>
+  <link rel="stylesheet" href="global.css">
+</head>
+<body>
+  <div id="home" class="hide">
+    <div class="home-canvas-wrapper">
+      <canvas class="home-canvas" width="800" height="600"></canvas>
+    </div>
+    <div class="home-text-holder">
+      <h2 class="home-underline-text">click & hold</h2>
+      <h2 id="home-hold" class="home-white-text">hold</h2>
+      <h2 id="home-ready" class="home-white-text">ready</h2>
+      <h2 id="home-wish">wish you all the best for <span class="home-wish-white-text">2016</span></h2>
+    </div>
+    <div class="home-restart-holder">
+      <a class="home-restart">
+        <span class="home-restart-out">restart</span>
+        <span class="home-restart-over">restart</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="experiences" class="hide">
+    <div id="think" class="hide"><canvas></canvas></div>
+    <div id="imagine" class="hide"><canvas></canvas></div>
+    <div id="work-hard" class="hide"></div>
+    <div id="strive" class="hide">
+      <div class="strive__sketch"></div>
+      <div class="strive__cursor"></div>
+      <div class="strive__title">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='Montserrat' font-size='20'%3ESTRIVE%3C/text%3E%3C/svg%3E" alt="">
+      </div>
+      <div class="strive__debug" style="display: none">
+        <div class="strive__middle"></div>
+        <div class="strive__circle"></div>
+        <div class="strive__circle_target"></div>
+      </div>
+    </div>
+    <div id="dream-big" class="hide">
+      <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="782px" height="180.25px" viewBox="0 0 782 180.25">
+        <g>
+          <path fill="#FFFFFF" d="M2.14,1.262h20.819c14.451,0,22.044,5.633,22.044,18.86v139.123c0,13.227-7.593,18.86-22.044,18.86H2.14V1.262z M21.979,170.757c8.818,0,13.227-3.185,13.227-10.777V19.387c0-7.593-4.409-10.777-13.227-10.777H11.938v162.147H21.979z"/>
+          <path fill="#FFFFFF" d="M185.353,1.262h22.044c11.757,0,20.084,5.388,20.084,16.411v52.171c0,9.552-2.694,16.411-15.186,17.39v0.49c8.818,0.735,15.186,5.144,15.186,15.921v74.46h-9.797v-74.46c0-6.613-3.674-12.736-13.471-12.736h-9.062v87.196h-9.797V1.262z M204.702,83.56c8.328,0,12.981-3.919,12.981-11.757V19.632c0-7.593-4.164-11.022-12.001-11.022H195.15v74.95H204.702z"/>
+          <path fill="#FFFFFF" d="M370.035,1.262h33.555V8.61h-23.758v74.95h22.288v7.349h-22.288v79.849h25.473v7.348h-35.27V1.262z"/>
+          <path fill="#FFFFFF" d="M568.678,126.424H544.43l-5.389,51.681h-8.817L550.062,1.262h13.717l20.329,176.843h-9.797L568.678,126.424z M567.943,119.075l-6.124-58.05c-1.959-17.635-4.408-35.515-4.898-53.396h-0.49c-1.959,17.635-2.693,35.76-4.653,53.396l-6.368,58.05H567.943z"/>
+          <path fill="#FFFFFF" d="M714.904,1.262h16.166l10.777,106.547c1.959,18.615,3.674,41.394,4.408,62.948h0.49c1.225-21.31,2.694-44.823,4.653-62.948L762.667,1.262h16.165v176.843h-9.797V68.374c0-11.512,0.489-37.475,0.979-59.764h-0.49c-2.204,23.269-5.144,51.436-6.857,70.051l-9.798,99.444h-12.246L730.58,79.641c-1.47-15.186-5.389-50.702-6.368-71.031h-0.49c-0.244,23.269,0.98,48.742,0.98,59.764v109.731h-9.798V1.262z"/>
+        </g>
+        <rect x="110.183" y="83.896" transform="matrix(0.7071 0.7071 -0.7071 0.7071 97.0962 -55.6161)" fill="#FFFFFF" width="11" height="11.003"/>
+        <rect x="296.683" y="83.896" transform="matrix(0.7071 0.7071 -0.7071 0.7071 151.7208 -187.4915)" fill="#FFFFFF" width="11" height="11.003"/>
+        <rect x="465.151" y="83.896" transform="matrix(0.7071 0.7071 -0.7071 0.7071 201.0641 -306.6169)" fill="#FFFFFF" width="11" height="11.003"/>
+        <rect x="638.75" y="83.896" transform="matrix(0.7071 0.7071 -0.7071 0.7071 251.91 -429.3696)" fill="#FFFFFF" width="11" height="11.003"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <a class="bt-artist" href="http://makemepulse.com" target="_blank">an experience by <b>makepulse</b></a>
+    <div class="bt-sound"><span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAKCAYAAACUJ79GAAAACXBIWXMAAAsTAAALEwEAmpwYAAABNklEQVQ4y6VTu07DQBC8WKehSpMOCfEJqVJ+AIVf4A9oUvEDKVKl5ANIaEhJQ0eRlLuLzTqO79Yniy3Znn3MM7s3Rgihcs4dhBACAPB8Pk9EhACgtVaZzWZotVqo1+tYLBZot9sol8sAgIuLC+8bADDf73e/3aEMIdDr9TAajbBYLAAAV1dX2Gw2GA6H2G632O12GI1GmE6nqFar2Gw2mE6nqNVq6Ha7mEwmqFariOO48L5hgjLGGELwyrbbLQCAc+6/7w3LsiwA+H2fJAlyzjGfz5FlWZYkCRaLBcbjMbanU9NHluM4Ds65d71er5VzDiEEURQhCIJ9JEkSMk1TUkoBAOecG41GZDweU5Zlyjkny+WSSJIk1us1mc1mZDab0dlsRmazWV4YhmSxWJD5fH6WeJIkeY6cxS+pe7/fF5qmH1/gC77gC/4r+AFQqq2zxp3yDQAAAABJRU5ErkJggg=="></span></div>
+  </div>
+  <div class="bottom-socials">
+    <a class="bt-fb" href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2F2016.makemepulse.com" target="_blank">
+      <svg viewBox="0 0 10 20"><path fill="#fff" d="M9.6,3.3H7.5C6.6,3.3,6,4.2,6,5.1v2.2h3.6L9.2,11H6v9H2v-9H0V7.3h2V4.6C2,2.2,3.8,0,6.4,0H9.6V3.3z"/></svg>
+    </a>
+    <a class="bt-tw" href="https://twitter.com/intent/tweet?text=Make+Me+Pulse+wishes+you+all+the+best+for+2016...&url=http%3A%2F%2F2016.makemepulse.com" target="_blank">
+      <svg viewBox="0 0 20 17"><path fill="#fff" d="M20,2c-0.7,0.3-1.5,0.5-2.3,0.6c0.8-0.5,1.4-1.3,1.7-2.2c-0.8,0.5-1.6,0.8-2.5,1c-0.7-0.8-1.8-1.3-2.9-1.3c-2.2,0-4,1.8-4,4c0,0.3,0,0.6,0.1,0.9C6.5,5.8,3.5,4.1,1.4,1.5C1,2.1,0.8,2.8,0.8,3.6c0,1.4,0.7,2.6,1.8,3.3C2,6.9,1.4,6.7,0.9,6.5v0c0,1.9,1.4,3.6,3.2,3.9C3.7,10.5,3.3,10.6,2.8,10.6c-0.3,0-0.6,0-0.9-0.1c0.6,1.8,2.3,3.2,4.3,3.2c-1.6,1.3-3.5,2-5.6,2C0.1,15.9,0,15.9,0,15.9C1.8,17.1,4,17.8,6.3,17.8c7.6,0,11.7-6.3,11.7-11.7c0-0.2,0-0.4,0-0.5C18.8,3.6,19.4,2.9,20,2z"/></svg>
+    </a>
+  </div>
+  <div class="experience-progress-bar"></div>
+
+  <script src="shared.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

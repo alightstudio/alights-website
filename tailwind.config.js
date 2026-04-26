@@ -24,6 +24,8 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-family)', 'Inter', 'system-ui', 'sans-serif'],
         display: ['var(--font-display)', 'Playfair Display', 'Noto Serif SC', 'serif'],
+        // 以下为逐区可配置字体
+        hero: ['var(--font-hero)', 'Playfair Display', 'Noto Serif SC', 'serif'],
       },
     },
   },

@@ -48,6 +48,15 @@ async function getThemeConfig(): Promise<{ fonts: FontOption[]; cssVars: Record<
     }
     if (!cssVars['--font-display']) cssVars['--font-display'] = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
 
+    if (theme.fontHero) {
+      const heroFont = findFont(theme.fontHero)
+      if (heroFont) {
+        if (heroFont.id !== findFont(theme.fontFamily)?.id && heroFont.id !== findFont(theme.fontDisplay)?.id) fonts.push(heroFont)
+        cssVars['--font-hero'] = heroFont.family
+      }
+    }
+    if (!cssVars['--font-hero']) cssVars['--font-hero'] = cssVars['--font-display']
+
     cssVars['--color-primary'] = theme.primaryColor || '#c9a962'
     cssVars['--color-bg'] = theme.bgColor || '#0a0a0a'
     cssVars['--color-text'] = theme.textColor || '#ffffff'
@@ -120,7 +129,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   const navSite = navVal?.navigation || navVal || {}
   const logo = navSite?.logo || '栖光'
-  const items = navSite?.items?.filter((i: any) => i.visible !== false) || []
+  const EN_LABELS: Record<string, string> = {
+    home: 'Home',
+    works: 'Works',
+    gallery: 'Inspiration',
+    community: 'Community',
+    about: 'About',
+    contact: 'Contact',
+    lab: 'Lab',
+  }
+  let items = navSite?.items?.filter((i: any) => i.visible !== false && i.href !== '/canvas') || []
+  // 添加英文和实验室入口（放在联系合作后面）
+  if (!items.find((i: any) => i.href === '/lab')) {
+    items.push({ id: 'lab', label: '实验室', labelEn: 'Lab', href: '/lab', visible: true, order: items.length })
+  }
+  // 补上英文标签
+  items = items.map((i: any) => ({ ...i, labelEn: i.labelEn || EN_LABELS[i.id] || '' }))
   const footer = footerVal || null
 
   return (

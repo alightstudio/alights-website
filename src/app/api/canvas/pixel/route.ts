@@ -7,20 +7,8 @@ function getUserId(req: NextRequest): string | null {
   return match ? match[1] : null
 }
 
-// 初始可用颜色
-const ALLOWED_COLORS = new Set([
-  '#FFFFFF', // white
-  '#000000', // black
-  '#FF0000', // red
-  '#00FF00', // green
-  '#FFFF00', // yellow
-  '#0000FF', // blue
-  '#800080', // purple
-  '#808080', // gray
-  '#A52A2A', // brown
-  '#D2B48C', // tan
-  '#00FFFF', // cyan
-])
+// 合法 hex 颜色正则
+const COLOR_RE = /^#[0-9a-fA-F]{6}$/
 
 // 检查画布是否已满，若满则触发扩张
 async function checkAndExpand(canvasId: string) {
@@ -99,9 +87,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '参数不完整' }, { status: 400 })
     }
 
-    // 验证颜色
-    if (!ALLOWED_COLORS.has(color.toUpperCase())) {
-      return NextResponse.json({ error: '不支持的颜色' }, { status: 400 })
+    // 验证颜色（六位 hex）
+    if (!COLOR_RE.test(color)) {
+      return NextResponse.json({ error: '颜色格式无效' }, { status: 400 })
     }
 
     // 获取当前画布

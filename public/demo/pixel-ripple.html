@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Alights · 像素律动</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  background: #0d0d0d;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+/* HUD */
+#hud {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 300;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+  z-index: 10;
+}
+#hud.hidden { opacity: 0; }
+#info {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.15);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  font-weight: 300;
+  pointer-events: none;
+  z-index: 10;
+}
+@media (max-width: 768px) {
+  #info { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="hud">像素律动</div>
+<div id="info"><span style="opacity:0.4">·· CLICK · TAP · DRAG ··</span></div>
+
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById('c')
+const ctx = canvas.getContext('2d')
+
+// ── 网格参数 ──
+const CELL = 16
+let cols, rows
+
+// ── 状态 ──
+const ripples = []      // 活跃涟漪
+const particles = []    // 粒子
+const grid = []         // 网格状态，用于颜色持久
+let glowPhase = 0       // 全局微光动画
+
+// ── 音频引擎 ──
+let audioCtx = null
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+}
+
+// 频率映射：点击位置生成不同音高，让交互有旋律感
+function playTone(x, y, intensity = 1) {
+  try {
+    initAudio()
+    // 将 x,y 映射到五声音阶频率
+    const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25]
+    const idx = Math.floor(((x + y) / (cols + rows)) * pentatonic.length) % pentatonic.length
+    const freq = pentatonic[idx]
+    const vol = Math.min(0.12, 0.04 + intensity * 0.08)
+
+    const osc = audioCtx.createOscillator()
+    const gain = audioCtx.createGain()
+    osc.type = 'sine'
+    osc.frequency.value = freq
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5 + intensity * 0.3)
+    osc.connect(gain)
+    gain.connect(audioCtx.destination)
+    osc.start()
+    osc.stop(audioCtx.currentTime + 0.6 + intensity * 0.3)
+
+    // 第二层泛音 (subtle overtone)
+    if (intensity > 0.4) {
+      const osc2 = audioCtx.createOscillator()
+      const gain2 = audioCtx.createGain()
+      osc2.type = 'sine'
+      osc2.frequency.value = freq * 2.01
+      gain2.gain.setValueAtTime(vol * 0.3, audioCtx.currentTime)
+      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3)
+      osc2.connect(gain2)
+      gain2.connect(audioCtx.destination)
+      osc2.start()
+      osc2.stop(audioCtx.currentTime + 0.3)
+    }
+  } catch (e) {
+    // 静默处理音频失败
+  }
+}
+
+// ── 涟漪类 ──
+class Ripple {
+  constructor(cx, cy, intensity) {
+    this.cx = cx          // 网格坐标
+    this.cy = cy
+    this.age = 0
+    this.maxAge = 40 + Math.floor(intensity * 30)
+    this.intensity = intensity
+    this.speed = 1.2 + intensity * 0.5
+    this.radius = 0
+    this.maxRadius = Math.max(cols, rows) * 0.6
+    this.color = this.randomColor()
+    this.alive = true
+  }
+
+  randomColor() {
+    const palette = [
+      { h: 42, s: 60 },  // 金色
+      { h: 35, s: 40 },  // 暗金
+      { h: 0, s: 0 },    // 白
+      { h: 200, s: 30 }, // 冷蓝
+      { h: 280, s: 25 }, // 淡紫
+    ]
+    const pick = palette[Math.floor(Math.random() * palette.length)]
+    return pick
+  }
+
+  update() {
+    this.age++
+    if (this.age >= this.maxAge) { this.alive = false; return }
+    this.radius += this.speed
+    // 减速
+    if (this.age > this.maxAge * 0.6) this.speed *= 0.97
+  }
+
+  draw(ctx) {
+    const p = this.age / this.maxAge   // progress 0→1
+    const opacity = Math.sin(p * Math.PI) * 0.4 * this.intensity
+    const cellPx = CELL
+    const r = this.radius * cellPx
+
+    // 涟漪圆圈
+    ctx.beginPath()
+    ctx.arc(this.cx * cellPx + cellPx/2, this.cy * cellPx + cellPx/2, r, 0, Math.PI * 2)
+    ctx.strokeStyle = `hsla(${this.color.h}, ${this.color.s}%, 80%, ${opacity})`
+    ctx.lineWidth = Math.max(1, 3 * (1 - p))
+    ctx.stroke()
+
+    // 连线到相邻涟漪？不，为了保持干净
+
+    // 内发光
+    if (p < 0.3) {
+      const innerOpacity = (0.3 - p) / 0.3 * 0.08 * this.intensity
+      ctx.beginPath()
+      ctx.arc(this.cx * cellPx + cellPx/2, this.cy * cellPx + cellPx/2, r * 0.3, 0, Math.PI * 2)
+      ctx.fillStyle = `hsla(${this.color.h}, ${this.color.s}%, 90%, ${innerOpacity})`
+      ctx.fill()
+    }
+  }
+}
+
+// ── 粒子类（涟漪边缘飞出的光点） ──
+class Particle {
+  constructor(x, y, color) {
+    this.x = x
+    this.y = y
+    this.vx = (Math.random() - 0.5) * 2
+    this.vy = (Math.random() - 0.5) * 2 - 1
+    this.life = 1
+    this.decay = 0.015 + Math.random() * 0.02
+    this.size = 1 + Math.random() * 2
+    this.color = color
+  }
+
+  update() {
+    this.x += this.vx
+    this.y += this.vy
+    this.vy += 0.02  // slight gravity
+    this.life -= this.decay
+    this.size *= 0.99
+    return this.life > 0
+  }
+
+  draw(ctx) {
+    ctx.globalAlpha = this.life * 0.6
+    ctx.fillStyle = `hsla(${this.color.h}, ${this.color.s}%, 90%, ${this.life})`
+    ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size)
+    ctx.globalAlpha = 1
+  }
+}
+
+// ── 网格初始化 ──
+function resize() {
+  const w = canvas.width = window.innerWidth
+  const h = canvas.height = window.innerHeight
+  cols = Math.ceil(w / CELL) + 2
+  rows = Math.ceil(h / CELL) + 2
+
+  // 初始化网格颜色（部分随机填充少量底色，更生动）
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const key = c + ',' + r
+      if (!grid[key]) {
+        // 90% 空，10% 有微弱底色
+        grid[key] = Math.random() < 0.05
+          ? { h: 42 + Math.random() * 20, s: 20 + Math.random() * 20, l: 3 + Math.random() * 5 }
+          : null
+      }
+    }
+  }
+}
+
+// ── 触发交互 ──
+function interact(screenX, screenY, intensity = 1) {
+  const cx = Math.floor(screenX / CELL)
+  const cy = Math.floor(screenY / CELL)
+  if (cx < 0 || cx >= cols || cy < 0 || cy >= rows) return
+
+  initAudio()
+  playTone(cx, cy, intensity)
+
+  // 添加涟漪
+  const r = new Ripple(cx, cy, intensity)
+  ripples.push(r)
+
+  // 从该位置产生多个涟漪（相邻格子）
+  const neighborCount = Math.floor(2 + intensity * 3)
+  for (let i = 0; i < neighborCount; i++) {
+    const nx = cx + Math.floor(Math.random() * 5) - 2
+    const ny = cy + Math.floor(Math.random() * 5) - 2
+    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+      const sub = new Ripple(nx, ny, intensity * (0.3 + Math.random() * 0.3))
+      sub.age = -Math.floor(Math.random() * 10) // 错开相位
+      ripples.push(sub)
+    }
+  }
+
+  // 触发格子的颜色高亮（短暂点亮）
+  const key = cx + ',' + cy
+  grid[key] = { h: 42, s: 60, l: 60 + Math.floor(Math.random() * 20) }
+
+  // 粒子弹射
+  const pCount = Math.floor(3 + intensity * 5)
+  for (let i = 0; i < pCount; i++) {
+    particles.push(new Particle(
+      cx * CELL + CELL/2 + (Math.random() - 0.5) * CELL,
+      cy * CELL + CELL/2 + (Math.random() - 0.5) * CELL,
+      r.color
+    ))
+  }
+}
+
+// ── 绘制主循环 ──
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  // ─── 背景 ───
+  const grad = ctx.createRadialGradient(
+    canvas.width/2, canvas.height/2, 0,
+    canvas.width/2, canvas.height/2, canvas.width * 0.7
+  )
+  grad.addColorStop(0, '#141414')
+  grad.addColorStop(1, '#0a0a0a')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // ─── 网格绘制 ───
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const key = c + ',' + r
+      const cell = grid[key]
+      const x = c * CELL
+      const y = r * CELL
+
+      if (cell && cell.l > 2) {
+        // 有颜色的格子 - 渐淡
+        ctx.fillStyle = `hsla(${cell.h}, ${cell.s}%, ${cell.l}%, 0.06)`
+        ctx.fillRect(x, y, CELL, CELL)
+        // 颜色衰减
+        cell.l *= 0.94
+        if (cell.l < 1) {
+          cell.l = 0
+          grid[key] = null
+        }
+      }
+
+      // 微弱的网格线（只在非 mobile 或缩放大时显示）
+      if (CELL >= 14) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.02)'
+        ctx.lineWidth = 0.5
+        ctx.strokeRect(x, y, CELL, CELL)
+      }
+    }
+  }
+
+  // ─── 涟漪绘制 ───
+  for (const ripple of ripples) {
+    ripple.update()
+    if (!ripple.alive) continue
+    ripple.draw(ctx)
+  }
+
+  // ─── 涟漪交叠效果 ───
+  // 在靠近的涟漪之间画连线
+  for (let i = 0; i < ripples.length; i++) {
+    if (!ripples[i].alive) continue
+    for (let j = i + 1; j < ripples.length; j++) {
+      if (!ripples[j].alive) continue
+      const dx = (ripples[i].cx - ripples[j].cx) * CELL
+      const dy = (ripples[i].cy - ripples[j].cy) * CELL
+      const dist = Math.sqrt(dx*dx + dy*dy)
+      const r1 = ripples[i].radius * CELL
+      const r2 = ripples[j].radius * CELL
+      // 当两个涟漪的边缘接近时画连接线
+      const edgeDist = Math.abs(dist - (r1 + r2))
+      if (edgeDist < CELL * 3 && r1 > 0 && r2 > 0) {
+        const opacity = Math.max(0, 0.15 * (1 - edgeDist / (CELL * 3)))
+        const p1 = ripples[i].age / ripples[i].maxAge
+        const p2 = ripples[j].age / ripples[j].maxAge
+        ctx.beginPath()
+        const x1 = ripples[i].cx * CELL + CELL/2 + Math.cos(p1 * Math.PI * 4) * r1
+        const y1 = ripples[i].cy * CELL + CELL/2 + Math.sin(p1 * Math.PI * 4) * r1
+        const x2 = ripples[j].cx * CELL + CELL/2 + Math.cos(p2 * Math.PI * 4) * r2
+        const y2 = ripples[j].cy * CELL + CELL/2 + Math.sin(p2 * Math.PI * 4) * r2
+        ctx.moveTo(x1, y1)
+        ctx.lineTo(x2, y2)
+        ctx.strokeStyle = `rgba(201, 169, 98, ${opacity})`
+        ctx.lineWidth = 0.5
+        ctx.stroke()
+      }
+    }
+  }
+
+  // ─── 粒子绘制 ───
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const alive = particles[i].update()
+    if (alive) particles[i].draw(ctx)
+    else particles.splice(i, 1)
+  }
+
+  // ─── 清除死亡涟漪 ───
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    if (!ripples[i].alive) ripples.splice(i, 1)
+  }
+
+  // ─── 全局微光脉冲 ───
+  glowPhase += 0.005
+  const glow = Math.sin(glowPhase) * 0.008 + 0.008
+
+  // 限制涟漪和粒子数量
+  if (ripples.length > 100) ripples.splice(0, ripples.length - 100)
+  if (particles.length > 300) particles.splice(0, particles.length - 300)
+
+  requestAnimationFrame(draw)
+}
+
+// ── 事件绑定 ──
+
+// 鼠标/触控点击
+function handleDown(e) {
+  let x, y, intensity = 1
+  e.preventDefault()
+  if (e.touches) {
+    const touch = e.touches[0]
+    x = touch.clientX
+    y = touch.clientY
+    intensity = Math.min(1, 0.5 + e.touches.length * 0.25)
+  } else {
+    x = e.clientX
+    y = e.clientY
+  }
+  interact(x, y, intensity)
+  // 淡出 HUD
+  document.getElementById('hud').classList.add('hidden')
+}
+
+// 拖拽画线（触控）
+let lastDrag = null
+function handleMove(e) {
+  if (!e.touches) return
+  e.preventDefault()
+  if (e.touches.length === 1) {
+    const touch = e.touches[0]
+    if (lastDrag) {
+      const dx = touch.clientX - lastDrag.x
+      const dy = touch.clientY - lastDrag.y
+      const dist = Math.sqrt(dx*dx + dy*dy)
+      if (dist > CELL * 0.5) {
+        interact(touch.clientX, touch.clientY, 0.4)
+        lastDrag = { x: touch.clientX, y: touch.clientY }
+      }
+    } else {
+      lastDrag = { x: touch.clientX, y: touch.clientY }
+    }
+  }
+}
+function handleEnd() {
+  lastDrag = null
+}
+
+canvas.addEventListener('mousedown', handleDown)
+canvas.addEventListener('touchstart', handleDown)
+canvas.addEventListener('touchmove', handleMove, { passive: false })
+canvas.addEventListener('touchend', handleEnd)
+canvas.addEventListener('touchcancel', handleEnd)
+
+// 键盘触发（每个按键不同的音）
+document.addEventListener('keydown', (e) => {
+  if (e.repeat) return
+  const x = Math.random() * canvas.width
+  const y = Math.random() * canvas.height
+  interact(x, y, 0.6)
+  document.getElementById('hud').classList.add('hidden')
+})
+
+// ── 启动 ──
+resize()
+window.addEventListener('resize', resize)
+draw()
+</script>
+</body>
+</html>

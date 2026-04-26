@@ -98,6 +98,7 @@ const SETTINGS_FIELDS: Record<string, { icon: React.ElementType; label: string; 
       { label: '文字色', path: 'theme.textColor', type: 'color', placeholder: '#ffffff' },
       { label: '正文字体', path: 'theme.fontFamily', type: 'select', options: SANS_FONTS.map(f => ({ value: f.id, label: `${f.name} ${f.chineseSupport ? '· 中文' : ''}` })) },
       { label: '展示字体', path: 'theme.fontDisplay', type: 'select', options: DISPLAY_FONTS.map(f => ({ value: f.id, label: `${f.name} ${f.category === 'serif' ? '· 衬线' : f.chineseSupport ? '· 中文' : ''}` })) },
+      { label: '首页主标题字体', path: 'theme.fontHero', type: 'select', options: DISPLAY_FONTS.map(f => ({ value: f.id, label: `${f.name} ${f.category === 'serif' ? '· 衬线' : f.chineseSupport ? '· 中文' : ''}` })) },
       { label: '圆角大小', path: 'theme.borderRadius', placeholder: '0' },
       { label: '自定义 CSS', path: 'theme.customCSS', type: 'textarea', placeholder: '额外 CSS 样式...' },
     ],

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, minimal-ui, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>光触 | Light Touch</title>
+  <link rel="stylesheet" href="index.css">
+  <style>
+    html, body { background: #1a1a2e; }
+  </style>
+</head>
+<body>
+  <section id='section-loading'>
+    <svg class="spinner" width="108" height="108" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 315 A 50 50 0 0 1 162.55 162.45" stroke="white" fill="none" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+  </section>
+
+  <section id='section-outro'>
+    <div class="section-outro__container">
+      <div class="section-outro__content hidden">
+        光栖之处·自有答案
+        <br>
+        <a class="btn-replay hidden" href="/lab"><span>Restart</span></a>
+      </div>
+    </div>
+
+        <svg id="bigyear" class="bigyear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 320">
+      <g>
+        <!-- 2 -->
+        <path class="svg-line-animations" d="M20,15 Q10,15 10,30 L10,50 Q10,65 30,65 L120,65 Q140,65 140,80 L140,150 Q140,175 110,175 L30,175 Q10,175 10,195 L10,285 Q10,305 30,305 L140,305 Q160,305 160,285" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- 0 -->
+        <path class="svg-line-animations" d="M220,30 Q220,15 235,15 L325,15 Q340,15 340,30 L340,285 Q340,305 325,305 L235,305 Q220,305 220,285 Z" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- 2 (second) -->
+        <path class="svg-line-animations" d="M400,15 Q390,15 390,30 L390,50 Q390,65 410,65 L500,65 Q520,65 520,80 L520,150 Q520,175 490,175 L410,175 Q390,175 390,195 L390,285 Q390,305 410,305 L520,305 Q540,305 540,285" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- 6 -->
+        <path class="svg-line-animations" d="M580,285 Q580,305 600,305 L690,305 Q710,305 710,285 L710,175 Q710,160 690,160 L620,160 Q600,160 600,175 L600,215 Q600,230 620,230 L680,230 Q700,230 700,245 L700,245" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+        <path class="svg-line-animations" d="M680,30 Q680,15 660,15 L600,15 Q580,15 580,30 L580,175" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+
+    <ul class="socials hidden">
+      <li class="facebook" style="visibility:hidden"></li>
+      <li class="twitter" style="visibility:hidden"></li>
+      <li class="instagram" style="visibility:hidden"></li>
+    </ul>
+
+  </section>
+
+  <canvas id='gl-canvas'></canvas>
+  <audio id='soundtrack' loop>
+    <source src="assets/sounds/soundtrack.mp3" type="audio/mp3">
+  </audio>
+
+  <div class="white-layer"></div>
+
+  <div class="mouse-cursor disabled">
+    <span></span>
+  </div>
+
+  <a class="logo hidden" href="/">
+    <img src="/logo.png" alt="Alights" style="height:18px;width:auto;filter:brightness(0) invert(1);">
+  </a>
+
+  <div class="navigation hidden">
+    <div class="dragger-area">
+      <canvas></canvas>
+      <div class="dragger-cursor"></div>
+    </div>
+  </div>
+
+  <script src="cannon.min.js"></script>
+  <script src="main.js"></script>
+  <script>
+    // prevent scroll on mobile / touchpad
+    document.addEventListener('touchmove', function(e) {e.preventDefault();}, false);
+
+    var app;
+    try { app = new App() } catch(e) {
+      console.error('App init failed:', e);
+    }
+  </script>
+</body>
+</html>

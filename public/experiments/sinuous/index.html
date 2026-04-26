@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>光流 | Light Flow</title>
+    <link type="text/css" href="css/reset.css" rel="stylesheet" media="screen" />
+    <link type="text/css" href="css/main.css" rel="stylesheet" media="screen" />
+    <style>
+        body { background: #0a0a0a; overflow: hidden; }
+        header { background: #0a0a0a; }
+        .header-instruction { color: #555; }
+        .extra { background: rgba(10,10,10,0.97); border-left: 1px solid #222; }
+        .extra h3 { color: #aaa; }
+        .extra p { color: #666; }
+        .extra a { color: #888; }
+        .credits { display: none; }
+        .app-store-link { display: none; }
+        .social-buttons { display: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>光流</h1>
+        <span class="header-instruction">展开查看说明与设置</span>
+        <div class="extra">
+            <section id="about">
+                <h3>关于</h3>
+                <p>躲避红色光点，收集绿色光点获得增益。<br/>存活越久，分数越高。</p>
+            </section>
+            <section id="legend">
+                <h3>图例</h3>
+                <ul>
+                    <li>S · 护盾</li>
+                    <li>G · 引力场</li>
+                    <li>T · 时间扭曲</li>
+                    <li>M · 缩小光点</li>
+                    <li>1 · 额外生命</li>
+                </ul>
+            </section>
+            <section id="settings">
+                <h3>设置</h3>
+                <ul>
+                    <li><a href="#" id="reset-game">重置游戏</a></li>
+                </ul>
+            </section>
+        </div>
+    </header>
+    <canvas id="world"></canvas>
+    <script type="text/javascript" src="js/libs/jquery-1.5.2.min.js"></script>
+    <script type="text/javascript" src="js/sinuous.min.js"></script>
+</body>
+</html>

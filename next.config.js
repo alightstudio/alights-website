@@ -17,6 +17,26 @@ const nextConfig = {
     }
     return config
   },
+  async rewrites() {
+    return [
+      {
+        source: '/lab/flow',
+        destination: '/experiments/sinuous/index.html',
+      },
+      {
+        source: '/lab/touch',
+        destination: '/experiments/touch/index.html',
+      },
+      {
+        source: '/lab/propagation',
+        destination: '/experiments/bacterium/index.html',
+      },
+      {
+        source: '/lab/tide',
+        destination: '/experiments/magnetic/index.html',
+      },
+    ]
+  },
   async redirects() {
     return [
       {

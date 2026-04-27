@@ -39,8 +39,8 @@ function LoginForm() {
       localStorage.setItem('userId', data.user.id)
       localStorage.setItem('userName', data.user.name)
       localStorage.setItem('userPhone', data.user.phone)
-      // 跳转到用户中心
-      router.push('/dashboard')
+      // 跳转到个人中心
+      router.push('/profile')
     } catch (err: any) {
       setError(err.message)
     } finally {

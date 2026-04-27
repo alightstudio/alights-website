@@ -55,6 +55,11 @@ export default function ProfilePage() {
   const [bio, setBio] = useState('')
   const [saving, setSaving] = useState(false)
 
+  // 计算注册天数
+  const daysSinceRegistration = profile
+    ? Math.floor((Date.now() - new Date(profile.createdAt).getTime()) / (24 * 60 * 60 * 1000))
+    : 0
+
   // 修改密码
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [currentPwd, setCurrentPwd] = useState('')
@@ -217,6 +222,17 @@ export default function ProfilePage() {
           {/* 页面标题 */}
           <h1 className="font-display text-4xl font-light mb-2">个人中心</h1>
           <p className="text-gray-500 text-sm mb-10">管理您的个人信息和积分</p>
+
+          {/* 注册信息 */}
+          {profile && (
+            <div className="mb-10 text-center">
+              <div className="inline-flex items-center gap-1.5 bg-dark-800/50 border border-dark-700/50 px-5 py-2.5">
+                <span className="text-gray-500 text-xs tracking-wider">已加入</span>
+                <span className="text-accent-gold/80 text-lg font-display mx-1">{daysSinceRegistration}</span>
+                <span className="text-gray-500 text-xs tracking-wider">天</span>
+              </div>
+            </div>
+          )}
 
           {/* 积分总览 */}
           <div className="grid grid-cols-3 gap-4 mb-10">

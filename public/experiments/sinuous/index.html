@@ -47,8 +47,8 @@
     <script type="text/javascript">
         var sc = 0;
         var FACEBOOK_MODE = false;
-        // Mobile: scale 1000x660 game to fit viewport
-        (function(){
+        // Mobile: scale 1000x660 game to fit viewport (run after DOM ready)
+        document.addEventListener('DOMContentLoaded', function() {
             if (window.innerWidth < 768) {
                 var scale = Math.min(window.innerWidth / 1000, window.innerHeight / 660, 1);
                 if (scale < 0.99) {
@@ -59,7 +59,7 @@
                     }
                 }
             }
-        })();
+        });
     </script>
 </head>
 <body>

@@ -7,7 +7,8 @@
   <base href="/experiments/touch/">
   <link rel="stylesheet" href="index.css">
   <style>
-    html, body { background: #1a1a2e; }
+    html, body { background: #1a1a2e; margin: 0; padding: 0; width: 100%; height: 100%; }
+    #gl-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; }
     .lab-back {
         position: fixed; top: 16px; left: 16px; z-index: 9999;
         padding: 6px 12px; font-size: 12px; color: rgba(255,255,255,0.4);
@@ -89,6 +90,8 @@
     var app;
     try { app = new App() } catch(e) {
       console.error('App init failed:', e);
+      document.getElementById('section-loading').innerHTML = 
+        '<p style="color:#666;text-align:center;padding:40% 20px;font-size:14px">设备兼容性提示<br><span style="font-size:11px;color:#444">您的设备可能不支持 3D 渲染，请在电脑端访问以获得最佳体验</span></p>';
     }
   </script>
 </body>

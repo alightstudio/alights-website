@@ -13,22 +13,28 @@ export async function GET() {
       },
     })
 
-    // 获取每个画布的像素贡献排行
     const result = await Promise.all(
       canvases.map(async (c) => {
+        // 获取像素贡献排行（排除 SYSTEM 自动填充）
         const leaderboard = await prisma.pixel.groupBy({
           by: ['userId'],
-          where: { canvasId: c.id },
+          where: { canvasId: c.id, userId: { not: 'SYSTEM' } },
           _count: { id: true },
           orderBy: { _count: { id: 'desc' } },
           take: 3,
         })
 
-        // 获取像素数据用于缩略图预览（最多 576 个，24×24 画布）
+        // 获取像素数据用于缩略图预览（最多 576 个，防止响应过大导致页面崩溃）
         const pixels = await prisma.pixel.findMany({
           where: { canvasId: c.id },
           select: { x: true, y: true, color: true },
           orderBy: { placedAt: 'desc' },
+          take: 576,
+        })
+
+        // 获取用户放置的像素数（排除 SYSTEM）
+        const userPixelCount = await prisma.pixel.count({
+          where: { canvasId: c.id, userId: { not: 'SYSTEM' } },
         })
 
         return {
@@ -37,7 +43,7 @@ export async function GET() {
           height: c.height,
           name: c.name,
           endTime: c.endTime,
-          pixelCount: c._count.pixels,
+          pixelCount: userPixelCount,
           totalPixels: c.width * c.height,
           fillRate: Math.round((c._count.pixels / (c.width * c.height)) * 100),
           ownerId: c.ownerId,

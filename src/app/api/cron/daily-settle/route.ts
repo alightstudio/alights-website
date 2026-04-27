@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
     const results = []
 
     for (const canvas of expiredCanvases) {
-      // 1. 计算各用户像素数，找出所有者
+      // 1. 计算各用户像素数，找出所有者（排除 SYSTEM 自动填充）
       const leaderboard = await prisma.pixel.groupBy({
         by: ['userId'],
-        where: { canvasId: canvas.id },
+        where: { canvasId: canvas.id, userId: { not: 'SYSTEM' } },
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
       })

@@ -59,7 +59,7 @@ export default function CanvasPage() {
   const [canvasInfo, setCanvasInfo] = useState<CanvasInfo | null>(null)
   const [pixelMap, setPixelMap] = useState<Map<string, string>>(new Map())
   const [pixelMeta, setPixelMeta] = useState<Map<string, PixelInfo>>(new Map())
-  const [selectedColor, setSelectedColor] = useState('#000000')
+  const [selectedColor, setSelectedColor] = useState('#0A0A0A')
   const [loading, setLoading] = useState(true)
   const [placing, setPlacing] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
@@ -157,12 +157,13 @@ export default function CanvasPage() {
     return () => clearInterval(iv)
   }, [fetchCanvas])
 
-  // 画布周期倒计时
+  // 画布周期倒计时（计算到今/明 00:00）
   useEffect(() => {
-    if (!startTimeRef) return
     const tick = () => {
-      const elapsed = Date.now() - startTimeRef
-      const remain = Math.max(0, 24 * 60 * 60 * 1000 - elapsed)
+      const now = new Date()
+      const midnight = new Date(now)
+      midnight.setHours(24, 0, 0, 0)
+      const remain = Math.max(0, midnight.getTime() - now.getTime())
       const h = Math.floor(remain / 3600000)
       const m = Math.floor((remain % 3600000) / 60000)
       const s = Math.floor((remain % 60000) / 1000)
@@ -171,7 +172,7 @@ export default function CanvasPage() {
     tick()
     const iv = setInterval(tick, 1000)
     return () => clearInterval(iv)
-  }, [startTimeRef])
+  }, [])
 
   // 随机填充倒计时（每60秒）
   useEffect(() => {

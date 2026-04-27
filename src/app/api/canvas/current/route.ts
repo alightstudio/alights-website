@@ -32,19 +32,23 @@ export async function GET(req: NextRequest) {
       select: { x: true, y: true, color: true, userId: true, placedAt: true },
     })
 
-    // 统计各用户像素数（用于显示领导者）
+    // 统计各用户像素数（用于显示领导者，不统计 SYSTEM 自动填充）
     const userCounts: Record<string, number> = {}
     for (const p of pixels) {
+      if (p.userId === 'SYSTEM') continue
       userCounts[p.userId] = (userCounts[p.userId] || 0) + 1
     }
     const leader = Object.entries(userCounts).sort((a, b) => b[1] - a[1])[0]
 
-    // 计算剩余时间和填充率（归档画布不显示倒计时）
+    // 计算距离下次 00:00 的剩余时间
     const isActive = canvas.status === 'ACTIVE'
-    const elapsed = isActive ? Date.now() - new Date(canvas.startTime).getTime() : 0
-    const remaining = isActive ? Math.max(0, 24 * 60 * 60 * 1000 - elapsed) : 0
+    const now = new Date()
+    const nextMidnight = new Date(now)
+    nextMidnight.setHours(24, 0, 0, 0)
+    const remaining = isActive ? Math.max(0, nextMidnight.getTime() - now.getTime()) : 0
     const totalPixels = canvas.width * canvas.height
-    const placedPixels = pixels.length
+    const userPixels = pixels.filter(p => p.userId !== 'SYSTEM').length
+    const placedPixels = pixels.length // 包含 SYSTEM，用于填充率
     const fillRate = Math.round((placedPixels / totalPixels) * 100)
 
     return NextResponse.json({

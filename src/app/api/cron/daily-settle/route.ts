@@ -6,7 +6,8 @@ import { verifyAdminSession } from '@/lib/admin-auth'
 function isCronAuthorized(req: NextRequest): boolean {
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) {
+  // 用 undefined 检查，避免空字符串被当作 falsy（空字符串时 !"" === true）
+  if (cronSecret === undefined || cronSecret === null || cronSecret === '') {
     // 未配置 CRON_SECRET 时允许本地开发调用
     return process.env.NODE_ENV !== 'production'
   }

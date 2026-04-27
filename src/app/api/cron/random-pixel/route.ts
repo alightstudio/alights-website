@@ -6,7 +6,8 @@ function isAuthorized(req: NextRequest): boolean {
   const authHeader = req.headers.get('authorization')
   const querySecret = req.nextUrl.searchParams.get('secret')
   const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) {
+  // 严格检查 undefined/null/空字符串，避免 !"" 误判
+  if (cronSecret === undefined || cronSecret === null || cronSecret === '') {
     return process.env.NODE_ENV !== 'production'
   }
   return authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret

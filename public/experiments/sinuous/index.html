@@ -4,10 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>光流 | Light Flow</title>
+    <base href="/experiments/sinuous/">
     <link type="text/css" href="css/reset.css" rel="stylesheet" media="screen" />
     <link type="text/css" href="css/main.css" rel="stylesheet" media="screen" />
     <style>
-        body { background: #0a0a0a; overflow: hidden; }
+        .lab-back {
+            position: fixed; top: 16px; left: 16px; z-index: 9999;
+            padding: 6px 12px; font-size: 12px; color: rgba(255,255,255,0.4);
+            background: rgba(10,10,10,0.4); backdrop-filter: blur(8px);
+            border-radius: 6px; text-decoration: none; letter-spacing: 0.15em;
+            transition: color 0.2s; font-family: -apple-system, sans-serif;
+        }
+        .lab-back:hover { color: rgba(255,255,255,0.8); }
+        body { background: #0a0a0a; overflow: hidden; margin: 0; }
+        header { display: none; }
+        #game {
+            position: absolute;
+            left: 50%; top: 50%;
+            margin-left: -500px;
+            margin-top: -330px;
+            transform-origin: center center;
+        }
+        @media (max-width: 1100px) { #game { transform: scale(0.7); } }
+        @media (max-width: 700px)  { #game { transform: scale(0.45); } }
+        @media (max-width: 450px)  { #game { transform: scale(0.28); } }
         header { background: #0a0a0a; }
         .header-instruction { color: #555; }
         .extra { background: rgba(10,10,10,0.97); border-left: 1px solid #222; }
@@ -17,9 +37,18 @@
         .credits { display: none; }
         .app-store-link { display: none; }
         .social-buttons { display: none; }
+        #share { display: none; }
+        #affiliation { display: none; }
+        #promotion { display: none; }
+        footer { display: none; }
     </style>
+    <script type="text/javascript">
+        var sc = 0;
+        var FACEBOOK_MODE = false;
+    </script>
 </head>
 <body>
+<a class="lab-back" href="/lab">← 返回实验室</a>
     <header>
         <h1>光流</h1>
         <span class="header-instruction">展开查看说明与设置</span>
@@ -27,26 +56,70 @@
             <section id="about">
                 <h3>关于</h3>
                 <p>躲避红色光点，收集绿色光点获得增益。<br/>存活越久，分数越高。</p>
+                <p class="credits">Created by <a href="http://hakim.se/">Hakim El Hattab</a></p>
             </section>
             <section id="legend">
                 <h3>图例</h3>
                 <ul>
-                    <li>S · 护盾</li>
-                    <li>G · 引力场</li>
-                    <li>T · 时间扭曲</li>
-                    <li>M · 缩小光点</li>
-                    <li>1 · 额外生命</li>
+                    <li class="shield"><span>S</span> 护盾</li>
+                    <li class="gravity-field"><span>G</span> 引力场</li>
+                    <li class="time-warp"><span>T</span> 时间扭曲</li>
+                    <li class="minimize-dots"><span>M</span> 缩小光点</li>
+                </ul>
+                <ul>
+                    <li class="life-up"><span>1</span> 额外生命</li>
+                    <li class="player"><span></span> 玩家</li>
+                    <li class="enemy"><span></span> 敌人</li>
                 </ul>
             </section>
             <section id="settings">
                 <h3>设置</h3>
                 <ul>
-                    <li><a href="#" id="reset-game">重置游戏</a></li>
+                    <li><a id="mute-button" href="#"></a></li>
+                    <li><a id="reset-button" href="#">重置游戏</a></li>
                 </ul>
             </section>
+            <section id="affiliation">
+                <span></span>
+            </section>
         </div>
+        <div id="share"></div>
     </header>
-    <canvas id="world"></canvas>
+
+    <div id="game">
+        <div id="game-status" class="ui"></div>
+        <div id="game-panels">
+            <div id="message" class="ui">
+                <h2 id="title">玩法</h2>
+                <ul class="instructions">
+                    <li>1. 躲避红色光点</li>
+                    <li>2. 碰触绿色光点获得增益</li>
+                    <li>3. 移动越多分数越高</li>
+                    <li>4. 尽可能活下去</li>
+                </ul>
+                <a href="#" id="start-button">开始</a>
+                <div id="level-selector">
+                    <span>Level:</span>
+                    <ul class="levels"></ul>
+                </div>
+            </div>
+            <div id="highscore-list" class="ui">
+                <h2>High Score</h2>
+                <ul id="highscore-output"></ul>
+            </div>
+            <div id="highscore-win" class="ui">
+                <h2 id="highscore-place"></h2>
+                <p>Something to identify you by</p>
+                <input id="highscore-input" type="text" name="alias" maxlength="10" />
+                <a id="highscore-submit" href="#">Go</a>
+            </div>
+        </div>
+        <div id="promotion"></div>
+        <canvas id="world"></canvas>
+    </div>
+
+    <footer></footer>
+
     <script type="text/javascript" src="js/libs/jquery-1.5.2.min.js"></script>
     <script type="text/javascript" src="js/sinuous.min.js"></script>
 </body>

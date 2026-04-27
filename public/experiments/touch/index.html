@@ -7,9 +7,19 @@
   <link rel="stylesheet" href="index.css">
   <style>
     html, body { background: #1a1a2e; }
+    .lab-back {
+        position: fixed; top: 16px; left: 16px; z-index: 9999;
+        padding: 6px 12px; font-size: 12px; color: rgba(255,255,255,0.4);
+        background: rgba(10,10,10,0.4); backdrop-filter: blur(8px);
+        border-radius: 6px; text-decoration: none; letter-spacing: 0.15em;
+        transition: color 0.2s; font-family: -apple-system, sans-serif;
+    }
+    .lab-back:hover { color: rgba(255,255,255,0.8); }
+    #section-loading { display: block; }
   </style>
 </head>
 <body>
+<a class="lab-back" href="/lab">← 返回实验室</a>
   <section id='section-loading'>
     <svg class="spinner" width="108" height="108" xmlns="http://www.w3.org/2000/svg">
       <path d="M50 315 A 50 50 0 0 1 162.55 162.45" stroke="white" fill="none" stroke-width="5" stroke-linecap="round"/>
@@ -69,15 +79,35 @@
     </div>
   </div>
 
+  <script>
+    // WebGL capability check
+    try {
+      var __gl = document.createElement('canvas').getContext('webgl') ||
+                 document.createElement('canvas').getContext('experimental-webgl');
+      window.__webglOK = !!__gl;
+      if (!__gl) throw new Error('No WebGL');
+    } catch(e) {
+      window.__webglOK = false;
+      document.getElementById('section-loading').innerHTML =
+        '<div style="color:#666;text-align:center;padding:30% 10%;font-size:14px;letter-spacing:0.1em">' +
+        '<p style="font-size:32px;margin-bottom:16px">⚠</p>' +
+        '<p>此装置不支援 3D 渲染</p>' +
+        '<p style="font-size:11px;color:#444;margin-top:16px">请使用桌上型电脑浏览</p></div>';
+    }
+  </script>
   <script src="cannon.min.js"></script>
   <script src="main.js"></script>
   <script>
-    // prevent scroll on mobile / touchpad
-    document.addEventListener('touchmove', function(e) {e.preventDefault();}, false);
-
-    var app;
-    try { app = new App() } catch(e) {
-      console.error('App init failed:', e);
+    if (window.__webglOK) {
+      document.addEventListener('touchmove', function(e) {e.preventDefault();}, false);
+      try { var app = new App() } catch(e) {
+        console.error('App init failed:', e);
+        document.getElementById('section-loading').innerHTML =
+          '<div style="color:#666;text-align:center;padding:30% 10%;font-size:14px">' +
+          '<p style="font-size:32px;margin-bottom:16px">⚠</p>' +
+          '<p>3D 渲染初始化失败</p>' +
+          '<p style="font-size:11px;color:#444;margin-top:16px">请使用桌上型电脑浏览</p></div>';
+      }
     }
   </script>
 </body>

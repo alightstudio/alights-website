@@ -107,9 +107,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
           <div>
             <p className="text-xs md:text-sm text-accent-gold/60 tracking-[0.4em] uppercase mb-4">Visual Effects Studio</p>
             <div className="mb-2">
-              <h1 className="font-hero text-6xl md:text-8xl font-black tracking-wider text-gray-300">
-                {hero.title}
-              </h1>
+              <Image src="/logo.png" alt={logo} width={2568} height={450} className="h-6 w-auto object-contain" />
             </div>
             <p className="text-xl md:text-3xl font-display font-light tracking-[0.3em] text-gray-500">
               {hero.titleEn}

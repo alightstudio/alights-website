@@ -451,12 +451,14 @@ export default function CanvasPage() {
       {/* 画布描述 */}
       <div className="px-6 md:px-12 mb-3">
         <p className="text-xs text-gray-500 leading-relaxed">
-          在空白画布上点击放置像素,与所有用户协作共创一幅作品。
-          每 24 小时结算一次,放置最多像素的用户成为画布所有者。
+          协作像素画布 — 点击空白处放置彩色像素，与所有用户共同创作一幅作品。
+          填满后自动扩张至原有 2 倍尺寸。
         </p>
         <p className="text-xs text-gray-600 leading-relaxed mt-1">
-          {'\uD83C\uDF1F'} 系统每分钟自动在随机空位填充一个彩色像素 —
-          当你离开时,画布也在悄悄生长。
+          {'\uD83C\uDF1F'} 系统每隔约 60 秒在随机空位自动填充彩色像素 — 当你离开时，画布也在悄悄生长。
+        </p>
+        <p className="text-xs text-gray-600 leading-relaxed mt-1">
+          {'\u23F0'} 每天 {'\u5348\u591C'} 自动结算归档，放置像素最多的用户成为画布所有者。
         </p>
       </div>
       {/* 顶部信息栏 */}

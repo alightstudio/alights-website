@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=1024, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>光流 | Light Flow</title>
     <base href="/experiments/sinuous/">
     <link type="text/css" href="css/reset.css" rel="stylesheet" media="screen" />
@@ -31,11 +31,15 @@
         #promotion { display: none; }
         footer { display: none; }
 
-        /* Mobile */
+        /* Mobile - scale 1000x660 game to fit screen */
         @media (max-width: 768px) {
-            body { overflow: hidden; }
-            header { height: 0 !important; padding: 0 !important; overflow: hidden; }
-            #game { position: absolute; left: 50%; top: 50%; margin-left: -500px; margin-top: -330px; }
+            body { overflow: hidden; position: fixed; width: 100vw; height: 100vh; }
+            html { overflow: hidden; height: 100%; }
+            header { display: none !important; }
+            #game { 
+                position: fixed; left: 50%; top: 50%; 
+                margin-left: -500px; margin-top: -330px;
+            }
             #game canvas { border: none; border-radius: 0; }
             .lab-back { font-size: 10px; top: 8px; left: 8px; padding: 4px 8px; }
         }
@@ -43,6 +47,19 @@
     <script type="text/javascript">
         var sc = 0;
         var FACEBOOK_MODE = false;
+        // Mobile: scale 1000x660 game to fit viewport
+        (function(){
+            if (window.innerWidth < 768) {
+                var scale = Math.min(window.innerWidth / 1000, window.innerHeight / 660, 1);
+                if (scale < 0.99) {
+                    var game = document.getElementById('game');
+                    if (game) {
+                        game.style.transform = 'scale(' + scale + ')';
+                        game.style.transformOrigin = 'center center';
+                    }
+                }
+            }
+        })();
     </script>
 </head>
 <body>

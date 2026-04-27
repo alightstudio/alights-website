@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { DISPLAY_FONTS, SANS_FONTS } from '@/lib/fonts'
 import { changeFontsSafe } from '@/lib/siteConfig'
 import {
@@ -1402,6 +1402,28 @@ export default function AdminPage() {
   )
 }
 
+/* ─── Pixel Preview Component ─── */
+function PixelPreview({ pixels, width, height }: { pixels: { x: number; y: number; color: string }[]; width: number; height: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const w = canvas.width
+    const h = canvas.height
+    const pw = w / width
+    const ph = h / height
+    ctx.fillStyle = '#050505'
+    ctx.fillRect(0, 0, w, h)
+    for (const p of pixels) {
+      ctx.fillStyle = p.color
+      ctx.fillRect(p.x * pw, p.y * ph, Math.ceil(pw), Math.ceil(ph))
+    }
+  }, [pixels, width, height])
+  return <canvas ref={canvasRef} width={48} height={48} className="w-full h-full" />
+}
+
 /* ─── Canvas Admin Component ─── */
 function CanvasAdmin() {
   const [activeCanvas, setActiveCanvas] = useState<any>(null)
@@ -1501,17 +1523,26 @@ function CanvasAdmin() {
       <div className="bg-black/30 rounded-xl border border-white/5 p-5">
         <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2"><FileText className="w-4 h-4 text-accent-gold/60"/>画布历史（最近 20 张）</h3>
         {history.length > 0 ? (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {history.slice(-20).reverse().map((c: any) => (
-              <div key={c.id} className="flex items-center justify-between py-2 px-3 bg-white/[0.02] rounded-lg hover:bg-white/[0.04] text-sm">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-gray-400 font-mono text-xs">{c.width}×{c.height}</span>
-                  <span className="text-white truncate">{c.name || `画布 #${c.id.slice(0, 8)}`}</span>
-                  <span className="text-gray-600 text-xs">{c.pixelCount || 0}px</span>
+              <div key={c.id} className="flex items-center gap-3 py-2 px-3 bg-white/[0.02] rounded-lg hover:bg-white/[0.04] text-sm">
+                {/* Pixel Preview */}
+                <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden bg-dark-950 border border-white/5">
+                  <PixelPreview pixels={c.pixels || []} width={c.width} height={c.height} />
                 </div>
-                <span className="text-xs text-gray-500">
-                  {c.status === 'ACTIVE' ? '🟢 活跃' : c.ownerId ? `👤 ${c.ownerId.slice(0, 8)}` : '⚪ 无主'}
-                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white truncate">{c.name || `画布 #${c.id.slice(0, 8)}`}</span>
+                    <span className="text-gray-600 text-xs">{c.pixelCount || 0}px / {c.totalPixels}px</span>
+                    <span className="text-accent-gold/60 text-xs">{c.fillRate}%</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-gray-500 text-xs">{c.endTime ? new Date(c.endTime).toLocaleDateString('zh-CN') : '-'}</span>
+                    <span className="text-xs text-gray-600">
+                      {c.ownerId ? `🏆 ${c.ownerId.slice(0, 8)}` : '⚪ 无主'}
+                    </span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

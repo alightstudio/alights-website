@@ -24,6 +24,13 @@ export async function GET() {
           take: 3,
         })
 
+        // 获取像素数据用于缩略图预览（最多 576 个，24×24 画布）
+        const pixels = await prisma.pixel.findMany({
+          where: { canvasId: c.id },
+          select: { x: true, y: true, color: true },
+          orderBy: { placedAt: 'desc' },
+        })
+
         return {
           id: c.id,
           width: c.width,
@@ -38,6 +45,7 @@ export async function GET() {
             userId: l.userId,
             count: l._count.id,
           })),
+          pixels: pixels,
         }
       })
     )

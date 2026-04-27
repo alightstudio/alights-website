@@ -146,14 +146,14 @@ export default function CanvasPage() {
     return () => clearInterval(iv)
   }, [fetchCanvas])
 
-  // 每10分钟触发一次随机变色（客户端驱动，API 端防重）
+  // 每60秒触发一次随机填充（与 OpenClaw cron 互补，API 端50秒节流防重）
   useEffect(() => {
     const iv = setInterval(async () => {
       try {
-        await fetch('/api/cron/random-pixel', { method: 'POST' })
+        await fetch('/api/cron/random-pixel', { method: 'GET' })
         fetchCanvas()
       } catch {}
-    }, 10 * 60 * 1000)
+    }, 60 * 1000)
     return () => clearInterval(iv)
   }, [fetchCanvas])
 
@@ -173,12 +173,12 @@ export default function CanvasPage() {
     return () => clearInterval(iv)
   }, [startTimeRef])
 
-  // 随机变色倒计时（每10分钟）
+  // 随机填充倒计时（每60秒）
   useEffect(() => {
     if (!lastRandomChangeAt) return
     const tick = () => {
       const elapsed = Date.now() - lastRandomChangeAt
-      const interval = 10 * 60 * 1000
+      const interval = 60 * 1000
       const remain = Math.max(0, interval - elapsed)
       const m = Math.floor(remain / 60000)
       const s = Math.floor((remain % 60000) / 1000)
@@ -453,6 +453,10 @@ export default function CanvasPage() {
           在空白画布上点击放置像素,与所有用户协作共创一幅作品。
           每 24 小时结算一次,放置最多像素的用户成为画布所有者。
         </p>
+        <p className="text-xs text-gray-600 leading-relaxed mt-1">
+          {'\uD83C\uDF1F'} 系统每分钟自动在随机空位填充一个彩色像素 —
+          当你离开时,画布也在悄悄生长。
+        </p>
       </div>
       {/* 顶部信息栏 */}
       <div className="px-6 md:px-12 mb-3 flex items-center justify-between flex-wrap gap-2">
@@ -466,7 +470,7 @@ export default function CanvasPage() {
               : <span className="text-red-400">结算中...</span>
             }
             {' \u00B7 '}
-            随机变色 <span className="text-purple-400/70">{randomCountdown}</span>
+            自动填充 <span className="text-purple-400/70">{randomCountdown}</span>
           </p>
         </div>
         <div className="flex items-center gap-4 text-sm">
@@ -584,9 +588,10 @@ export default function CanvasPage() {
 
       {/* 提示 */}
       <div className="px-6 md:px-12 mt-3 flex items-center gap-4 text-xs text-gray-600">
-        <span>{'\uD83D\uDDB1'} 点击像素</span>
+        <span>{'\uD83D\uDDB1\uFE0F'} 点击放置</span>
         <span>右键 取色</span>
         <span>1像素 = 1积分</span>
+        <span>{'\uD83C\uDF1F'} 每分钟自动填充</span>
       </div>
 
       {/* 历史作品链接 */}
@@ -649,6 +654,9 @@ export default function CanvasPage() {
                 每张画布的寿命为 <span className="text-accent-gold/70">24 小时</span>，
                 每天 <span className="text-accent-gold/70">00:00</span> 自动结算。
                 画布归档后,放置像素最多的用户成为画布所有者。
+              </p>
+              <p className="text-xs text-gray-500 mb-4">
+                {'\uD83C\uDF1F'} 系统每分钟自动在随机空位填充彩色像素，即使无人参与画布也在持续生长。
               </p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
@@ -721,7 +729,7 @@ export default function CanvasPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent-gold/70 mt-0.5">•</span>
-                  <span>每 10 分钟系统自动在随机空位填充彩色像素</span>
+                  <span>每分钟系统自动在随机空位填充一个彩色像素</span>
                 </li>
               </ul>
             </div>

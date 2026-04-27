@@ -9,24 +9,14 @@
     <link type="text/css" href="css/main.css" rel="stylesheet" media="screen" />
     <style>
         .lab-back {
-            position: fixed; top: 16px; left: 16px; z-index: 9999;
+            position: fixed; top: 16px; left: 16px; z-index: 99999;
             padding: 6px 12px; font-size: 12px; color: rgba(255,255,255,0.4);
-            background: rgba(10,10,10,0.4); backdrop-filter: blur(8px);
+            background: rgba(10,10,10,0.7); backdrop-filter: blur(8px);
             border-radius: 6px; text-decoration: none; letter-spacing: 0.15em;
             transition: color 0.2s; font-family: -apple-system, sans-serif;
         }
         .lab-back:hover { color: rgba(255,255,255,0.8); }
-        body { background: #0a0a0a; overflow: hidden; margin: 0; height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; }
-        header { display: none; }
-        #game {
-            position: static;
-            left: auto; top: auto;
-            margin: 0;
-            transform-origin: center center;
-        }
-        @media (max-width: 1100px) { #game { transform: scale(0.7); } }
-        @media (max-width: 700px)  { #game { transform: scale(0.45); } }
-        @media (max-width: 450px)  { #game { transform: scale(0.28); } }
+        body { background: #0a0a0a; overflow: hidden; height: 100vh; width: 100vw; }
         header { background: #0a0a0a; }
         .header-instruction { color: #555; }
         .extra { background: rgba(10,10,10,0.97); border-left: 1px solid #222; }

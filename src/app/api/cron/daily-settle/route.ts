@@ -25,12 +25,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const now = new Date()
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
     const expiredCanvases = await prisma.canvas.findMany({
       where: {
         status: 'ACTIVE',
-        startTime: { lte: twentyFourHoursAgo },
       },
     })
 

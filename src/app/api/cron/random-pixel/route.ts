@@ -4,11 +4,12 @@ import { prisma } from '@/lib/prisma'
 // Vercel Cron 鉴权
 function isAuthorized(req: NextRequest): boolean {
   const authHeader = req.headers.get('authorization')
+  const querySecret = req.nextUrl.searchParams.get('secret')
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
     return process.env.NODE_ENV !== 'production'
   }
-  return authHeader === `Bearer ${cronSecret}`
+  return authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret
 }
 
 const COLORS = ['#FFFFFF','#000000','#333333','#666666','#999999','#C9A962','#A0895C','#8B7355','#8B2500','#722F37','#2F4F4F','#4A766E','#1B3A5C','#1C3A5C','#4A3B5C','#A0895C','#C3A86C','#F5F0E0','#CC3333','#CC7733','#CCAA33','#33AA55','#33AAAA','#3366CC','#CC6699','#8844AA']

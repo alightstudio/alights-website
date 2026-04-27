@@ -79,35 +79,15 @@
     </div>
   </div>
 
-  <script>
-    // WebGL capability check
-    try {
-      var __gl = document.createElement('canvas').getContext('webgl') ||
-                 document.createElement('canvas').getContext('experimental-webgl');
-      window.__webglOK = !!__gl;
-      if (!__gl) throw new Error('No WebGL');
-    } catch(e) {
-      window.__webglOK = false;
-      document.getElementById('section-loading').innerHTML =
-        '<div style="color:#666;text-align:center;padding:30% 10%;font-size:14px;letter-spacing:0.1em">' +
-        '<p style="font-size:32px;margin-bottom:16px">⚠</p>' +
-        '<p>此装置不支援 3D 渲染</p>' +
-        '<p style="font-size:11px;color:#444;margin-top:16px">请使用桌上型电脑浏览</p></div>';
-    }
-  </script>
   <script src="cannon.min.js"></script>
   <script src="main.js"></script>
   <script>
-    if (window.__webglOK) {
-      document.addEventListener('touchmove', function(e) {e.preventDefault();}, false);
-      try { var app = new App() } catch(e) {
-        console.error('App init failed:', e);
-        document.getElementById('section-loading').innerHTML =
-          '<div style="color:#666;text-align:center;padding:30% 10%;font-size:14px">' +
-          '<p style="font-size:32px;margin-bottom:16px">⚠</p>' +
-          '<p>3D 渲染初始化失败</p>' +
-          '<p style="font-size:11px;color:#444;margin-top:16px">请使用桌上型电脑浏览</p></div>';
-      }
+    // prevent scroll on mobile / touchpad
+    document.addEventListener('touchmove', function(e) {e.preventDefault();}, false);
+
+    var app;
+    try { app = new App() } catch(e) {
+      console.error('App init failed:', e);
     }
   </script>
 </body>

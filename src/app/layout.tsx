@@ -75,16 +75,17 @@ async function getThemeConfig(): Promise<{ fonts: FontOption[]; cssVars: Record<
 }
 
 /** 本地可用的字体列表（自托管，无需 Google Fonts） */
-const LOCAL_FONTS: Record<string, { cssPath: string; fileUrls: string[] }> = {
+/** 自托管字体 CSS 内容（本地 @font-face 声明，无需请求 Google Fonts） */
+const INTER_CSS = `@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:300;src:url(/fonts/inter/inter-latin-300-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:400;src:url(/fonts/inter/inter-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:500;src:url(/fonts/inter/inter-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:600;src:url(/fonts/inter/inter-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:700;src:url(/fonts/inter/inter-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}`
+
+const LOCAL_FONTS: Record<string, { cssContent: string; fileUrls: string[] }> = {
   inter: {
-    cssPath: 'public/fonts/inter.css',
-    fileUrls: [
-      '/fonts/inter/inter-latin-300-normal.woff2',
-      '/fonts/inter/inter-latin-400-normal.woff2',
-      '/fonts/inter/inter-latin-500-normal.woff2',
-      '/fonts/inter/inter-latin-600-normal.woff2',
-      '/fonts/inter/inter-latin-700-normal.woff2',
-    ],
+    cssContent: INTER_CSS,
+    fileUrls: ['/fonts/inter/inter-latin-300-normal.woff2','/fonts/inter/inter-latin-400-normal.woff2','/fonts/inter/inter-latin-500-normal.woff2','/fonts/inter/inter-latin-600-normal.woff2','/fonts/inter/inter-latin-700-normal.woff2'],
   },
 }
 
@@ -93,13 +94,7 @@ async function fetchFontCSS(fonts: FontOption[], text?: string): Promise<{ fontC
     // 检查是否有本地版本
     const local = LOCAL_FONTS[font.id]
     if (local) {
-      try {
-        const fs = await import('fs')
-        const content = fs.readFileSync(local.cssPath, 'utf-8')
-        return content
-      } catch {
-        // 本地字体读取失败，回退 Google Fonts
-      }
+      return local.cssContent
     }
     const url = googleFontUrl(font, text)
     const res = await fetch(url, {

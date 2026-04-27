@@ -66,7 +66,7 @@ export default function Navigation({ initialLogo, initialNavItems }: NavigationP
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center">
-              <Image src="/logo.png" alt={logo} width={2864} height={526} className="h-[20px] w-auto" />
+              <Image src="/logo.png" alt={logo} width={2711} height={635} className="h-[20px] w-auto" />
               <span className="font-display text-xl tracking-wider ml-2">{logo}</span>
             </Link>
 

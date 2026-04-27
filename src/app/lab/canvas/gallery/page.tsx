@@ -24,6 +24,7 @@ interface PixelData {
 
 export default function CanvasGallery() {
   const [canvases, setCanvases] = useState<ArchiveCanvas[]>([])
+  const [canvasPixelsMap, setCanvasPixelsMap] = useState<Map<string, {x: number; y: number; color: string}[]>>(new Map())
   const [loading, setLoading] = useState(true)
   const [selectedCanvas, setSelectedCanvas] = useState<ArchiveCanvas | null>(null)
   const [selectedPixels, setSelectedPixels] = useState<PixelData[]>([])
@@ -45,7 +46,15 @@ export default function CanvasGallery() {
   useEffect(() => {
     fetch('/api/canvas/history')
       .then(r => r.json())
-      .then(setCanvases)
+      .then(data => {
+        const arr = data.canvases || data
+        setCanvases(arr)
+        const map = new Map<string, {x: number; y: number; color: string}[]>()
+        for (const c of arr) {
+          if (c.pixels) map.set(c.id, c.pixels)
+        }
+        setCanvasPixelsMap(map)
+      })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
@@ -84,18 +93,9 @@ export default function CanvasGallery() {
   }
 
   // 打开详情
-  const openDetail = async (c: ArchiveCanvas) => {
+  const openDetail = (c: ArchiveCanvas) => {
     setSelectedCanvas(c)
-    setLoadingDetail(true)
-    setSelectedPixels([])
-    try {
-      const res = await fetch('/api/canvas/current?id=' + c.id)
-      if (res.ok) {
-        const data = await res.json()
-        setSelectedPixels(data.pixels || [])
-      }
-    } catch {}
-    setLoadingDetail(false)
+    setSelectedPixels((canvasPixelsMap.get(c.id) || []) as PixelData[])
   }
 
   // 缩放画板的像素渲染

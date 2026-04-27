@@ -30,7 +30,11 @@ export async function generateMetadata(): Promise<Metadata> {
 async function getThemeConfig(): Promise<{ fonts: FontOption[]; cssVars: Record<string, string> }> {
   try {
     const config = await prisma.siteConfig.findFirst({ where: { key: 'theme' } })
-    if (!config) return { fonts: [], cssVars: {} }
+    if (!config) {
+      const inter = findFont('inter')
+      if (inter) return { fonts: [inter], cssVars: { '--font-family': inter.family } }
+      return { fonts: [], cssVars: {} }
+    }
     const theme = JSON.parse(config.value)
     const fonts: FontOption[] = []
     const cssVars: Record<string, string> = {}
@@ -64,12 +68,39 @@ async function getThemeConfig(): Promise<{ fonts: FontOption[]; cssVars: Record<
 
     return { fonts, cssVars }
   } catch {
+    const inter = findFont('inter')
+    if (inter) return { fonts: [inter], cssVars: { '--font-family': inter.family } }
     return { fonts: [], cssVars: {} }
   }
 }
 
+/** 本地可用的字体列表（自托管，无需 Google Fonts） */
+const LOCAL_FONTS: Record<string, { cssPath: string; fileUrls: string[] }> = {
+  inter: {
+    cssPath: 'public/fonts/inter.css',
+    fileUrls: [
+      '/fonts/inter/inter-latin-300-normal.woff2',
+      '/fonts/inter/inter-latin-400-normal.woff2',
+      '/fonts/inter/inter-latin-500-normal.woff2',
+      '/fonts/inter/inter-latin-600-normal.woff2',
+      '/fonts/inter/inter-latin-700-normal.woff2',
+    ],
+  },
+}
+
 async function fetchFontCSS(fonts: FontOption[], text?: string): Promise<{ fontCSS: string; fontUrls: string[] }> {
   const results = await Promise.allSettled(fonts.map(async (font) => {
+    // 检查是否有本地版本
+    const local = LOCAL_FONTS[font.id]
+    if (local) {
+      try {
+        const fs = await import('fs')
+        const content = fs.readFileSync(local.cssPath, 'utf-8')
+        return content
+      } catch {
+        // 本地字体读取失败，回退 Google Fonts
+      }
+    }
     const url = googleFontUrl(font, text)
     const res = await fetch(url, {
       signal: AbortSignal.timeout(5000),
@@ -79,7 +110,15 @@ async function fetchFontCSS(fonts: FontOption[], text?: string): Promise<{ fontC
     return await res.text()
   }))
   const allCSS = results.map(r => r.status === 'fulfilled' ? r.value : '').filter(Boolean).join('\n')
+  // 收集所有字体文件 URL（包括本地和 Google）
   const fontUrls: string[] = []
+  for (const font of fonts) {
+    const local = LOCAL_FONTS[font.id]
+    if (local) {
+      fontUrls.push(...local.fileUrls)
+    }
+  }
+  // 也提取 CSS 中的远程 font URL（其他非本地字体）
   const urlRegex = /url\(['"]?([^)'"]+)['"]?\)/g
   let match
   while ((match = urlRegex.exec(allCSS)) !== null) {
@@ -151,8 +190,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="zh-CN">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {fontUrls.map((url, i) => (
           <link key={i} rel="preload" as="font" crossOrigin="anonymous" href={url} />
         ))}

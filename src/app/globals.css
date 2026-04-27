@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;900&family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap');
+/* Google Fonts @import 已移除——字体由 layout.tsx 动态加载（Inter 已自托管） */
 
 @tailwind base;
 @tailwind components;

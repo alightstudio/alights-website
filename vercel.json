@@ -1,11 +1,11 @@
 {
   "crons": [
     {
-      "path": "/api/cron/daily-settle",
-      "schedule": "0 16 * * *"
+      "path": "/api/cron/random-pixel",
+      "schedule": "30 15 * * *"
     },
     {
-      "path": "/api/cron/random-pixel",
+      "path": "/api/cron/daily-settle",
       "schedule": "0 16 * * *"
     }
   ]

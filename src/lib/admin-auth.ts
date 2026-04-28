@@ -5,8 +5,17 @@ import { createHmac, randomBytes } from 'crypto'
 // Token 格式: base64url({admin,exp}) . base64url(hmac)
 // 所有 Lambda 实例共享同一 SECRET，无需内存 Map
 
-// JWT 签名密钥：优先用环境变量（跨 Lambda 共享），否则随机生成（单实例）
-const SECRET = process.env.ADMIN_JWT_SECRET || randomBytes(32).toString('hex')
+// P1 #8 修复：强制要求设置 ADMIN_JWT_SECRET，未设置时仅在非生产环境可用
+const getSecret = (): string => {
+  const env = process.env.ADMIN_JWT_SECRET
+  if (env && env.length > 0) return env
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[CRITICAL] ADMIN_JWT_SECRET not set in production! Admin sessions will break on cold start.')
+  }
+  // 开发环境回退到固定值（避免每次热重载生成新密钥）
+  return 'dev-only-admin-secret-do-not-use-in-prod'
+}
+const SECRET = getSecret()
 
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000 // 7 天
 

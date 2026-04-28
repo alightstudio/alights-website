@@ -141,7 +141,12 @@ export async function GET() {
       theme: configMap.theme || DEFAULT_THEME,
       announcement: configMap.announcement || DEFAULT_ANNOUNCEMENT,
       pages: configMap.pages || DEFAULT_PAGES,
-      codeInjection: configMap.codeInjection || DEFAULT_CODE_INJECTION,
+      codeInjection: (() => { 
+        const ci = configMap.codeInjection || DEFAULT_CODE_INJECTION
+        // P1 #9: 过滤 <script> 标签防止 XSS
+        const sanitize = (html: string) => (html || '').replace(/<script[\s\S]*?<\/script>/gi, '')
+        return { headHTML: sanitize(ci.headHTML), footerHTML: sanitize(ci.footerHTML), bodyStartHTML: sanitize(ci.bodyStartHTML) }
+      })(),
       socialLinks: configMap.socialLinks || DEFAULT_SOCIAL_LINKS,
       particle: configMap.particle || null,
       spotlight: configMap.spotlight || null,

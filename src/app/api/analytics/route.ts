@@ -16,6 +16,9 @@ export async function POST(request: Request) {
 
     const today = getToday()
 
+    // P2 #11: 限制 visitorIds 数组大小，超过1000个时重置（用 Set 去重后只保留最新1000个）
+    const MAX_VISITOR_IDS = 1000
+
     const existing = await prisma.siteAnalytics.findUnique({
       where: { path_date: { path, date: today } }
     })
@@ -25,13 +28,22 @@ export async function POST(request: Request) {
       : true
 
     if (existing) {
+      const updateData: any = {
+        pv: { increment: 1 },
+        uv: isNewVisitor ? { increment: 1 } : undefined,
+      }
+      if (isNewVisitor) {
+        if (existing.visitorIds.length >= MAX_VISITOR_IDS) {
+          // 重置 visitorIds，只保留最新的去重后1000个
+          const uniqueIds = Array.from(new Set([...existing.visitorIds.slice(-MAX_VISITOR_IDS + 1), visitorId]))
+          updateData.visitorIds = uniqueIds
+        } else {
+          updateData.visitorIds = { push: visitorId }
+        }
+      }
       await prisma.siteAnalytics.update({
         where: { path_date: { path, date: today } },
-        data: {
-          pv: { increment: 1 },
-          uv: isNewVisitor ? { increment: 1 } : undefined,
-          visitorIds: isNewVisitor ? { push: visitorId } : undefined,
-        }
+        data: updateData,
       })
     } else {
       await prisma.siteAnalytics.create({

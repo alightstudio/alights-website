@@ -31,7 +31,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   // Check if user is author or admin
   const user = await prisma.user.findUnique({ where: { id: userId } })
-  if (post.authorId !== userId && user?.phone !== '15091855505') {
+  // P2 #12: 管理员判断 — 使用 siteConfig 中的管理员手机号
+  const adminPhone = process.env.ADMIN_PHONE || '15091855505'
+  if (post.authorId !== userId && user?.phone !== adminPhone) {
     return NextResponse.json({ error: '无权限删除' }, { status: 403 })
   }
 

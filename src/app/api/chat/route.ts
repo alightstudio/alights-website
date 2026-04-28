@@ -1,5 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// P1 #10: 简单速率限制（基于 IP，内存存储，serverless 下有限但聊胜于无）
+const chatAttempts = new Map<string, { count: number; resetTime: number }>()
+const CHAT_RATE_WINDOW = 60 * 1000 // 1分钟
+const CHAT_RATE_MAX = 10 // 每分钟最多10条
+
+function checkChatRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = chatAttempts.get(ip)
+  if (!record || now > record.resetTime) {
+    chatAttempts.set(ip, { count: 1, resetTime: now + CHAT_RATE_WINDOW })
+    return true
+  }
+  if (record.count >= CHAT_RATE_MAX) return false
+  record.count++
+  return true
+}
+
+function getClientIP(req: NextRequest): string {
+  const fwd = req.headers.get('x-forwarded-for')
+  if (fwd) return fwd.split(',')[0].trim()
+  return req.headers.get('x-real-ip') || 'unknown'
+}
+
 const SYSTEM_PROMPT = `你是栖光文化的 AI 客服助手。栖光文化是一家专业的影视制作公司，位于西安。
 
 【公司信息】
@@ -38,6 +61,12 @@ A: 我们的作品可以在新片场查看：https://www.xinpianchang.com/u12018
 
 export async function POST(request: NextRequest) {
   try {
+    // 速率限制
+    const ip = getClientIP(request)
+    if (!checkChatRateLimit(ip)) {
+      return NextResponse.json({ error: '消息过于频繁，请稍后再试' }, { status: 429 })
+    }
+
     const { message, history } = await request.json()
 
     if (!message) {
@@ -47,10 +76,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 构建对话历史
+    // P1: 过滤 history，只保留 role=user/assistant，防止注入 system 消息
+    const safeHistory = (history || [])
+      .filter((m: any) => m.role === 'user' || m.role === 'assistant')
+      .slice(-6)
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
-      ...history.slice(-6), // 只保留最近6条上下文
+      ...safeHistory,
       { role: 'user', content: message },
     ]
 
@@ -96,7 +128,7 @@ export async function POST(request: NextRequest) {
     console.error('Chat API error:', error)
     return NextResponse.json(
       { response: '抱歉，服务暂时不可用。请拨打 15091855505 联系我们。' },
-      { status: 200 }
+      { status: 500 }
     )
   }
 }

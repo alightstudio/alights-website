@@ -199,7 +199,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true, section, data })
   } catch (error) {
     console.error('更新配置失败:', error)
-    return NextResponse.json({ error: '更新配置失败', details: String(error) }, { status: 500 })
+    return NextResponse.json({ error: '更新配置失败', details: "Internal error" }, { status: 500 })
   }
 }
 
@@ -226,6 +226,6 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, section, data: merged })
   } catch (error) {
     console.error('更新配置失败:', error)
-    return NextResponse.json({ error: '更新配置失败', details: String(error) }, { status: 500 })
+    return NextResponse.json({ error: '更新配置失败', details: "Internal error" }, { status: 500 })
   }
 }

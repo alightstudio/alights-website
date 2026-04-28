@@ -99,36 +99,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '坐标超出画布范围' }, { status: 400 })
     }
 
-    // 检查积分（1像素 = 1积分）
-    const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (!user || user.points < 1) {
-      return NextResponse.json({ error: '积分不足' }, { status: 402 })
-    }
+    // P1 #6 修复：原子操作 — 积分扣除与像素放置在同一事务中
+    const result = await prisma.$transaction(async (tx) => {
+      // 检查积分（1像素 = 1积分）
+      const user = await tx.user.findUnique({ where: { id: userId } })
+      if (!user || user.points < 1) {
+        throw new Error('INSUFFICIENT_POINTS')
+      }
 
-    // 扣除积分
-    await prisma.user.update({
-      where: { id: userId },
-      data: { points: { decrement: 1 } },
+      // 扣除积分
+      const updated = await tx.user.update({
+        where: { id: userId },
+        data: { points: { decrement: 1 } },
+      })
+
+      // 记录交易
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: 'pixel_place',
+          amount: -1,
+          balance: updated.points,
+          refId: canvasId,
+          note: `放置像素 (${x},${y})`,
+        },
+      })
+
+      // 放置/更新像素
+      const pixel = await tx.pixel.upsert({
+        where: { canvasId_x_y: { canvasId, x, y } },
+        update: { color, userId, placedAt: new Date() },
+        create: { canvasId, x, y, color, userId },
+      })
+
+      return { pixel, pointsRemaining: updated.points }
     })
 
-    // 记录交易
-    await prisma.transaction.create({
-      data: {
-        userId,
-        type: 'pixel_place',
-        amount: -1,
-        balance: user.points - 1,
-        refId: canvasId,
-        note: `放置像素 (${x},${y})`,
-      },
-    })
-
-    // 放置/更新像素
-    const pixel = await prisma.pixel.upsert({
-      where: { canvasId_x_y: { canvasId, x, y } },
-      update: { color, userId, placedAt: new Date() },
-      create: { canvasId, x, y, color, userId },
-    })
+    const { pixel, pointsRemaining } = result
 
     // 异步检查是否满
     checkAndExpand(canvasId).catch(e => console.error('扩张检查失败:', e))
@@ -136,9 +143,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       pixel: { x: pixel.x, y: pixel.y, color: pixel.color },
-      pointsRemaining: user.points - 1,
+      pointsRemaining,
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'INSUFFICIENT_POINTS') {
+      return NextResponse.json({ error: '积分不足' }, { status: 402 })
+    }
     console.error('放置像素失败:', error)
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }

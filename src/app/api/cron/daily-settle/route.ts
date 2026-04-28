@@ -102,6 +102,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     console.error('Daily settle error:', error)
-    return NextResponse.json({ success: false, error: String(error) }, { status: 500 })
+    return NextResponse.json({ success: false, error: '结算失败' }, { status: 500 })
   }
 }

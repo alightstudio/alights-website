@@ -243,7 +243,7 @@ export default function CommunityPage() {
                 <div className="flex items-start gap-4">
                   {post.coverUrl && (
                     <div className="w-24 h-16 flex-shrink-0 overflow-hidden">
-                      <img src={post.coverUrl} alt="" className="w-full h-full object-cover" />
+                      <img src={post.coverUrl} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -401,7 +401,7 @@ export default function CommunityPage() {
 
                 {selectedPost.coverUrl && (
                   <div className="mb-6">
-                    <img src={selectedPost.coverUrl} alt="" className="w-full max-h-96 object-cover" />
+                    <img src={selectedPost.coverUrl} alt="" referrerPolicy="no-referrer" className="w-full max-h-96 object-cover" />
                   </div>
                 )}
 

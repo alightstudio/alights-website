@@ -200,6 +200,7 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
               <img
                 src={work.thumbnail}
                 alt={work.title}
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement

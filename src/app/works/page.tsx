@@ -139,6 +139,7 @@ export default function WorksPage() {
               <img
                 src={work.image}
                 alt={work.title}
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement

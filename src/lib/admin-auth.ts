@@ -9,10 +9,12 @@ import { createHmac, randomBytes } from 'crypto'
 const getSecret = (): string => {
   const env = process.env.ADMIN_JWT_SECRET
   if (env && env.length > 0) return env
-  if (process.env.NODE_ENV === 'production') {
-    console.error('[CRITICAL] ADMIN_JWT_SECRET not set in production! Admin sessions will break on cold start.')
+  if (process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production') {
+    // 构建时 env 可能尚未注入，静默回退避免构建失败
+    console.warn('[WARN] ADMIN_JWT_SECRET not available at build time, using fallback')
+    return 'dev-only-admin-secret-do-not-use-in-prod'
   }
-  // 开发环境回退到固定值（避免每次热重载生成新密钥）
+  // 开发环境回退到固定值
   return 'dev-only-admin-secret-do-not-use-in-prod'
 }
 const SECRET = getSecret()

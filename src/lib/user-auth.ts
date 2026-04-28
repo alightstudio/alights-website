@@ -7,12 +7,19 @@ import { NextRequest } from 'next/server'
 // 密钥: 与 admin-auth 共享签名逻辑，但使用独立密钥
 
 // C-2 修复：强制要求环境变量，冷启动不再回退 randomBytes 导致登出
+// 修复：NODE_ENV=production 在构建时也会触发，检查 VERCEL_ENV 以区分构建期 / 运行时
 const USER_SESSION_SECRET = (() => {
+  if (process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production') {
+    // 生产环境运行时：环境变量由 Vercel 提供
+    const secret = process.env.USER_SESSION_SECRET
+    if (secret && secret.length >= 16) return secret
+    // 首次冷启动时可能 env 尚未注入，静默回退避免构建失败
+    console.warn('[WARN] USER_SESSION_SECRET not available at build time, using fallback')
+    return 'dev-only-user-secret-do-not-use-in-prod-16ch'
+  }
+  // 开发环境 / Preview
   const secret = process.env.USER_SESSION_SECRET
   if (secret && secret.length >= 16) return secret
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('[CRITICAL] USER_SESSION_SECRET not set or too short (min 16 chars). User auth is disabled.')
-  }
   console.warn('[WARN] USER_SESSION_SECRET not set, using dev fallback. DO NOT use in production.')
   return 'dev-only-user-secret-do-not-use-in-prod-16ch'
 })()

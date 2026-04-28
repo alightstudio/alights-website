@@ -71,14 +71,9 @@ export async function POST(request: Request) {
     // 登录成功，清除限制记录
     loginAttempts.delete(ip)
 
-    // 设置 session cookie
-    const cookieStore = await cookies()
-    cookieStore.set('userId', user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-    })
+    // 设置签名 session cookie
+    const { setUserCookie } = await import('@/lib/user-auth')
+    await setUserCookie(user.id)
 
     return NextResponse.json({
       message: '登录成功',

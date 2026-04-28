@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 
-function getUserId(req: NextRequest): string | null {
-  const cookie = req.headers.get('cookie') || ''
-  const match = cookie.match(/userId=([^;]+)/)
-  return match ? match[1] : null
-}
 
 // GET /api/points - 获取积分概况和历史
 export async function GET(req: NextRequest) {
-  const userId = getUserId(req)
+  const userId = getVerifiedUserId(req)
   if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
   const today = new Date().toISOString().split('T')[0]

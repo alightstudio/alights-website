@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 
-function getUserId(req: NextRequest): string | null {
-  const cookie = req.headers.get('cookie') || ''
-  const match = cookie.match(/userId=([^;]+)/)
-  return match ? match[1] : null
-}
 
 const DAILY_LIMIT = 100 // 每日积分上限
 const CLICK_POINTS = 2 // 每次点击作品获得积分
 
 // POST /api/points/click - 记录作品点击获得积分
 export async function POST(req: NextRequest) {
-  const userId = getUserId(req)
+  const userId = getVerifiedUserId(req)
   if (!userId) {
     // 未登录用户也可以记录点击但不加分
     return NextResponse.json({ points: 0 })

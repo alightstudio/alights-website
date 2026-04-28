@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 
 const BURN_RATE = 0.05 // 5% 交易燃烧
 
@@ -8,11 +9,16 @@ export const dynamic = 'force-dynamic'
 // POST /api/market/buy — 购买画布（含 5% 交易燃烧）
 export async function POST(request: NextRequest) {
   try {
-    const { userId, listingId } = await request.json()
+    const cookieUserId = getVerifiedUserId(request)
+    if (!cookieUserId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    }
 
-    if (!userId || !listingId) {
+    const { listingId } = await request.json()
+    if (!listingId) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 })
     }
+    const userId = cookieUserId
 
     const listing = await prisma.marketplaceListing.findUnique({
       where: { id: listingId },
@@ -117,13 +123,18 @@ export async function POST(request: NextRequest) {
 // DELETE /api/market/buy — 取消上架
 export async function DELETE(request: NextRequest) {
   try {
-    const { userId, listingId } = await request.json()
+    const cookieUserId = getVerifiedUserId(request)
+    if (!cookieUserId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    }
+
+    const { listingId } = await request.json()
 
     const listing = await prisma.marketplaceListing.findUnique({
       where: { id: listingId },
     })
     if (!listing) return NextResponse.json({ error: '上架不存在' }, { status: 404 })
-    if (listing.sellerId !== userId) return NextResponse.json({ error: '只能取消自己的上架' }, { status: 403 })
+    if (listing.sellerId !== cookieUserId) return NextResponse.json({ error: '只能取消自己的上架' }, { status: 403 })
 
     await prisma.marketplaceListing.update({
       where: { id: listingId },

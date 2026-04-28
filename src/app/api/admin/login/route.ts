@@ -6,7 +6,8 @@ import { createSessionToken } from '@/lib/admin-auth'
 
 // 管理员用户名从环境变量读取
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
-const ENV_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
+// 注意：不再提供默认密码回退，必须设置 ADMIN_PASSWORD 环境变量
+const ENV_PASSWORD = process.env.ADMIN_PASSWORD || ''
 
 // 简单的频率限制（内存存储，生产环境建议用 Redis）
 const loginAttempts = new Map<string, { count: number; resetTime: number }>()
@@ -43,11 +44,24 @@ async function verifyPassword(inputPwd: string): Promise<boolean> {
         // bcrypt hash
         return bcrypt.compare(inputPwd, creds.password)
       }
-      // 明文存储（旧格式）
-      return inputPwd === creds.password
+      // 明文密码 — 自动升级为 bcrypt
+      if (inputPwd === creds.password) {
+        const hashed = await bcrypt.hash(inputPwd, 10)
+        await prisma.siteConfig.update({
+          where: { key: 'admin_credentials' },
+          data: { value: JSON.stringify({ ...creds, password: hashed }) },
+        })
+        return true
+      }
+      return false
     }
   } catch {
     // 数据库查询失败，回退到环境变量
+  }
+  // 环境变量密码（仅支持 bcrypt hash 或非空明文）
+  if (!ENV_PASSWORD) return false
+  if (ENV_PASSWORD.startsWith('$2')) {
+    return bcrypt.compare(inputPwd, ENV_PASSWORD)
   }
   return inputPwd === ENV_PASSWORD
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,11 +54,17 @@ export async function GET(request: NextRequest) {
 // POST /api/market/listings — 上架画布
 export async function POST(request: NextRequest) {
   try {
-    const { userId, canvasId, startPrice, endTime } = await request.json()
+    const cookieUserId = getVerifiedUserId(request)
+    if (!cookieUserId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    }
 
-    if (!userId || !canvasId) {
+    const { canvasId, startPrice, endTime } = await request.json()
+
+    if (!canvasId) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 })
     }
+    const userId = cookieUserId
 
     // 验证画布存在且已归档
     const canvas = await prisma.canvas.findUnique({ where: { id: canvasId } })

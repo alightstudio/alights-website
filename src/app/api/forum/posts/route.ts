@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 
 // GET /api/forum/posts — list posts
 export async function GET(req: NextRequest) {
@@ -29,15 +30,10 @@ export async function GET(req: NextRequest) {
 
 // POST /api/forum/posts — create post (requires login)
 export async function POST(req: NextRequest) {
-  // 兼容两种方式：body.userId（localStorage）或 cookie（旧方式）
-  const body = await req.json()
-  let userId = body.userId
-  if (!userId) {
-    const cookie = req.headers.get('cookie') || ''
-    userId = cookie.match(/userId=([^;]+)/)?.[1]
-  }
+  const userId = getVerifiedUserId(req)
   if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
+  const body = await req.json()
   const { title, content, videoUrl, coverUrl, categoryId } = body
 
   if (!title?.trim() || !content?.trim() || !categoryId) {

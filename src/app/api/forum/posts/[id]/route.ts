@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 
 // GET /api/forum/posts/[id] — get single post with comments
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -21,12 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 // DELETE /api/forum/posts/[id] — delete post (author or admin)
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const body = await req.json().catch(() => ({}) as any)
-  let userId = (body as any).userId
-  if (!userId) {
-    const cookie = req.headers.get('cookie') || ''
-    userId = cookie.match(/userId=([^;]+)/)?.[1]
-  }
+  const userId = getVerifiedUserId(req)
   if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
   const { id } = await params

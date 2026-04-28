@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 import bcrypt from 'bcryptjs'
 
-function getUserId(req: NextRequest): string | null {
-  const cookie = req.headers.get('cookie') || ''
-  const match = cookie.match(/userId=([^;]+)/)
-  return match ? match[1] : null
-}
 
 // GET /api/user/profile - 获取用户信息
 export async function GET(req: NextRequest) {
-  const userId = getUserId(req)
+  const userId = getVerifiedUserId(req)
   if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
   const user = await prisma.user.findUnique({
@@ -52,7 +48,7 @@ export async function GET(req: NextRequest) {
 
 // PUT /api/user/profile - 更新用户信息
 export async function PUT(req: NextRequest) {
-  const userId = getUserId(req)
+  const userId = getVerifiedUserId(req)
   if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
   const body = await req.json()
@@ -76,7 +72,7 @@ export async function PUT(req: NextRequest) {
 
 // PATCH /api/user/profile - 修改密码
 export async function PATCH(req: NextRequest) {
-  const userId = getUserId(req)
+  const userId = getVerifiedUserId(req)
   if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
   const { currentPassword, newPassword } = await req.json()

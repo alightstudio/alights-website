@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 // PUT /api/admin/users/[id] — 更新用户信息和积分
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (!(await verifyAdminSession())) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 })
+  }
+
   try {
     const body = await req.json()
     const { name, phone, email, company, bio, points } = body
@@ -40,6 +45,10 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (!(await verifyAdminSession())) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 })
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: { id: params.id },

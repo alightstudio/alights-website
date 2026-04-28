@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getVerifiedUserId } from '@/lib/user-auth'
 import { prisma } from '@/lib/prisma'
 
-function getUserId(req: NextRequest): string | null {
-  const cookie = req.headers.get('cookie') || ''
-  const match = cookie.match(/userId=([^;]+)/)
-  return match ? match[1] : null
-}
 
 // GET /api/canvas/current — 获取当前活跃画布 + 所有像素
 // GET /api/canvas/current?id=xxx — 获取指定画布（含已归档）

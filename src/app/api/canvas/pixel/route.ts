@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 
-function getUserId(req: NextRequest): string | null {
-  const cookie = req.headers.get('cookie') || ''
-  const match = cookie.match(/userId=([^;]+)/)
-  return match ? match[1] : null
-}
 
 // 合法 hex 颜色正则
 const COLOR_RE = /^#[0-9a-fA-F]{6}$/
@@ -74,7 +70,7 @@ async function checkAndExpand(canvasId: string) {
 // POST /api/canvas/pixel — 放置像素
 export async function POST(req: NextRequest) {
   try {
-    const userId = getUserId(req)
+    const userId = getVerifiedUserId(req)
     if (!userId) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 })
     }

@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getVerifiedUserId } from '@/lib/user-auth'
 
 // POST /api/canvas/name - 为已归档画布命名（仅所有者）
 export async function POST(req: NextRequest) {
   try {
-    const cookie = req.headers.get('cookie') || ''
-    const match = cookie.match(/userId=([^;]+)/)
-    const userId = match ? match[1] : null
+    const userId = getVerifiedUserId(req)
     if (!userId) {
       return NextResponse.json({ error: '未登录' }, { status: 401 })
     }

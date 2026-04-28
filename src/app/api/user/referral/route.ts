@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
+import { randomBytes } from 'crypto'
 
 
 // GET /api/user/referral — 获取我的邀请信息
@@ -14,13 +15,18 @@ export async function GET(req: NextRequest) {
   })
   if (!user) return NextResponse.json({ error: '用户不存在' }, { status: 404 })
 
-  // 如果没有邀请码则生成一个
+  // 如果没有邀请码则生成一个（P3 #18 修复：使用 crypto.randomBytes 替代 Math.random）
   if (!user.referralCode) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     let code = ''
     for (let attempt = 0; attempt < 20; attempt++) {
+      // 用 randomBytes 生成 4 字节随机数，映射到 chars
+      const buf = randomBytes(4)
       code = ''
-      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+      for (let i = 0; i < 6; i++) {
+        const idx = buf.readUInt8(i % 4) % chars.length
+        code += chars[idx]
+      }
       const existing = await prisma.user.findUnique({ where: { referralCode: code } })
       if (!existing) break
     }

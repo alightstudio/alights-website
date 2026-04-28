@@ -6,67 +6,6 @@ import { getVerifiedUserId } from '@/lib/user-auth'
 // 合法 hex 颜色正则
 const COLOR_RE = /^#[0-9a-fA-F]{6}$/
 
-// 检查画布是否已满，若满则触发扩张
-async function checkAndExpand(canvasId: string) {
-  // 用事务保证原子性：先标记 ARCHIVED，只有第一个能成功
-  await prisma.$transaction(async (tx) => {
-    const canvas = await tx.canvas.findUnique({ where: { id: canvasId } })
-    if (!canvas || canvas.status !== 'ACTIVE') return
-
-    const totalPixels = canvas.width * canvas.height
-    const placedPixels = await tx.pixel.count({ where: { canvasId } })
-    if (placedPixels < totalPixels) return
-
-    // 原子归档：只有 status=ACTIVE 的才能被更新
-    const archived = await tx.canvas.updateMany({
-      where: { id: canvasId, status: 'ACTIVE' },
-      data: { status: 'ARCHIVED', endTime: new Date() },
-    })
-    if (archived.count === 0) return // 已被其他事务归档
-
-    const newSize = Math.min(canvas.width * 2, 480)
-
-    // 创建新画布
-    const newCanvas = await tx.canvas.create({
-      data: { width: newSize, height: newSize, status: 'ACTIVE' },
-    })
-
-    // 记录扩张
-    await tx.canvasExpansion.create({
-      data: {
-        oldCanvasId: canvasId,
-        canvasId: newCanvas.id,
-        oldSize: canvas.width,
-        newSize,
-      },
-    })
-
-    // 映射旧像素到 2×2
-    const oldPixels = await tx.pixel.findMany({ where: { canvasId } })
-    const scale = newSize / canvas.width
-    if (scale === 2) {
-      const batch: any[] = []
-      for (const p of oldPixels) {
-        for (let dx = 0; dx < 2; dx++) {
-          for (let dy = 0; dy < 2; dy++) {
-            batch.push({
-              canvasId: newCanvas.id,
-              x: p.x * 2 + dx,
-              y: p.y * 2 + dy,
-              color: p.color,
-              userId: p.userId,
-            })
-          }
-        }
-      }
-      // 批量插入
-      if (batch.length > 0) {
-        await tx.pixel.createMany({ data: batch, skipDuplicates: true })
-      }
-    }
-  })
-}
-
 // POST /api/canvas/pixel — 放置像素
 export async function POST(req: NextRequest) {
   try {
@@ -99,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '坐标超出画布范围' }, { status: 400 })
     }
 
-    // P1 #6 修复：原子操作 — 积分扣除与像素放置在同一事务中
+    // P2 #15 修复：扩张检查合并到同一事务，消除并发竞态窗口
     const result = await prisma.$transaction(async (tx) => {
       // 检查积分（1像素 = 1积分）
       const user = await tx.user.findUnique({ where: { id: userId } })
@@ -132,13 +71,60 @@ export async function POST(req: NextRequest) {
         create: { canvasId, x, y, color, userId },
       })
 
+      // P2 #15: 在事务内检查画布是否已满并同步扩张
+      const currentCanvas = await tx.canvas.findUnique({ where: { id: canvasId } })
+      if (currentCanvas && currentCanvas.status === 'ACTIVE') {
+        const totalPixels = currentCanvas.width * currentCanvas.height
+        const placedPixels = await tx.pixel.count({ where: { canvasId } })
+        if (placedPixels >= totalPixels) {
+          // 原子归档 — 只有第一个能成功
+          const archived = await tx.canvas.updateMany({
+            where: { id: canvasId, status: 'ACTIVE' },
+            data: { status: 'ARCHIVED', endTime: new Date() },
+          })
+          if (archived.count > 0) {
+            const newSize = Math.min(currentCanvas.width * 2, 480)
+            const newCanvas = await tx.canvas.create({
+              data: { width: newSize, height: newSize, status: 'ACTIVE' },
+            })
+            await tx.canvasExpansion.create({
+              data: {
+                oldCanvasId: canvasId,
+                canvasId: newCanvas.id,
+                oldSize: currentCanvas.width,
+                newSize,
+              },
+            })
+            // 映射旧像素到 2×2
+            const scale = newSize / currentCanvas.width
+            if (scale === 2) {
+              const oldPixels = await tx.pixel.findMany({ where: { canvasId } })
+              const batch: any[] = []
+              for (const p of oldPixels) {
+                for (let dx = 0; dx < 2; dx++) {
+                  for (let dy = 0; dy < 2; dy++) {
+                    batch.push({
+                      canvasId: newCanvas.id,
+                      x: p.x * 2 + dx,
+                      y: p.y * 2 + dy,
+                      color: p.color,
+                      userId: p.userId,
+                    })
+                  }
+                }
+              }
+              if (batch.length > 0) {
+                await tx.pixel.createMany({ data: batch, skipDuplicates: true })
+              }
+            }
+          }
+        }
+      }
+
       return { pixel, pointsRemaining: updated.points }
     })
 
     const { pixel, pointsRemaining } = result
-
-    // 异步检查是否满
-    checkAndExpand(canvasId).catch(e => console.error('扩张检查失败:', e))
 
     return NextResponse.json({
       success: true,

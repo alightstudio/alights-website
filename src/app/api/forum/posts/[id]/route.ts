@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 // GET /api/forum/posts/[id] — get single post with comments
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -29,11 +30,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const post = await prisma.forumPost.findUnique({ where: { id } })
   if (!post) return NextResponse.json({ error: '帖子不存在' }, { status: 404 })
 
-  // Check if user is author or admin
-  const user = await prisma.user.findUnique({ where: { id: userId } })
-  // P2 #12: 管理员判断 — 使用 siteConfig 中的管理员手机号
-  const adminPhone = process.env.ADMIN_PHONE || '15091855505'
-  if (post.authorId !== userId && user?.phone !== adminPhone) {
+  // P2 #12 修复：通过 admin session 判断管理员，不再依赖硬编码手机号
+  const isAdmin = await verifyAdminSession()
+  if (post.authorId !== userId && !isAdmin) {
     return NextResponse.json({ error: '无权限删除' }, { status: 403 })
   }
 

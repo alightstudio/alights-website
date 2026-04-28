@@ -87,7 +87,7 @@ const nextConfig = {
               "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googletagmanager.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com https://alights.cn",
-              "img-src 'self' data: blob: https://images.unsplash.com https://cdn.inew.land https://open.snmc.io https://*.vercel-blob.com https://*.public.blob.vercel-staging.com",
+              "img-src 'self' data: blob: https://images.unsplash.com https://cdn.inew.land https://open.snmc.io https://*.vercel-blob.com https://*.public.blob.vercel-staging.com https://*.xpccdn.com https://*.xinpianchang.com",
               "media-src 'self' https://*.vercel-blob.com https://*.public.blob.vercel-staging.com blob:",
               "connect-src 'self' https://www.googletagmanager.com https://api.openweathermap.org https://ipgeolocation.abstractapi.com https://api.cloudflare.com",
               "frame-src 'none'",

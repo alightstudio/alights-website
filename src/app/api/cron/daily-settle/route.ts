@@ -3,8 +3,16 @@ import { prisma } from '@/lib/prisma'
 import { verifyAdminSession } from '@/lib/admin-auth'
 import { isCronAuthorized } from '@/lib/cron-auth'
 
-// POST /api/cron/daily-settle — Vercel Cron 每日 00:00 触发 / 管理员手动触发
+// GET/POST /api/cron/daily-settle — Vercel Cron 每日 00:00 触发 / 管理员手动触发 / cron-job.org 外部调用
+export async function GET(req: NextRequest) {
+  return handleDailySettle(req)
+}
+
 export async function POST(req: NextRequest) {
+  return handleDailySettle(req)
+}
+
+async function handleDailySettle(req: NextRequest) {
   // M-5 修复：独立密钥 CRON_SECRET_DAILY_SETTLE，回退 CRON_SECRET
   const isCron = isCronAuthorized(req, 'daily-settle')
   const isAdmin = await verifyAdminSession()

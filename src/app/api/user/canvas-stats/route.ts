@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
       activeCanvas: activeData,
     })
   } catch (error) {
-    console.error('Canvas stats error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

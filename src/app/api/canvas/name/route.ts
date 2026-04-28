@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, name })
   } catch (error) {
-    console.error('命名失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

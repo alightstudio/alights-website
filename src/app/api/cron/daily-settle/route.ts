@@ -1,23 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyAdminSession } from '@/lib/admin-auth'
-
-// Vercel Cron 鉴权：验证 CRON_SECRET header
-function isCronAuthorized(req: NextRequest): boolean {
-  const authHeader = req.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
-  // 用 undefined 检查，避免空字符串被当作 falsy（空字符串时 !"" === true）
-  if (cronSecret === undefined || cronSecret === null || cronSecret === '') {
-    // 未配置 CRON_SECRET 时允许本地开发调用
-    return process.env.NODE_ENV !== 'production'
-  }
-  return authHeader === `Bearer ${cronSecret}`
-}
+import { isCronAuthorized } from '@/lib/cron-auth'
 
 // POST /api/cron/daily-settle — Vercel Cron 每日 00:00 触发 / 管理员手动触发
 export async function POST(req: NextRequest) {
-  // 两种鉴权方式：1) CRON_SECRET  2) 管理员 session（用于后台手动结算）
-  const isCron = isCronAuthorized(req)
+  // M-5 修复：独立密钥 CRON_SECRET_DAILY_SETTLE，回退 CRON_SECRET
+  const isCron = isCronAuthorized(req, 'daily-settle')
   const isAdmin = await verifyAdminSession()
 
   if (!isCron && !isAdmin) {
@@ -101,7 +90,7 @@ export async function POST(req: NextRequest) {
       canvases: results,
     })
   } catch (error) {
-    console.error('Daily settle error:', error)
+    // P0-1: hidden
     return NextResponse.json({ success: false, error: '结算失败' }, { status: 500 })
   }
 }

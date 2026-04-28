@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof Error && error.message === 'INSUFFICIENT_POINTS') {
       return NextResponse.json({ error: '积分不足' }, { status: 402 })
     }
-    console.error('放置像素失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

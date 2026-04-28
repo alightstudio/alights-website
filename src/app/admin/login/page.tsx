@@ -1,5 +1,5 @@
 'use client'
-
+import { COMPANY_NAME } from '@/lib/site-constants'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -111,7 +111,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="text-center text-gray-600 text-sm mt-8">
-          西安栖光文化传播有限公司 · 管理后台
+          {COMPANY_NAME} · 管理后台
         </p>
       </motion.div>
     </div>

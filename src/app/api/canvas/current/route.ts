@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
       })),
     })
   } catch (error) {
-    console.error('获取画布失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

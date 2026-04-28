@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import '../globals.css'
+import { COMPANY_NAME } from '@/lib/site-constants'
 
 export const metadata: Metadata = {
   title: '栖光实验室 | Alights Lab',
-  description: '西安栖光文化传播有限公司 - 交互实验空间',
+  description: `${COMPANY_NAME} - 交互实验空间`,
 }
 
 export default function LabLayout({

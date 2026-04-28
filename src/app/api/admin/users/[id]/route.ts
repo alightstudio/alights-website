@@ -35,7 +35,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true, user })
   } catch (error) {
-    console.error('更新用户失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '更新失败' }, { status: 500 })
   }
 }
@@ -64,7 +64,7 @@ export async function GET(
     }
     return NextResponse.json({ user })
   } catch (error) {
-    console.error('获取用户失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

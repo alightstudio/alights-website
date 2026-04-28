@@ -36,7 +36,7 @@ export async function GET() {
       stash175: works175.map(transform),
     })
   } catch (error) {
-    console.error('Failed to read stash works:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: 'Failed to read stash works' }, { status: 500 })
   }
 }

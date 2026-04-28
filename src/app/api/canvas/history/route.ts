@@ -58,7 +58,7 @@ export async function GET() {
 
     return NextResponse.json({ canvases: result })
   } catch (error) {
-    console.error('获取历史画布失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

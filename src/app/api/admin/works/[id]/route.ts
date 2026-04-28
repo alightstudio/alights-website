@@ -18,7 +18,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Failed to delete work:', error)
+    // P0-1: hidden
     return NextResponse.json(
       { error: '删除作品失败' },
       { status: 500 }

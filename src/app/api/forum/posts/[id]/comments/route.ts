@@ -24,11 +24,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const post = await prisma.forumPost.findUnique({ where: { id: postId } })
   if (!post) return NextResponse.json({ error: '帖子不存在' }, { status: 404 })
 
-  const { content } = body
-  if (!content?.trim()) return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
+  let { content } = body
+  // P1-6: forum comment XSS protection + length limit
+  const MAX_COMMENT_LEN = 5000
+  if (!content?.trim() || typeof content !== 'string') {
+    return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
+  }
+  content = content.slice(0, MAX_COMMENT_LEN)
+    .replace(/<script[\s\S]*?<\/script\s*>/gi, '')
+    .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>"']+)/gi, '')
+    .replace(/(href|src)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)javascript:/gi, '$1=#')
+    .replace(/<(?:iframe|embed|object|applet|svg|math)[^>]*>/gi, '')
+  if (!content.trim()) {
+    return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
+  }
 
   const comment = await prisma.forumComment.create({
-    data: { content, postId, authorId: userId },
+    data: { content: content.trim(), postId, authorId: userId },
     include: { author: { select: { id: true, name: true } } },
   })
   return NextResponse.json(comment, { status: 201 })

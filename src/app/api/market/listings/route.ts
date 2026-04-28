@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ listings: enriched, total, page, limit })
   } catch (error) {
-    console.error('GET /market/listings error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ listing })
   } catch (error) {
-    console.error('POST /market/listings error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }

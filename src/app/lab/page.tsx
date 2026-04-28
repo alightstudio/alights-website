@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { COMPANY_NAME } from '@/lib/site-constants'
 
 const experiences = [
   {
@@ -134,7 +135,7 @@ export default function LabPage() {
       {/* Footer */}
       <footer className="px-8 md:px-16 py-8 border-t border-white/5">
         <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-gray-700">
-          <span>西安栖光文化传播有限公司</span>
+          <span>{COMPANY_NAME}</span>
           <span>Alights Lab © 2026</span>
         </div>
       </footer>

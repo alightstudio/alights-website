@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import type { FooterConfig } from '@/lib/siteConfig'
+import { SLOGAN, COPYRIGHT } from '@/lib/site-constants'
 
 const DEFAULT_FOOTER: FooterConfig = {
   logo: '栖光',
-  tagline: '光栖之处 · 自有答案',
+  tagline: SLOGAN,
   columns: [
     { id: 'nav', title: '导航', type: 'links', links: [
       { label: '作品集', href: '/works', order: 0 },
@@ -16,7 +17,7 @@ const DEFAULT_FOOTER: FooterConfig = {
     { id: 'services', title: '服务', type: 'text', items: ['TVC广告', '产品动画', '发布会', '影视剧'] },
     { id: 'contact', title: '联系', type: 'contact', items: [] },
   ],
-  copyright: '© 2026 西安栖光文化传播有限公司. All rights reserved.',
+  copyright: COPYRIGHT,
   bottomText: 'alights.cn',
 }
 

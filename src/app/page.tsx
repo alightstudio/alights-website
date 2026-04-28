@@ -1,19 +1,20 @@
 import { prisma } from '@/lib/prisma'
 import HomeClient from './HomeClient'
+import { COMPANY_NAME, SLOGAN } from '@/lib/site-constants'
 
 export const dynamic = 'force-dynamic'
 
-const DEFAULT_HERO = { title: '栖光', titleEn: 'ALIGHTS', subtitle: '光栖之处 · 自有答案', subtitleEn: 'Where light alights · Truth resides', tags: ['TVC广告', '产品动画', 'AIGC', '发布会', '影视剧'] }
+const DEFAULT_HERO = { title: '栖光', titleEn: 'ALIGHTS', subtitle: SLOGAN, subtitleEn: 'Where light alights · Truth resides', tags: ['TVC广告', '产品动画', 'AIGC', '发布会', '影视剧'] }
 const DEFAULT_BRAND_DISPLAY = { opacity: 0.75, opacityHover: 1, grayscale: true, grayscaleHover: true }
 
 const DEFAULT_COMPANY = {
-  name: '西安栖光文化传播有限公司',
+  name: COMPANY_NAME,
   nameEn: "Xi'an Alights Culture Communication Co., Ltd.",
   shortName: '栖光',
   shortNameEn: 'ALIGHTS',
-  slogan: '光栖之处 · 自有答案',
+  slogan: SLOGAN,
   sloganEn: 'Where light alights · Truth resides',
-  description: '西安栖光文化传播有限公司，专注于高端视效制作领域',
+  description: `${COMPANY_NAME}，专注于高端视效制作领域`,
   descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. ",
   detail: '深耕 TVC 广告、产品动画、发布会大屏、影视剧制作，为客户提供从创意到成片的完整视觉解决方案。',
 }

@@ -2,38 +2,41 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { verifyAdminSession } from '@/lib/admin-auth'
+import {
+  COMPANY_NAME, BRAND_NAME, BRAND_NAME_EN, SLOGAN, CONTACT, COPYRIGHT, SERVICES,
+} from '@/lib/site-constants'
 
 // 默认配置（fallback）
 const DEFAULT_CONFIG = {
   company: {
-    name: "西安栖光文化传播有限公司",
+    name: COMPANY_NAME,
     nameEn: "Xi'an Alights Culture Communication Co., Ltd.",
-    shortName: "栖光",
-    shortNameEn: "ALIGHTS",
-    slogan: "专业视效制作 · 光影叙事艺术",
-    sloganEn: "Professional Visual Effects · Cinematic Storytelling",
-    description: "西安栖光文化传播有限公司，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。",
+    shortName: BRAND_NAME.slice(0, 2),
+    shortNameEn: BRAND_NAME_EN,
+    slogan: SLOGAN,
+    sloganEn: "Where light alights · Truth resides",
+    description: `${COMPANY_NAME}，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。`,
     descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. Using light and shadow as our brush, creativity as our ink, we tell compelling stories for brands."
   },
   contact: {
-    phone: "15091855505",
-    email: "184436962@qq.com",
-    address: "陕西省西安市",
-    wechat: "15091855505",
+    phone: CONTACT.phone,
+    email: CONTACT.email,
+    address: CONTACT.address,
+    wechat: CONTACT.wechat,
     weibo: "",
     xiaohongshu: ""
   },
   seo: {
-    title: "栖光文化 | ALIGHTS - 专业视效制作",
-    description: "西安栖光文化传播有限公司，专注于高端视效制作领域。TVC广告、产品动画、发布会、影视剧。",
+    title: `${BRAND_NAME} | ${BRAND_NAME_EN} - ${SLOGAN}`,
+    description: `${COMPANY_NAME}，专注于高端视效制作领域。TVC广告、产品动画、发布会、影视剧。`,
     keywords: "栖光,视效,TVC广告,产品动画,发布会,影视剧,3D渲染,CG"
   },
   hero: {
     title: "栖光",
     titleEn: "ALIGHTS",
-    subtitle: "光栖之处 · 自有答案",
+    subtitle: SLOGAN,
     subtitleEn: "Where light alights · Truth resides",
-    tags: ["TVC广告", "产品动画", "AIGC", "发布会", "影视剧"]
+    tags: [...SERVICES, "发布会"]
   },
   featuredWorks: [],
   services: [
@@ -63,7 +66,7 @@ const DEFAULT_CONFIG = {
   },
   footer: {
     logo: '栖光',
-    tagline: '专业视效制作 · 光影叙事艺术',
+    tagline: SLOGAN,
     columns: [
       { id: 'nav', title: '导航', type: 'links', links: [
         { label: '作品集', href: '/works', order: 0 },
@@ -75,7 +78,7 @@ const DEFAULT_CONFIG = {
       { id: 'services', title: '服务', type: 'text', items: ['TVC广告', '产品动画', '发布会', '影视剧'] },
       { id: 'contact', title: '联系', type: 'contact' }
     ],
-    copyright: '© 2024-2026 西安栖光文化传播有限公司. All rights reserved.',
+    copyright: COPYRIGHT,
     bottomText: 'alights.cn'
   },
   particle: {
@@ -174,7 +177,7 @@ export async function GET() {
     const config = await readConfig()
     return NextResponse.json(config)
   } catch (error) {
-    console.error('读取配置失败:', error)
+    // P0-1: hidden
     // 如果数据库失败，返回默认配置
     return NextResponse.json(DEFAULT_CONFIG)
   }
@@ -198,7 +201,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, section, data })
   } catch (error) {
-    console.error('更新配置失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '更新配置失败', details: "Internal error" }, { status: 500 })
   }
 }
@@ -225,7 +228,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, section, data: merged })
   } catch (error) {
-    console.error('更新配置失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '更新配置失败', details: "Internal error" }, { status: 500 })
   }
 }

@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       id: contact.id,
     })
   } catch (error) {
-    console.error('联系表单错误:', error)
+    // P0-1: hidden
     return NextResponse.json(
       { error: '提交失败，请稍后重试' },
       { status: 500 }

@@ -15,14 +15,17 @@ export async function GET() {
     const totalTransactions = await prisma.transaction.count()
     const totalCanvas = await prisma.canvas.count()
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       totalBurned,
       totalUsers,
       totalTransactions,
       totalCanvas,
     })
+    // L-6 修复：加缓存头，减少被频繁探测
+    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+    return response
   } catch (error) {
-    console.error('GET /api/stats error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }

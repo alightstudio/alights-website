@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
 
     // 从数据库读取管理员凭据
     const stored = await prisma.siteConfig.findUnique({ where: { key: 'admin_credentials' } })
-    const envPassword = process.env.ADMIN_PASSWORD || 'admin123'
+    // C-3 修复：移除默认密码回退
+    const envPassword = process.env.ADMIN_PASSWORD || ''
 
     if (stored) {
       const creds = JSON.parse(stored.value)
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
       })
     } else {
       // 首次设置 - 验证环境变量密码
-      if (currentPassword !== envPassword) {
+      if (!envPassword || currentPassword !== envPassword) {
         return NextResponse.json({ error: '当前密码错误' }, { status: 403 })
       }
       // 迁移到数据库存储
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: '密码已修改' })
   } catch (error) {
-    console.error('修改密码失败:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

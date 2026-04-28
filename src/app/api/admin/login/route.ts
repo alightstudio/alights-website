@@ -4,9 +4,9 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { createSessionToken } from '@/lib/admin-auth'
 
-// 管理员用户名从环境变量读取
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
-// 注意：不再提供默认密码回退，必须设置 ADMIN_PASSWORD 环境变量
+// C-3 修复：管理员凭据必须通过环境变量或数据库设置
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || ''
+// 不再提供默认密码回退，必须设置 ADMIN_PASSWORD 或在数据库中存储密码
 const ENV_PASSWORD = process.env.ADMIN_PASSWORD || ''
 
 // 简单的频率限制（内存存储，生产环境建议用 Redis）
@@ -101,8 +101,8 @@ export async function POST(request: NextRequest) {
       path: '/'
     })
     return response
-  } catch (error) {
-    console.error('登录失败:', error)
+  } catch {
+    // P0-1 修复：不再输出错误堆栈，防止内部信息泄漏
     return NextResponse.json({ error: '登录失败' }, { status: 500 })
   }
 }

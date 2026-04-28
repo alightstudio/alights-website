@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { CONTACT } from '@/lib/site-constants'
 
 interface Message {
   id: string
@@ -66,7 +67,7 @@ export default function AIChatWidget() {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || '抱歉，我暂时无法回答这个问题。您可以拨打 15091855505 直接联系我们。',
+        content: data.response || `抱歉，我暂时无法回答这个问题。您可以拨打 ${CONTACT.phone} 直接联系我们。`,
         timestamp: new Date(),
       }
 
@@ -75,7 +76,7 @@ export default function AIChatWidget() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: '抱歉，服务暂时不可用。请拨打 15091855505 或发送邮件至 184436962@qq.com 联系我们。',
+        content: `抱歉，服务暂时不可用。请拨打 ${CONTACT.phone} 或发送邮件至 ${CONTACT.email} 联系我们。`,
         timestamp: new Date(),
       }
       setMessages(prev => [...prev, errorMessage])

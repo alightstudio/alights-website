@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 // GET /api/forum/categories — list all
 export async function GET() {
@@ -12,6 +13,11 @@ export async function GET() {
 
 // POST /api/forum/categories — create (admin only)
 export async function POST(req: NextRequest) {
+  // H-1 修复：仅管理员可创建分类
+  if (!(await verifyAdminSession())) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 })
+  }
+
   const body = await req.json()
   const { name, nameEn, icon, description, sortOrder } = body
 

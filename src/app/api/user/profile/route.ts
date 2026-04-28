@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
 
 
 // GET /api/user/profile - 获取用户信息
@@ -22,9 +23,11 @@ export async function GET(req: NextRequest) {
 
   // 如果没有邀请码则自动生成
   if (!user.referralCode) {
+    // P1-2 修复：使用 crypto.randomBytes 替代 Math.random()
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    const bytes = randomBytes(6)
     let code = ''
-    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+    for (let i = 0; i < 6; i++) code += chars[bytes[i] % chars.length]
     await prisma.user.update({
       where: { id: userId },
       data: { referralCode: code },

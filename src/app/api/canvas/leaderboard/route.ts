@@ -101,7 +101,7 @@ export async function GET() {
       },
     })
   } catch (error) {
-    console.error('Leaderboard error:', error)
+    // P0-1: hidden error details
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

@@ -29,7 +29,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('Work view error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

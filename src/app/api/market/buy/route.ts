@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       burn: { rate: `${BURN_RATE*100}%`, amount: burnAmount, totalBurned: newTotalBurned },
     })
   } catch (error) {
-    console.error('POST /market/buy error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
@@ -143,7 +143,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('DELETE /market/buy error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }

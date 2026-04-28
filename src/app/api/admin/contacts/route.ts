@@ -15,7 +15,7 @@ export async function GET() {
 
     return NextResponse.json(contacts)
   } catch (error) {
-    console.error('获取联系记录错误:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

@@ -19,7 +19,7 @@ export async function GET() {
 
     return NextResponse.json(users)
   } catch (error) {
-    console.error('Failed to fetch users:', error)
+    // P0-1: hidden
     return NextResponse.json(
       { error: '获取用户列表失败' },
       { status: 500 }

@@ -47,7 +47,7 @@ export async function GET() {
       recentWorks
     })
   } catch (error) {
-    console.error('Failed to fetch stats:', error)
+    // P0-1: hidden
     return NextResponse.json(
       { error: '获取统计数据失败' },
       { status: 500 }

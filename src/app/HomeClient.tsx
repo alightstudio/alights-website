@@ -6,6 +6,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import SpotlightText, { resolveSpotlightConfig, SpotlightConfig } from '@/components/SpotlightText'
 import topInspirations from '@/data/top-inspirations.json'
+import { COMPANY_NAME, SLOGAN } from '@/lib/site-constants'
 
 // 禁用 SSR 以避免水合不匹配（Canvas 组件在服务端无 DOM）
 const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), { ssr: false })
@@ -13,19 +14,19 @@ const ParticleBackground = dynamic(() => import('@/components/ParticleBackground
 const DEFAULT_HERO = {
   title: '栖光',
   titleEn: 'ALIGHTS',
-  subtitle: '光栖之处 · 自有答案',
+  subtitle: SLOGAN,
   subtitleEn: 'Where light alights · Truth resides',
   tags: ['TVC广告', '产品动画', 'AIGC', '发布会', '影视剧'],
 }
 
 const DEFAULT_COMPANY = {
-  name: '西安栖光文化传播有限公司',
+  name: COMPANY_NAME,
   nameEn: "Xi'an Alights Culture Communication Co., Ltd.",
   shortName: '栖光',
   shortNameEn: 'ALIGHTS',
-  slogan: '光栖之处 · 自有答案',
+  slogan: SLOGAN,
   sloganEn: 'Where light alights · Truth resides',
-  description: '西安栖光文化传播有限公司，专注于高端视效制作领域',
+  description: `${COMPANY_NAME}，专注于高端视效制作领域`,
   descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. ",
 }
 

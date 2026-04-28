@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error('登录错误:', error)
+    // P0-1: hidden
     return NextResponse.json(
       { error: '服务器错误，请稍后重试' },
       { status: 500 }

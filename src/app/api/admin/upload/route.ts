@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { verifyAdminSession } from '@/lib/admin-auth'
+import { randomUUID } from 'crypto'
 
 // 允许的文件类型
 const ALLOWED_TYPES: Record<string, string[]> = {
@@ -49,11 +50,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 生成唯一文件路径
-    const ext = file.name.split('.').pop() || (category === 'video' ? 'mp4' : 'jpg')
-    const timestamp = Date.now()
-    const randomStr = Math.random().toString(36).substring(2, 8)
-    const pathname = `${subdir}/${timestamp}_${randomStr}.${ext}`
+    // P1-2 修复：使用 crypto.randomUUID() 替代 Math.random() 生成唯一文件名
+    const ext = (file.name.includes('.') ? file.name.split('.').pop() : null) || (category === 'video' ? 'mp4' : 'jpg')
+    const uuid = randomUUID()
+    const pathname = `${subdir}/${uuid}.${ext}`
 
     // 上传到 Vercel Blob
     const blob = await put(pathname, file, {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       category,
     })
   } catch (error) {
-    console.error('Upload error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '上传失败' }, { status: 500 })
   }
 }

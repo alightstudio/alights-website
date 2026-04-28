@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Review failed:', error)
+    // P0-1: hidden
     return NextResponse.json(
       { error: '审核失败' },
       { status: 500 }

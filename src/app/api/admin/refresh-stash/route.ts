@@ -33,7 +33,7 @@ export async function POST() {
       command: 'node scripts/refresh-stash.mjs',
     })
   } catch (error) {
-    console.error('Refresh stash error:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: '服务器错误' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
 
 // 频率限制
 const registerAttempts = new Map<string, { count: number; resetTime: number }>()
@@ -35,18 +36,19 @@ function isValidPhone(phone: string): boolean {
   return /^1[3-9]\d{9}$/.test(phone)
 }
 
-// 生成唯一邀请码
+// P1-2 修复：使用 crypto.randomBytes 替代 Math.random() 生成安全的邀请码
 async function generateReferralCode(): Promise<string> {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   for (let attempt = 0; attempt < 20; attempt++) {
+    const bytes = randomBytes(6)
     let code = ''
     for (let i = 0; i < 6; i++) {
-      code += chars[Math.floor(Math.random() * chars.length)]
+      code += chars[bytes[i] % chars.length]
     }
     const existing = await prisma.user.findUnique({ where: { referralCode: code } })
     if (!existing) return code
   }
-  return 'REF' + Date.now().toString(36).toUpperCase()
+  return 'REF' + randomBytes(4).toString('hex').toUpperCase()
 }
 
 const REFERRAL_BONUS = 10 // 双方各得积分
@@ -66,10 +68,16 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, phone, email, company, password, referralCode } = body
 
-    // 验证必填字段
+    // P1-1 修复：验证必填字段 + 密码最小长度
     if (!name || !phone || !password) {
       return NextResponse.json(
         { error: '请填写必填项' },
+        { status: 400 }
+      )
+    }
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: '密码至少6位' },
         { status: 400 }
       )
     }
@@ -175,7 +183,7 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error('注册错误:', error)
+    // P0-1: hidden
     return NextResponse.json(
       { error: '服务器错误，请稍后重试' },
       { status: 500 }

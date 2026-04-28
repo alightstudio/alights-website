@@ -1,5 +1,5 @@
 'use client'
-
+import { CONTACT } from '@/lib/site-constants'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
@@ -97,11 +97,11 @@ export default function ContactPage() {
               <div className="space-y-8 mb-12">
                 <div>
                   <p className="text-sm text-gray-500 mb-2 tracking-wide">微信</p>
-                  <p className="text-lg">15091855505</p>
+                  <p className="text-lg">{CONTACT.phone}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-2 tracking-wide">邮箱</p>
-                  <p className="text-lg">184436962@qq.com</p>
+                  <p className="text-lg">{CONTACT.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-2 tracking-wide">地址</p>

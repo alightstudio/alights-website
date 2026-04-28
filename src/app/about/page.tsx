@@ -1,5 +1,5 @@
 'use client'
-
+import { COMPANY_NAME } from '@/lib/site-constants'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
@@ -20,7 +20,7 @@ const SERVICE_DEFAULTS = [
 ]
 
 const STORY_TEXT = [
-  '西安栖光文化传播有限公司，专注于高端视效制作领域。我们相信，每一个品牌都有属于自己的独特光芒。',
+  `${COMPANY_NAME}，专注于高端视效制作领域。我们相信，每一个品牌都有属于自己的独特光芒。`,
   '从 TVC 广告到产品动画，从发布会大屏到影视剧特效，我们用光影艺术，为客户打造令人难忘的视觉体验。',
   '我们追求极致的视觉品质，注重每一个细节的打磨。减到不能减，精到不能精——这是我们的设计哲学。',
 ]

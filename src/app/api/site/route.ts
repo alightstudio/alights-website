@@ -1,5 +1,37 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import {
+  COMPANY_NAME, BRAND_NAME, BRAND_NAME_EN, SLOGAN, CONTACT, COPYRIGHT, SERVICES,
+} from '@/lib/site-constants'
+
+// P0-3 修复：使用 sanitize-html 库替代正则，防御所有 XSS 向量
+import sanitize from 'sanitize-html'
+
+function sanitizeHTML(html: string): string {
+  if (!html) return ''
+  return sanitize(html, {
+    allowedTags: ['h1','h2','h3','h4','h5','h6','p','br','hr','div','span','ul','ol','li','strong','em','b','i','u','s','a','blockquote','code','pre','img','section','article','aside'],
+    allowedAttributes: {
+      a: ['href','title','target','rel'],
+      img: ['src','alt','width','height','loading','class'],
+      div: ['class','id'],
+      section: ['class','id'],
+      article: ['class','id'],
+      aside: ['class','id'],
+      span: ['class'],
+      p: ['class'],
+    },
+    allowedSchemes: ['http','https','mailto'],
+    disallowedTagsMode: 'discard',
+    enforceHtmlBoundary: true,
+    transformTags: {
+      a: (tagName, attribs) => {
+        if (attribs.target === '_blank') attribs.rel = (attribs.rel||'') + ' noopener noreferrer'
+        return { tagName, attribs }
+      },
+    },
+  })
+}
 
 // 强制动态渲染（每次请求都从数据库读取最新数据）
 export const dynamic = 'force-dynamic'
@@ -7,19 +39,19 @@ export const revalidate = 0
 
 // ===== Default Config Fallbacks =====
 const DEFAULT_COMPANY = {
-  name: "西安栖光文化传播有限公司",
+  name: COMPANY_NAME,
   nameEn: "Xi'an Alights Culture Communication Co., Ltd.",
-  shortName: "栖光",
-  shortNameEn: "ALIGHTS",
-  slogan: "专业视效制作 · 光影叙事艺术",
-  sloganEn: "Professional Visual Effects · Cinematic Storytelling",
-  description: "西安栖光文化传播有限公司，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。",
+  shortName: BRAND_NAME.slice(0, 2),
+  shortNameEn: BRAND_NAME_EN,
+  slogan: SLOGAN,
+  sloganEn: "Where light alights · Truth resides",
+  description: `${COMPANY_NAME}，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。`,
   descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production."
 }
 
-const DEFAULT_CONTACT = { phone: "15091855505", email: "184436962@qq.com", address: "陕西省西安市", wechat: "15091855505" }
-const DEFAULT_SEO = { title: "栖光文化 | ALIGHTS - 专业视效制作", description: "专业视效制作领域。TVC广告、产品动画、发布会、影视剧。", keywords: "栖光,视效,TVC广告" }
-const DEFAULT_HERO = { title: "栖光", titleEn: "ALIGHTS", subtitle: "光栖之处 · 自有答案", subtitleEn: "Where light alights · Truth resides", tags: ["TVC广告", "产品动画", "AIGC", "发布会", "影视剧"] }
+const DEFAULT_CONTACT = { phone: CONTACT.phone, email: CONTACT.email, address: CONTACT.address, wechat: CONTACT.wechat }
+const DEFAULT_SEO = { title: `${BRAND_NAME} | ${BRAND_NAME_EN} - ${SLOGAN}`, description: `${COMPANY_NAME}，专注于高端视效制作领域。TVC广告、产品动画、发布会、影视剧。`, keywords: "栖光,视效,TVC广告" }
+const DEFAULT_HERO = { title: "栖光", titleEn: "ALIGHTS", subtitle: SLOGAN, subtitleEn: "Where light alights · Truth resides", tags: [...SERVICES, "产品发布会"] }
 
 const DEFAULT_NAVIGATION = {
   logo: "栖光",
@@ -40,7 +72,7 @@ const DEFAULT_NAVIGATION = {
 
 const DEFAULT_FOOTER = {
   logo: "栖光",
-  tagline: "专业视效制作 · 光影叙事艺术",
+  tagline: SLOGAN,
   columns: [
     {
       id: "nav", title: "导航", type: "links",
@@ -61,7 +93,7 @@ const DEFAULT_FOOTER = {
       id: "contact", title: "联系", type: "contact"
     }
   ],
-  copyright: "© 2024-2026 西安栖光文化传播有限公司. All rights reserved.",
+  copyright: COPYRIGHT,
   bottomText: "alights.cn"
 }
 
@@ -143,18 +175,16 @@ export async function GET() {
       pages: configMap.pages || DEFAULT_PAGES,
       codeInjection: (() => { 
         const ci = configMap.codeInjection || DEFAULT_CODE_INJECTION
-        // P1 #9: 过滤 <script> 标签防止 XSS
-        const sanitize = (html: string) => (html || '').replace(/<script[\s\S]*?<\/script>/gi, '')
-        return { headHTML: sanitize(ci.headHTML), footerHTML: sanitize(ci.footerHTML), bodyStartHTML: sanitize(ci.bodyStartHTML) }
+        // C-4 修复：使用严格的 HTML sanitizer 替代简单正则
+        return { headHTML: sanitizeHTML(ci.headHTML), footerHTML: sanitizeHTML(ci.footerHTML), bodyStartHTML: sanitizeHTML(ci.bodyStartHTML) }
       })(),
       socialLinks: configMap.socialLinks || DEFAULT_SOCIAL_LINKS,
       particle: configMap.particle || null,
       spotlight: configMap.spotlight || null,
       aboutTeamVideo: configMap.aboutTeamVideo || '',
     })
-  } catch (error) {
-    console.error('读取配置失败:', error)
-    // 数据库不可用时返回默认配置
+  } catch {
+    // P0-1：隐藏错误详情
     return NextResponse.json({
       company: DEFAULT_COMPANY,
       contact: DEFAULT_CONTACT,

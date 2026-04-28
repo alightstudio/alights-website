@@ -28,7 +28,7 @@ export async function GET() {
     
     return NextResponse.json(transformed)
   } catch (error) {
-    console.error('Failed to read stash 175:', error)
+    // P0-1: hidden
     return NextResponse.json({ error: 'Failed to read stash 175' }, { status: 500 })
   }
 }

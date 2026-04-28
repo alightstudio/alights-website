@@ -5,10 +5,11 @@ import Footer from '@/components/Footer'
 import { prisma } from '@/lib/prisma'
 import { findFont, googleFontUrl } from '@/lib/fonts'
 import type { FontOption } from '@/lib/fonts'
+import { BRAND_NAME, BRAND_NAME_EN, COMPANY_NAME, SLOGAN } from '@/lib/site-constants'
 
 const DEFAULT_SEO = {
-  title: '栖光文化 | ALIGHTS ',
-  description: '西安栖光文化传播有限公司，专注于高端视效制作领域。TVC广告、产品动画、AIGC、发布会大屏、影视剧。',
+  title: `${BRAND_NAME} | ${BRAND_NAME_EN} `,
+  description: `${COMPANY_NAME}，专注于高端视效制作领域。TVC广告、产品动画、AIGC、发布会大屏、影视剧。`,
   keywords: '栖光,视效,TVC广告,AIGC,产品动画,发布会大屏,影视剧,3D渲染,CG',
 }
 

@@ -28,7 +28,7 @@ export async function GET() {
 
     return NextResponse.json(works)
   } catch (error) {
-    console.error('Failed to fetch works:', error)
+    // P0-1: hidden
     return NextResponse.json(
       { error: '获取作品列表失败' },
       { status: 500 }

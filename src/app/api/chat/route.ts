@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
+import { COMPANY_NAME, CONTACT } from '@/lib/site-constants'
 // P1 #10: 简单速率限制（基于 IP，内存存储，serverless 下有限但聊胜于无）
 const chatAttempts = new Map<string, { count: number; resetTime: number }>()
 const CHAT_RATE_WINDOW = 60 * 1000 // 1分钟
@@ -26,9 +26,9 @@ function getClientIP(req: NextRequest): string {
 const SYSTEM_PROMPT = `你是栖光文化的 AI 客服助手。栖光文化是一家专业的影视制作公司，位于西安。
 
 【公司信息】
-- 公司全称：西安栖光文化传播有限公司
+- 公司全称：${COMPANY_NAME}
 - 主营业务：TVC广告、产品动画、产品发布会、影视剧视效
-- 联系方式：电话 15091855505，邮箱 184436962@qq.com
+- 联系方式：电话 ${CONTACT.phone}，邮箱 ${CONTACT.email}
 - 作品展示：https://www.xinpianchang.com/u12018057
 
 【服务范围】
@@ -76,14 +76,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // P1: 过滤 history，只保留 role=user/assistant，防止注入 system 消息
+    // H-3 修复：用户输入转义，防止 prompt 注入
+    const sanitized = message
+      .replace(/<\|im_start\|>/g, '')
+      .replace(/<\|im_end\|>/g, '')
+      .replace(/\[INST\]/gi, '')
+      .replace(/\[\/INST\]/gi, '')
+      .replace(/<\|system\|>/gi, '')
+      .replace(/<\|user\|>/gi, '')
+      .replace(/<\|assistant\|>/gi, '')
+      .slice(0, 500)
+
     const safeHistory = (history || [])
       .filter((m: any) => m.role === 'user' || m.role === 'assistant')
+      .map((m: any) => ({
+        role: m.role,
+        content: typeof m.content === 'string' ? m.content.slice(0, 500) : ''
+      }))
       .slice(-6)
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...safeHistory,
-      { role: 'user', content: message },
+      { role: 'user', content: sanitized },
     ]
 
     // 调用 AI 模型 API
@@ -115,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('AI API error:', error)
+      // P0-1: hidden error details
       const fallbackResponse = getFallbackResponse(message)
       return NextResponse.json({ response: fallbackResponse })
     }
@@ -125,9 +139,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ response: aiResponse })
   } catch (error) {
-    console.error('Chat API error:', error)
+    // P0-1: hidden error details
     return NextResponse.json(
-      { response: '抱歉，服务暂时不可用。请拨打 15091855505 联系我们。' },
+      { response: `抱歉，服务暂时不可用。请拨打 ${CONTACT.phone} 联系我们。` },
       { status: 500 }
     )
   }
@@ -154,12 +168,12 @@ function getFallbackResponse(message: string): string {
   }
 
   if (lowerMsg.includes('联系') || lowerMsg.includes('电话') || lowerMsg.includes('邮箱') || lowerMsg.includes('怎么找')) {
-    return '您可以通过以下方式联系我们：电话 15091855505（同微信），邮箱 184436962@qq.com。工作日 9:00-18:00 在线，期待与您的合作！'
+    return `您可以通过以下方式联系我们：电话 ${CONTACT.phone}（同微信），邮箱 ${CONTACT.email}。工作日 9:00-18:00 在线，期待与您的合作！`
   }
 
   if (lowerMsg.includes('你好') || lowerMsg.includes('在吗') || lowerMsg.includes('hi') || lowerMsg.includes('hello')) {
     return '您好！我是栖光文化的 AI 助手。我可以帮您了解我们的服务、作品案例，或者解答关于影视制作的问题。请问有什么可以帮您的？'
   }
 
-  return '感谢您的咨询！这个问题我需要进一步确认。建议您拨打 15091855505 或发送邮件至 184436962@qq.com，我们的专业团队会为您提供详细解答。'
+  return `感谢您的咨询！这个问题我需要进一步确认。建议您拨打 ${CONTACT.phone} 或发送邮件至 ${CONTACT.email}，我们的专业团队会为您提供详细解答。`
 }

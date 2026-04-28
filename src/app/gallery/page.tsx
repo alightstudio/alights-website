@@ -28,6 +28,11 @@ import stash154Raw from '@/data/stash154.json'
 import stash153Raw from '@/data/stash153.json'
 import stash152Raw from '@/data/stash152.json'
 import stash151Raw from '@/data/stash151.json'
+import stash149Raw from '@/data/stash149.json'
+import stash148Raw from '@/data/stash148.json'
+import stash147Raw from '@/data/stash147.json'
+import stash146Raw from '@/data/stash146.json'
+import stash145Raw from '@/data/stash145.json'
 import stash150Raw from '@/data/stash150.json'
 import stash160Raw from '@/data/stash160.json'
 
@@ -91,6 +96,11 @@ const stash153Data: StashWork[] = stash153Raw.map(transform).sort(sortByHeat)
 const stash152Data: StashWork[] = stash152Raw.map(transform).sort(sortByHeat)
 const stash151Data: StashWork[] = stash151Raw.map(transform).sort(sortByHeat)
 const stash150Data: StashWork[] = stash150Raw.map(transform).sort(sortByHeat)
+const stash149Data: StashWork[] = stash149Raw.map(transform).sort(sortByHeat)
+const stash148Data: StashWork[] = stash148Raw.map(transform).sort(sortByHeat)
+const stash147Data: StashWork[] = stash147Raw.map(transform).sort(sortByHeat)
+const stash146Data: StashWork[] = stash146Raw.map(transform).sort(sortByHeat)
+const stash145Data: StashWork[] = stash145Raw.map(transform).sort(sortByHeat)
 
 const allStashes = [
   { id: '176', label: 'Stash 176', data: stash176Data },
@@ -120,6 +130,11 @@ const allStashes = [
   { id: '152', label: 'Stash 152', data: stash152Data },
   { id: '151', label: 'Stash 151', data: stash151Data },
   { id: '150', label: 'Stash 150', data: stash150Data },
+  { id: '149', label: 'Stash 149', data: stash149Data },
+  { id: '148', label: 'Stash 148', data: stash148Data },
+  { id: '147', label: 'Stash 147', data: stash147Data },
+  { id: '146', label: 'Stash 146', data: stash146Data },
+  { id: '145', label: 'Stash 145', data: stash145Data },
 ]
 
 const totalWorks = allStashes.reduce((s, st) => s + st.data.length, 0)
@@ -241,6 +256,7 @@ export default function GalleryPage() {
     { label: '最新收藏 (170-176)', stashes: allStashes.filter(s => parseInt(s.id) >= 170) },
     { label: '中期收藏 (160-169)', stashes: allStashes.filter(s => parseInt(s.id) >= 160 && parseInt(s.id) < 170) },
     { label: '早期收藏 (150-159)', stashes: allStashes.filter(s => parseInt(s.id) >= 150 && parseInt(s.id) < 160) },
+    { label: '更早收藏 (145-149)', stashes: allStashes.filter(s => parseInt(s.id) < 150) },
   ]
 
   return (

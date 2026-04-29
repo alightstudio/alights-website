@@ -13,6 +13,8 @@ const DEFAULT_SEO = {
   keywords: '栖光,视效,TVC广告,AIGC,产品动画,发布会大屏,影视剧,3D渲染,CG',
 }
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const config = await prisma.siteConfig.findFirst({ where: { key: 'seo' } })

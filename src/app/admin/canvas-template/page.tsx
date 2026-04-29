@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { getAllPaintings } from '@/lib/famous-paintings'
 
+export const dynamic = 'force-dynamic'
+
 interface PaintingTemplate {
   id: string
   title: string

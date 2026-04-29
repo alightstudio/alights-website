@@ -1,11 +1,11 @@
-import { verifyAdminSession } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyAdminSession } from '@/lib/admin-auth'
 import { prisma } from '@/lib/prisma'
 import { FAMOUS_PAINTINGS } from '@/lib/famous-paintings'
 
 // 获取当前底稿配置 + 画作列表
 export async function GET(req: NextRequest) {
-  const admin = await verifyAdminSession(req)
+  const admin = await verifyAdminSession()
   if (!admin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
 // 更新底稿配置
 export async function POST(req: NextRequest) {
-  const admin = await verifyAdminSession(req)
+  const admin = await verifyAdminSession()
   if (!admin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

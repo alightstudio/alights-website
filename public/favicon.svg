@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" fill="#0a0a0a"/>
-  <text x="16" y="22" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#c9a962" text-anchor="middle">栖</text>
+  <path d="M7.5,26 L12.5,16 L17.5,26 Z" fill="#ffffff"/>
+  <path d="M14,16 L19.5,26 L9,26 Z" fill="#ff7f00" opacity="0.6"/>
 </svg>

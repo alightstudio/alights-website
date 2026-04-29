@@ -66,8 +66,7 @@ export default function Navigation({ initialLogo, initialNavItems }: NavigationP
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center">
-              <Image src="/logo.svg" alt={logo} width={2810} height={450} className="h-[18px] w-auto align-middle mt-0.5" />
-              <span className="font-display text-xl tracking-wider ml-2">{logo}</span>
+              <Image src="/logo.svg" alt="ALIGHTS" width={2810} height={450} className="h-[18px] w-auto align-middle" priority />
             </Link>
 
             {/* Desktop Menu */}

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import type { FooterConfig } from '@/lib/siteConfig'
 import { SLOGAN, COPYRIGHT } from '@/lib/site-constants'
 
@@ -54,7 +55,7 @@ export default function Footer({ initialFooter, initialContact }: FooterProps) {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand */}
           <div>
-            <h3 className="font-display text-2xl tracking-wider mb-6" style={{ fontFamily: 'var(--font-display, unset)' }}>{cfg.logo}</h3>
+            <Image src="/logo.svg" alt="ALIGHTS" width={2810} height={450} className="h-[22px] w-auto mb-6" />
             <p className="text-gray-500 text-sm leading-relaxed">{cfg.tagline}</p>
           </div>
 

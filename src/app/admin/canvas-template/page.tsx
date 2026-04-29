@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { getAllPaintings, TEMPLATE_SIZE } from '@/lib/famous-paintings'
+import { FAMOUS_PAINTINGS, TEMPLATE_SIZE, PaintingTemplate } from '@/lib/famous-paintings'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +68,7 @@ export default function CanvasTemplateAdmin() {
 
       <div className="max-w-6xl">
         <p className="text-gray-400 mb-6">
-          选择画布自动填充时使用的名画底稿。底稿引导比例为 70%，其余 30% 为纯随机填充。
+          选择画布自动填充时使用的名画底稿。填充时 100% 由底稿引导（位置+颜色均来自底稿），画面更协调。
           画布尺寸：{TEMPLATE_SIZE}×{TEMPLATE_SIZE}（共 {TEMPLATE_SIZE * TEMPLATE_SIZE} 格）。
         </p>
 
@@ -115,7 +115,7 @@ function PaintingCard({ painting, isSelected, onClick }: {
 
   useEffect(() => {
     // 通过 id 找到完整像素数据
-    const full = getAllPaintings().find(p => p.id === painting.id)
+    const full = FAMOUS_PAINTINGS.find(p => p.id === painting.id)
     if (!full || !canvasRef.current) return
 
     const cvs = canvasRef.current

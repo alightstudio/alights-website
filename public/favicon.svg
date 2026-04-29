@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#0a0a0a"/>
-  <path d="M7.5,26 L12.5,16 L17.5,26 Z" fill="#ffffff"/>
-  <path d="M14,16 L19.5,26 L9,26 Z" fill="#ff7f00" opacity="0.6"/>
+  <rect width="32" height="32" fill="#0a0a0a" rx="6"/>
+  <!-- A triangle (from logo first path, simplified) -->
+  <path d="M10,25 L16,12 L22,25 Z" fill="#ffffff"/>
+  <!-- Orange diamond accent (from logo polygon) -->
+  <polygon points="17.5,20.5 19.5,24.5 15.5,23 13.5,19" fill="#ff7f00"/>
 </svg>

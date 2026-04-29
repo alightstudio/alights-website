@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server'
+
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 
 // GET /api/canvas/history — 获取已归档画布列表

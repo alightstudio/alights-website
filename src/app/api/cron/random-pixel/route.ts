@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { DEFAULT_TEMPLATE, getSortedPixelsByBrightness } from '@/lib/famous-paintings'
+import { FAMOUS_PAINTINGS, getSortedPixelsByBrightness } from '@/lib/famous-paintings'
+
+// 默认底稿：星月夜
+const DEFAULT_TEMPLATE_ID = 'starry-night'
+
+// 从数据库读取当前底稿配置
+async function getCurrentTemplate() {
+  try {
+    const config = await prisma.siteConfig.findUnique({
+      where: { key: 'canvas_template' }
+    })
+    const templateId = config?.value || DEFAULT_TEMPLATE_ID
+    return FAMOUS_PAINTINGS.find(p => p.id === templateId) || FAMOUS_PAINTINGS[0]
+  } catch {
+    return FAMOUS_PAINTINGS[0] // 降级到星月夜
+  }
+}
 
 // 禁止 Vercel CDN 缓存此动态端点（cron-job.org 每 60 秒调用，必须每次实时执行）
 export const dynamic = 'force-dynamic'
@@ -60,7 +76,8 @@ export async function GET(req: NextRequest) {
 
     if (useTemplate) {
       // 70% 底稿引导：按亮度从高到低选择未被占用的像素
-      const sortedPixels = getSortedPixelsByBrightness(DEFAULT_TEMPLATE)
+      const template = await getCurrentTemplate()
+      const sortedPixels = getSortedPixelsByBrightness(template)
       const available = sortedPixels.filter(p => !occupied.has(`${p.x},${p.y}`))
       
       if (available.length > 0) {

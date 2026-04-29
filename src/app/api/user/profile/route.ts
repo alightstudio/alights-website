@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// 禁止 Vercel CDN 缓存此动态端点
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
+
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
+
 
 
 // GET /api/user/profile - 获取用户信息

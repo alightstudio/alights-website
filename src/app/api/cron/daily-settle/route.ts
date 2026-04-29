@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyAdminSession } from '@/lib/admin-auth'
 import { isCronAuthorized } from '@/lib/cron-auth'
+import { FAMOUS_PAINTINGS } from '@/lib/famous-paintings'
+
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 
 // GET/POST /api/cron/daily-settle — Vercel Cron 每日 00:00 触发 / 管理员手动触发 / cron-job.org 外部调用
 export async function GET(req: NextRequest) {
@@ -92,10 +96,23 @@ async function handleDailySettle(req: NextRequest) {
       })
     }
 
+    // 5. 自动轮换底稿（周期结束时切换）
+    const nextTemplate = FAMOUS_PAINTINGS[Math.floor(Math.random() * FAMOUS_PAINTINGS.length)]
+    await prisma.siteConfig.upsert({
+      where: { key: 'canvas_template' },
+      update: { value: nextTemplate.id },
+      create: { key: 'canvas_template', value: nextTemplate.id }
+    })
+
     return NextResponse.json({
       success: true,
       settled: results.length,
       canvases: results,
+      nextTemplate: {
+        id: nextTemplate.id,
+        title: nextTemplate.title,
+        artist: nextTemplate.artist
+      }
     })
   } catch (error) {
     // P0-1: hidden

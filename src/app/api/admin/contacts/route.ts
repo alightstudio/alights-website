@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
+
+// 禁止 Vercel CDN 缓存此动态端点
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { verifyAdminSession } from '@/lib/admin-auth'
+
 
 // 获取所有联系记录
 export async function GET() {

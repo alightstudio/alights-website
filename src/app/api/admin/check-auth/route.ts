@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server'
+
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import { verifyAdminSession } from '@/lib/admin-auth'
 
 export async function GET() {

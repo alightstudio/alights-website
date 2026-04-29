@@ -4,6 +4,10 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 
+interface PixelRef {
+  x: number; y: number; color: string
+}
+
 interface ArchiveCanvas {
   id: string
   width: number
@@ -16,6 +20,7 @@ interface ArchiveCanvas {
   fillRate: number
   ownerId: string | null
   topUsers: { userId: string; count: number }[]
+  pixels?: PixelRef[]
 }
 
 interface PixelData {
@@ -67,29 +72,41 @@ export default function CanvasGallery() {
     const ctx = canvasEl.getContext('2d')
     if (!ctx) return
 
+    // 背景
     ctx.fillStyle = '#111111'
     ctx.fillRect(0, 0, 240, 240)
 
-    ctx.fillStyle = '#FFFFFF'
-    ctx.fillRect(0, 0, 240, 240)
+    // 绘制实际像素
+    if (c.pixels && c.pixels.length > 0) {
+      const cellSize = Math.floor(200 / Math.max(c.width, c.height))
+      const offsetX = Math.floor((240 - c.width * cellSize) / 2)
+      const offsetY = Math.floor((180 - c.height * cellSize) / 2)
+      for (const p of c.pixels) {
+        if (p.x < c.width && p.y < c.height) {
+          ctx.fillStyle = p.color
+          ctx.fillRect(offsetX + p.x * cellSize, offsetY + p.y * cellSize, cellSize, cellSize)
+        }
+      }
+    } else {
+      // 无像素时显示空画布文字
+      ctx.fillStyle = '#333'
+      ctx.font = '11px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText('empty canvas', 120, 120)
+    }
 
-    // 网格信息
-    ctx.fillStyle = 'rgba(0,0,0,0.05)'
+    // 填充率进度条（底部区域）
+    const barY = 212
+    ctx.fillStyle = 'rgba(255,255,255,0.06)'
+    ctx.fillRect(20, barY, 200, 5)
+    ctx.fillStyle = c.fillRate > 50 ? 'rgba(34,197,94,0.6)' : 'rgba(201,169,98,0.5)'
+    ctx.fillRect(20, barY, (c.fillRate / 100) * 200, 5)
+
+    // 信息文字
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'
     ctx.font = '10px sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText(c.width + '×' + c.height, 120, 120)
-
-    // 填充率进度
-    const barY = 200
-    ctx.fillStyle = 'rgba(0,0,0,0.06)'
-    ctx.fillRect(20, barY, 200, 6)
-    ctx.fillStyle = c.fillRate > 50 ? 'rgba(34,197,94,0.4)' : 'rgba(201,169,98,0.3)'
-    ctx.fillRect(20, barY, (c.fillRate / 100) * 200, 6)
-
-    ctx.fillStyle = '#999'
-    ctx.font = '11px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText(c.pixelCount + ' px · ' + c.fillRate + '%', 120, 230)
+    ctx.fillText(c.width + '×' + c.height + ' · ' + c.pixelCount + 'px', 120, 234)
   }
 
   // 打开详情

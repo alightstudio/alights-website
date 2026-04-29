@@ -6,6 +6,9 @@ import {
   COMPANY_NAME, BRAND_NAME, BRAND_NAME_EN, SLOGAN, CONTACT, COPYRIGHT, SERVICES,
 } from '@/lib/site-constants'
 
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
+
 // 默认配置（fallback）
 const DEFAULT_CONFIG = {
   company: {

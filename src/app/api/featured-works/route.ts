@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 
 // GET /api/featured-works — 首页展示作品（无需登录）

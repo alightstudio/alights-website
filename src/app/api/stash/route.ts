@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
+
+// 禁止 Vercel CDN 缓存此动态端点
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import path from 'path'
 import fs from 'fs'
+
 
 export async function GET() {
   try {

@@ -1,3 +1,5 @@
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { COMPANY_NAME, CONTACT } from '@/lib/site-constants'
 // P1 #10: 简单速率限制（基于 IP，内存存储，serverless 下有限但聊胜于无）

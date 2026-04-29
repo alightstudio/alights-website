@@ -1,3 +1,5 @@
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { revokeSession, isValidSession } from '@/lib/admin-auth'

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// 禁止 Vercel CDN 缓存此动态端点
+// 禁止 Vercel CDN 缓存此动态端点
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
+
 
 // P1-4 修复：论坛内容安全 — 长度限制 + HTML 过滤
 const MAX_TITLE_LEN = 200

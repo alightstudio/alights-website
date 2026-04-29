@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { FAMOUS_PAINTINGS, getSortedPixelsByBrightness } from '@/lib/famous-paintings'
+import { FAMOUS_PAINTINGS, TEMPLATE_SIZE, getSortedPixelsByBrightness } from '@/lib/famous-paintings'
 
 // 默认底稿：星月夜
 const DEFAULT_TEMPLATE_ID = 'starry-night'
@@ -15,6 +15,14 @@ async function getCurrentTemplate() {
     return FAMOUS_PAINTINGS.find(p => p.id === templateId) || FAMOUS_PAINTINGS[0]
   } catch {
     return FAMOUS_PAINTINGS[0] // 降级到星月夜
+  }
+}
+
+// 将模板坐标缩放到画布尺寸
+function scaleToCanvas(templateX: number, templateY: number, canvasW: number, canvasH: number): { x: number; y: number } {
+  return {
+    x: Math.floor(templateX / TEMPLATE_SIZE * canvasW),
+    y: Math.floor(templateY / TEMPLATE_SIZE * canvasH),
   }
 }
 
@@ -78,12 +86,16 @@ export async function GET(req: NextRequest) {
       // 70% 底稿引导：按亮度从高到低选择未被占用的像素
       const template = await getCurrentTemplate()
       const sortedPixels = getSortedPixelsByBrightness(template)
-      const available = sortedPixels.filter(p => !occupied.has(`${p.x},${p.y}`))
       
-      if (available.length > 0) {
+      // 关键修复：将模板坐标缩放到实际画布尺寸
+      const scaledAvailable = sortedPixels
+        .map(p => ({ ...p, ...scaleToCanvas(p.x, p.y, canvas.width, canvas.height) }))
+        .filter(p => p.x >= 0 && p.x < canvas.width && p.y >= 0 && p.y < canvas.height && !occupied.has(`${p.x},${p.y}`))
+      
+      if (scaledAvailable.length > 0) {
         // 从最亮的 30% 像素中随机选一个（避免每次都是同一个最亮像素）
-        const topCount = Math.max(1, Math.floor(available.length * 0.3))
-        const selected = available[Math.floor(Math.random() * topCount)]
+        const topCount = Math.max(1, Math.floor(scaledAvailable.length * 0.3))
+        const selected = scaledAvailable[Math.floor(Math.random() * topCount)]
         x = selected.x
         y = selected.y
         color = selected.color

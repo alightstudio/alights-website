@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyAdminSession } from '@/lib/admin-auth'
 import { isCronAuthorized } from '@/lib/cron-auth'
-import { FAMOUS_PAINTINGS } from '@/lib/famous-paintings'
+import { FAMOUS_PAINTINGS, TEMPLATE_SIZE } from '@/lib/famous-paintings'
 
 // 禁止 Vercel CDN 缓存此动态端点
 export const dynamic = 'force-dynamic'
@@ -57,11 +57,12 @@ async function handleDailySettle(req: NextRequest) {
         },
       })
 
-      // 3. 创建新画布
+      // 3. 创建新画布（重置为标准尺寸，避免跑偏过大）
+      const newSize = TEMPLATE_SIZE
       await prisma.canvas.create({
         data: {
-          width: canvas.width,
-          height: canvas.height,
+          width: newSize,
+          height: newSize,
           status: 'ACTIVE',
         },
       })

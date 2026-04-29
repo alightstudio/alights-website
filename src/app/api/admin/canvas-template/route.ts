@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminSession } from '@/lib/admin-auth'
 import { prisma } from '@/lib/prisma'
-import { FAMOUS_PAINTINGS } from '@/lib/famous-paintings'
+import { getPaintingsList } from '@/lib/famous-paintings'
 
 // 获取当前底稿配置 + 画作列表
 export async function GET(req: NextRequest) {
@@ -18,12 +18,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     current: config?.value || 'starry-night',
     updatedAt: config?.updatedAt || null,
-    paintings: FAMOUS_PAINTINGS.map(p => ({
-      id: p.id,
-      title: p.title,
-      artist: p.artist,
-      year: p.year
-    }))
+    paintings: getPaintingsList()
   })
 }
 

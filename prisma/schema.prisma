@@ -174,8 +174,8 @@ model SiteAnalytics {
 
 model Canvas {
   id        String   @id @default(cuid())
-  width     Int      @default(24)
-  height    Int      @default(24)
+  width     Int      @default(40)
+  height    Int      @default(40)
   status    String   @default("ACTIVE") // ACTIVE, ARCHIVED
   name      String?  // 归档后可命名，24字符以内
   startTime DateTime @default(now())

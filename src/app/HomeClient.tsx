@@ -116,11 +116,11 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
               {hero.titleEn}
             </p>
           </div>
-          <div className="mt-12">
+          <div className="mt-12 flex flex-col items-center">
             <SpotlightText
               text={hero.subtitle}
               config={spotlightConfig}
-              className="text-lg md:text-xl font-light leading-relaxed max-w-2xl mx-auto text-center"
+              className="text-lg md:text-xl font-light leading-relaxed text-center"
               glowClassName="text-lg md:text-xl font-light leading-relaxed"
             />
             <div className="mt-2">

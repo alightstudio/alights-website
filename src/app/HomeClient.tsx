@@ -15,7 +15,7 @@ const DEFAULT_HERO = {
   title: '栖光',
   titleEn: 'ALIGHTS',
   subtitle: SLOGAN,
-  subtitleEn: 'Where light alights · Truth resides',
+  subtitleEn: 'Where Alights·There Essence',
   tags: ['TVC广告', '产品动画', 'AIGC', '发布会', '影视剧'],
 }
 
@@ -25,7 +25,7 @@ const DEFAULT_COMPANY = {
   shortName: '栖光',
   shortNameEn: 'ALIGHTS',
   slogan: SLOGAN,
-  sloganEn: 'Where light alights · Truth resides',
+  sloganEn: 'Where Alights·There Essence',
   description: `${COMPANY_NAME}，专注于高端视效制作领域`,
   descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. ",
 }

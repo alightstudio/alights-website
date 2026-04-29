@@ -44,14 +44,14 @@ const DEFAULT_COMPANY = {
   shortName: BRAND_NAME.slice(0, 2),
   shortNameEn: BRAND_NAME_EN,
   slogan: SLOGAN,
-  sloganEn: "Where light alights · Truth resides",
+  sloganEn: "Where Alights·There Essence",
   description: `${COMPANY_NAME}，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。`,
   descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production."
 }
 
 const DEFAULT_CONTACT = { phone: CONTACT.phone, email: CONTACT.email, address: CONTACT.address, wechat: CONTACT.wechat }
 const DEFAULT_SEO = { title: `${BRAND_NAME} | ${BRAND_NAME_EN} - ${SLOGAN}`, description: `${COMPANY_NAME}，专注于高端视效制作领域。TVC广告、产品动画、发布会、影视剧。`, keywords: "栖光,视效,TVC广告" }
-const DEFAULT_HERO = { title: "栖光", titleEn: "ALIGHTS", subtitle: SLOGAN, subtitleEn: "Where light alights · Truth resides", tags: [...SERVICES, "产品发布会"] }
+const DEFAULT_HERO = { title: "栖光", titleEn: "ALIGHTS", subtitle: SLOGAN, subtitleEn: "Where Alights·There Essence", tags: [...SERVICES, "产品发布会"] }
 
 const DEFAULT_NAVIGATION = {
   logo: "栖光",

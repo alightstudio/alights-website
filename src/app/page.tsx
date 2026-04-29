@@ -4,7 +4,7 @@ import { COMPANY_NAME, SLOGAN } from '@/lib/site-constants'
 
 export const dynamic = 'force-dynamic'
 
-const DEFAULT_HERO = { title: '栖光', titleEn: 'ALIGHTS', subtitle: SLOGAN, subtitleEn: 'Where Alights·There Essence', tags: ['TVC广告', '产品动画', 'AIGC', '发布会', '影视剧'] }
+const DEFAULT_HERO = { title: '栖光', titleEn: 'ALIGHTS', subtitle: SLOGAN, subtitleEn: 'Where Alights There Essence', tags: ['TVC广告', '产品动画', 'AIGC', '发布会', '影视剧'] }
 const DEFAULT_BRAND_DISPLAY = { opacity: 0.75, opacityHover: 1, grayscale: true, grayscaleHover: true }
 
 const DEFAULT_COMPANY = {
@@ -13,7 +13,7 @@ const DEFAULT_COMPANY = {
   shortName: '栖光',
   shortNameEn: 'ALIGHTS',
   slogan: SLOGAN,
-  sloganEn: 'Where Alights·There Essence',
+  sloganEn: 'Where Alights There Essence',
   description: `${COMPANY_NAME}，专注于高端视效制作领域`,
   descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. ",
   detail: '深耕 TVC 广告、产品动画、发布会大屏、影视剧制作，为客户提供从创意到成片的完整视觉解决方案。',

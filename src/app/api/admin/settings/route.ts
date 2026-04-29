@@ -17,7 +17,7 @@ const DEFAULT_CONFIG = {
     shortName: BRAND_NAME.slice(0, 2),
     shortNameEn: BRAND_NAME_EN,
     slogan: SLOGAN,
-    sloganEn: "Where Alights·There Essence",
+    sloganEn: "Where Alights There Essence",
     description: `${COMPANY_NAME}，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。`,
     descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. Using light and shadow as our brush, creativity as our ink, we tell compelling stories for brands."
   },
@@ -38,7 +38,7 @@ const DEFAULT_CONFIG = {
     title: "栖光",
     titleEn: "ALIGHTS",
     subtitle: SLOGAN,
-    subtitleEn: "Where Alights·There Essence",
+    subtitleEn: "Where Alights There Essence",
     tags: [...SERVICES, "发布会"]
   },
   featuredWorks: [],

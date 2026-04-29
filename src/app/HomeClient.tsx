@@ -15,7 +15,7 @@ const DEFAULT_HERO = {
   title: '栖光',
   titleEn: 'ALIGHTS',
   subtitle: SLOGAN,
-  subtitleEn: 'Where Alights·There Essence',
+  subtitleEn: 'Where Alights There Essence',
   tags: ['TVC广告', '产品动画', 'AIGC', '发布会', '影视剧'],
 }
 
@@ -25,7 +25,7 @@ const DEFAULT_COMPANY = {
   shortName: '栖光',
   shortNameEn: 'ALIGHTS',
   slogan: SLOGAN,
-  sloganEn: 'Where Alights·There Essence',
+  sloganEn: 'Where Alights There Essence',
   description: `${COMPANY_NAME}，专注于高端视效制作领域`,
   descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. ",
 }
@@ -116,18 +116,20 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
               {hero.titleEn}
             </p>
           </div>
-          <div className="mt-12 flex flex-col items-center">
-            <SpotlightText
-              text={hero.subtitle}
-              config={spotlightConfig}
-              className="text-lg md:text-xl font-light leading-relaxed text-center"
-              glowClassName="text-lg md:text-xl font-light leading-relaxed"
-            />
-            <div className="mt-2">
+          <div className="mt-12 text-center">
+            <div className="inline-block text-center">
+              <SpotlightText
+                text={hero.subtitle}
+                config={spotlightConfig}
+                className="text-lg md:text-xl font-light leading-relaxed"
+                glowClassName="text-lg md:text-xl font-light leading-relaxed"
+              />
+            </div>
+            <div className="mt-2 text-center">
               <SpotlightText
                 text={hero.subtitleEn}
                 config={spotlightConfig}
-                className="text-sm tracking-wide text-center"
+                className="text-sm tracking-wide"
                 glowClassName="text-sm tracking-wide"
               />
             </div>

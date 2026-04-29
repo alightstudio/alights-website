@@ -19,7 +19,7 @@ export const BRAND_NAME = '栖光文化'
 export const BRAND_NAME_EN = 'ALIGHTS'
 
 /** 品牌标语 */
-export const SLOGAN = '光栖之处 · 自有答案'
+export const SLOGAN = '光栖之处·自有答案'
 
 /** 公司英文名 */
 export const COMPANY_NAME_EN = 'Alights'

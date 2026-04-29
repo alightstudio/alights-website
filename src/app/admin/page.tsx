@@ -1430,6 +1430,7 @@ function CanvasAdmin() {
   const [history, setHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [settling, setSettling] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const fetchData = () => {
     setLoading(true)
@@ -1461,6 +1462,24 @@ function CanvasAdmin() {
       alert('网络错误')
     } finally {
       setSettling(false)
+    }
+  }
+
+  const deleteCanvas = async (id: string) => {
+    if (!confirm('确定删除此画布？此操作不可撤销！')) return
+    setDeletingId(id)
+    try {
+      const res = await fetch("/api/admin/canvas/" + id, { method: 'DELETE' })
+      if (res.ok) {
+        setHistory(prev => prev.filter(c => c.id !== id))
+      } else {
+        const data = await res.json()
+        alert('删除失败: ' + (data.error || '未知错误'))
+      }
+    } catch {
+      alert('网络错误')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -1497,6 +1516,16 @@ function CanvasAdmin() {
           {settling ? '结算中...' : '立即结算'}
         </button>
       </div>
+
+      {/* Template Management */}
+      <a href="/admin/canvas-template"
+        className="flex items-center justify-between p-4 bg-purple-500/5 border border-purple-500/15 rounded-xl hover:bg-purple-500/10 transition-colors group">
+        <div>
+          <p className="text-sm text-white font-medium">管理画布底稿</p>
+          <p className="text-xs text-gray-500 mt-0.5">选择画布自动填充时使用的名画底稿（当前 20+ 幅）</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors shrink-0" />
+      </a>
 
       {/* Active Canvas */}
       {activeCanvas && (
@@ -1543,6 +1572,18 @@ function CanvasAdmin() {
                     </span>
                   </div>
                 </div>
+                <button
+                  onClick={() => deleteCanvas(c.id)}
+                  disabled={deletingId === c.id}
+                  className="shrink-0 p-1.5 rounded text-gray-600 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-30 transition-colors"
+                  title="删除已结算画布"
+                >
+                  {deletingId === c.id ? (
+                    <span className="block w-4 h-4 border-2 border-red-400/50 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             ))}
           </div>

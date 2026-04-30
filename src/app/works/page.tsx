@@ -17,6 +17,15 @@ interface FeaturedWork {
   duration?: number
 }
 
+// 当数据库不可用时的静态作品数据（fallback）
+const DEFAULT_WORKS: FeaturedWork[] = [
+  { id: 'demo-1', title: '灯语', titleEn: 'DENGYU LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://us-xpc5.xpccdn.com/b9c708b9-6207-41ce-a59a-b9d6ee88ae7b/c9de12f5-c71f-4aeb-bad9-f67154f88084.jpg', homepageOrder: 1, views: 0 },
+  { id: 'demo-2', title: '想象', titleEn: 'Xiangxiang LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://us-xpc5.xpccdn.com/2c1ed4da-92ea-4c0e-9d40-58d1c09b3c5c/6db3c289-f6c1-440d-bc1e-c83671cae8d8.jpg', homepageOrder: 2, views: 0 },
+  { id: 'demo-3', title: '稳座', titleEn: 'Wenzuo LIST', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://us-xpc5.xpccdn.com/4448bed8-579a-4bb2-9b6d-d8defbabd26a/edc0041e-f0e9-4f07-9623-517d7301aba7.jpg', homepageOrder: 3, views: 0 },
+  { id: 'demo-4', title: '费翔 X D19', titleEn: 'LEAPMOTOR D19', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://oss-xpc0.xpccdn.com/uploadfile/article/2025/12/29/e4c586d43e41944b1d8b58476da7549c', homepageOrder: 4, views: 0 },
+  { id: 'demo-5', title: '张天爱 | 雅娜薇图', titleEn: 'ZHANG TIANAI', category: 'TVC广告', categoryEn: 'TVC COMMERCIAL', image: 'https://oss-xpc0.xpccdn.com/uploadfile/article/2025/12/11/03e3d4b574519e1720d84581c1d2e331', homepageOrder: 5, views: 0 },
+]
+
 export default function WorksPage() {
   const [allWorks, setAllWorks] = useState<FeaturedWork[]>([])
   const [activeCategory, setActiveCategory] = useState('全部')
@@ -25,11 +34,17 @@ export default function WorksPage() {
   const [totalViews, setTotalViews] = useState(0)
 
   useEffect(() => {
-    fetch('/api/site')
+    fetch('/api/works')
       .then(res => res.json())
       .then(data => {
-        if (data.featuredWorks && Array.isArray(data.featuredWorks)) {
-          const works = data.featuredWorks.sort((a: FeaturedWork, b: FeaturedWork) => (b.views || 0) - (a.views || 0))
+        if (data.error) {
+          console.error('Failed to load works:', data.error)
+          setAllWorks(DEFAULT_WORKS)
+          setCategories(['全部'])
+          return
+        }
+        if (Array.isArray(data) && data.length > 0) {
+          const works = data
           setAllWorks(works)
           const total = works.reduce((sum: number, w: FeaturedWork) => sum + (w.views || 0), 0)
           setTotalViews(total)
@@ -37,7 +52,12 @@ export default function WorksPage() {
           setCategories(['全部', ...cats])
         }
       })
-      .catch(err => console.error('Failed to load works:', err))
+      .catch(err => {
+        console.error('Failed to load works:', err)
+        setAllWorks(DEFAULT_WORKS)
+        const cats = Array.from(new Set(DEFAULT_WORKS.map((w: FeaturedWork) => w.category))) as string[]
+        setCategories(['全部', ...cats])
+      })
       .finally(() => setLoading(false))
   }, [])
 

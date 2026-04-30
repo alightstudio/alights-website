@@ -88,12 +88,10 @@ export default function AboutPage() {
 
   return (
     <>
-      {/* Fixed full-viewport particle background */}
-      {config?.particle && (
-        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-          <ParticleBackground config={config.particle} />
-        </div>
-      )}
+      {/* Always render particle background — pass DB config or null for defaults */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <ParticleBackground config={config?.particle ?? null} />
+      </div>
       {/* Content with semi-transparent backdrop for readability */}
       <div className="relative z-10 pt-24 pb-32" style={{ backgroundColor: 'rgba(10,10,10,0.55)' }}>
         {/* Hero */}

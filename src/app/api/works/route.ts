@@ -49,8 +49,9 @@ export async function POST(request: Request) {
       work,
     })
   } catch (error) {
-    // P0-1: hidden
-    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : '服务器错误';
+    console.error('POST /api/works error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
@@ -75,7 +76,8 @@ export async function GET() {
     })
     return NextResponse.json(works)
   } catch (error) {
-    // P0-1: hidden
-    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : '服务器错误';
+    console.error('GET /api/works error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

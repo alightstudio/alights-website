@@ -8,13 +8,16 @@ const globalForPrisma = globalThis as unknown as {
 function buildDbUrl(rawUrl: string): string {
   if (!rawUrl) return rawUrl
 
-  // Remove channel_binding=require — it conflicts with Neon's PgBouncer pooler
-  let url = rawUrl.replace(/&?channel_binding\s*=\s*require/gi, '')
+  // Use direct endpoint (not pooler) — better reliability from Vercel serverless
+  let url = rawUrl.replace(/-pooler\.c-/g, '.c-')
 
-  // Optimize connection params for serverless (Neon cold-start wakeup can take 20s+)
-  if (!url.includes('connection_limit')) {
+  // Remove channel_binding=require — some Neon endpoints reject it
+  url = url.replace(/&?channel_binding\s*=\s*require/gi, '')
+
+  // Serverless-optimized params (longer timeouts for Neon free-tier wake-up)
+  if (!url.includes('connect_timeout')) {
     const separator = url.includes('?') ? '&' : '?'
-    url += `${separator}connection_limit=5&pool_timeout=30&connect_timeout=30`
+    url += `${separator}connect_timeout=30`
   }
   
   return url

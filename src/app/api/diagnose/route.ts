@@ -88,7 +88,7 @@ export async function GET() {
   // TLS handshake test (simulates what Prisma does)
   results.tls = await testTls(host, port)
 
-  if (results.tls !== 'ok') {
+  if (!results.tls.startsWith('ok')) {
     results.diagnosis = 'TLS_HANDSHAKE_FAILED'
     results.elapsed = `${Date.now() - startTime}ms`
     return NextResponse.json(results)

@@ -627,7 +627,7 @@ export default function AdminPage() {
         </header>
 
         {/* ── Content ── */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-4 pb-20 lg:pb-6 lg:p-6 scroll-smooth">
 
           {/* ===== DASHBOARD ===== */}
           {activeTab === 'dashboard' && stats && (
@@ -1308,7 +1308,22 @@ export default function AdminPage() {
         </div>{/* end content area */}
       </main>
 
-      {/* ── Mobile Sidebar Overlay ── */}
+      {/* ── Mobile Bottom Nav ── */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-900/95 backdrop-blur-md border-t border-white/10" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="flex items-center justify-around h-14">
+          {tabs.map(({ id, label, icon: Icon }) => (
+            <button key={id} onClick={() => setActiveTab(id)}
+              className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors ${
+                activeTab === id ? 'text-accent-gold' : 'text-gray-500'
+              }`}>
+              <Icon className="w-4.5 h-4.5" />
+              <span className="text-[10px] leading-tight">{label.length > 4 ? label.slice(0, 4) : label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {/* ── Mobile Sidebar Overlay (More menu) ── */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex" onClick={() => setMobileOpen(false)}>
           <div className="w-56 bg-black/95 border-r border-white/5 p-4 animate-in slide-in-from-left duration-200" onClick={e => e.stopPropagation()}>

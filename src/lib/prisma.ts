@@ -6,20 +6,17 @@ const globalForPrisma = globalThis as unknown as {
 
 // Lazy initialization to avoid build-time DB connection
 function createPrisma(): PrismaClient {
+  // Build URL safely — append serverless-optimized params without breaking existing query string
+  let dbUrl = process.env.DATABASE_URL || ''
+  if (!dbUrl.includes('connection_limit')) {
+    const separator = dbUrl.includes('?') ? '&' : '?'
+    dbUrl += `${separator}connection_limit=5&pool_timeout=10&connect_timeout=10`
+  }
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-    // M-3 修复：Serverless 优化连接池
     datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
+      db: { url: dbUrl },
     },
-    // L-3 修复：连接超时配置
-    ...(process.env.DATABASE_URL?.includes('connection_limit')
-      ? {}
-      : {
-          datasources: { db: { url: `${process.env.DATABASE_URL}?connection_limit=5&pool_timeout=10&connect_timeout=5` } }
-        }),
   })
 }
 

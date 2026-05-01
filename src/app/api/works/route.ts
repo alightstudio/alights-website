@@ -63,25 +63,63 @@ export async function POST(request: Request) {
   }
 }
 
+// 从 stash-works.json 加载作品数据（兼容旧数据）
+async function loadStashWorks() {
+  try {
+    const fs = require('fs')
+    const path = require('path')
+    const filePath = path.join(process.cwd(), 'src/data/stash-works.json')
+    const data = fs.readFileSync(filePath, 'utf-8')
+    const stashWorks = JSON.parse(data)
+    // 映射字段为 Work 表格式
+    return stashWorks.map((w: any) => ({
+      id: 'stash-' + w.id,
+      title: w.title,
+      description: `Duration: ${w.duration}s | Views: ${w.count_view} | Likes: ${w.count_like}`,
+      category: w.categories || '未分类',
+      videoUrl: w.web_url,
+      coverUrl: w.cover,
+      status: 'APPROVED',
+      viewCount: w.count_view || 0,
+      creatorName: w.author || '栖光文化',
+      creatorPhone: '',
+      createdAt: new Date(w.publish_time * 1000).toISOString(),
+      updatedAt: new Date(w.publish_time * 1000).toISOString(),
+      userId: null,
+    }))
+  } catch (e) {
+    console.error('Failed to load stash-works.json:', e)
+    return FALLBACK_WORKS
+  }
+}
+
 // 获取作品列表
 export async function GET() {
   try {
     const user = await getCurrentUser()
 
+    let works = []
+
     if (user) {
       // 已登录：返回用户自己的作品
-      const works = await prisma.work.findMany({
+      works = await prisma.work.findMany({
         where: { userId: user.id },
         orderBy: { createdAt: 'desc' },
       })
-      return NextResponse.json(works)
+    } else {
+      // 未登录：返回已审核通过的作品（公开展示）
+      works = await prisma.work.findMany({
+        where: { status: 'APPROVED' },
+        orderBy: { createdAt: 'desc' },
+      })
     }
 
-    // 未登录：返回已审核通过的作品（公开展示）
-    const works = await prisma.work.findMany({
-      where: { status: 'APPROVED' },
-      orderBy: { createdAt: 'desc' },
-    })
+    // 如果数据库没有数据，从 stash-works.json 读取（兼容旧数据）
+    if (works.length === 0) {
+      console.log('Work table empty, loading from stash-works.json...')
+      works = await loadStashWorks()
+    }
+
     return NextResponse.json(works)
   } catch (error) {
     const msg = error instanceof Error ? error.message : '服务器错误';

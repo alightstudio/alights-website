@@ -57,15 +57,67 @@ async function handleDailySettle(req: NextRequest) {
         },
       })
 
-      // 3. 创建新画布（重置为标准尺寸，避免跑偏过大）
-      const newSize = TEMPLATE_SIZE
-      await prisma.canvas.create({
+      // 3. 扩展画布（每个像素拆分为 4 个小方块：2×2）
+      // 上限：80×80，达到后不再扩展，让玩家继续在 80×80 画布上玩
+      const MAX_CANVAS_SIZE = 80
+      if (canvas.width >= MAX_CANVAS_SIZE) {
+        results.push({
+          canvasId: canvas.id,
+          size: canvas.width + 'x' + canvas.height,
+          ownerId,
+          bonus: ownerId ? Math.max(10, Math.floor(leaderboard[0]._count.id * 0.5)) : 0,
+          pixelCount: leaderboard.reduce((s, r) => s + r._count.id, 0),
+          topUsers: leaderboard.slice(0, 5).map(r => ({ userId: r.userId, count: r._count.id })),
+          note: `已达最大尺寸 ${MAX_CANVAS_SIZE}x${MAX_CANVAS_SIZE}，保持不变`,
+        })
+        continue
+      }
+      const newSize = canvas.width * 2 // 40→80
+      const oldSize = canvas.width
+      
+      // 读取旧画布所有像素
+      const oldPixels = await prisma.pixel.findMany({
+        where: { canvasId: canvas.id }
+      })
+      
+      // 创建新画布
+      const newCanvas = await prisma.canvas.create({
         data: {
           width: newSize,
           height: newSize,
           status: 'ACTIVE',
         },
       })
+      
+      // 每个旧像素拆分为 4 个小方块（2×2）
+      const newPixels = []
+      for (const px of oldPixels) {
+        const x = px.x
+        const y = px.y
+        // (x,y) → (2x,2y), (2x+1,2y), (2x,2y+1), (2x+1,2y+1)
+        const newPositions = [
+          { x: x * 2, y: y * 2 },
+          { x: x * 2 + 1, y: y * 2 },
+          { x: x * 2, y: y * 2 + 1 },
+          { x: x * 2 + 1, y: y * 2 + 1 },
+        ]
+        for (const pos of newPositions) {
+          newPixels.push({
+            canvasId: newCanvas.id,
+            userId: px.userId, // 用户保留
+            x: pos.x,
+            y: pos.y,
+            color: px.color, // 颜色复制
+          })
+        }
+      }
+      
+      // 批量写入
+      if (newPixels.length > 0) {
+        await prisma.pixel.createMany({
+          data: newPixels,
+        })
+      }
 
       // 4. 给画布拥有者发放积分奖励
       if (ownerId) {

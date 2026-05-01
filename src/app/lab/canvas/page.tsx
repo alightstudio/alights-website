@@ -190,25 +190,13 @@ export default function CanvasPage() {
     return () => clearInterval(iv)
   }, [lastRandomChangeAt])
 
-  // 画布自适应：所有设备统一自动缩放居中
+  // Canvas 尺寸：固定 600x600，不随窗口变化
   useEffect(() => {
-    if (!canvasInfo || !containerRef.current) return
-    const container = containerRef.current
-    const padW = 24
-    const padH = 24
-    const cw = container.clientWidth - padW
-    const ch = container.clientHeight - padH
-    if (cw <= 0 || ch <= 0) return
-    const autoZoom = Math.max(0.5, Math.min(10,
-      Math.min(cw / (canvasInfo.width * CELL_BASE), ch / (canvasInfo.height * CELL_BASE))
-    ))
-    const canvasPxW = canvasInfo.width * CELL_BASE * autoZoom
-    const canvasPxH = canvasInfo.height * CELL_BASE * autoZoom
-    setZoom(autoZoom)
-    setOffset({
-      x: (container.clientWidth - canvasPxW) / 2,
-      y: (container.clientHeight - canvasPxH) / 2,
-    })
+    if (!canvasInfo) return
+    const DISPLAY_SIZE = 600
+    const computedZoom = DISPLAY_SIZE / (canvasInfo.width * CELL_BASE)
+    setZoom(computedZoom)
+    setOffset({ x: 0, y: 0 })
   }, [canvasInfo])
 
   // Canvas 渲染
@@ -218,23 +206,31 @@ export default function CanvasPage() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const cellSize = CELL_BASE * zoom
+    // 固定 canvas 尺寸为 600x600，不依赖容器大小
+    const DISPLAY_SIZE = 600
+
+    // 关键：同时设置物理像素和 CSS 尺寸，两者都是正方形
+    canvas.width = DISPLAY_SIZE
+    canvas.height = DISPLAY_SIZE
+    canvas.style.width = DISPLAY_SIZE + 'px'
+    canvas.style.height = DISPLAY_SIZE + 'px'
+
+    // 画布内容尺寸（可能不是正方形，如 160×120）
+    const cellSize = DISPLAY_SIZE / canvasInfo.width
     const canvasW = canvasInfo.width * cellSize
     const canvasH = canvasInfo.height * cellSize
-    const container = containerRef.current
-    canvas.width = container ? container.clientWidth : 800
-    canvas.height = container ? container.clientHeight : 600
+    // 内容在 canvas 内的居中偏移
+    const ox = (DISPLAY_SIZE - canvasW) / 2
+    const oy = (DISPLAY_SIZE - canvasH) / 2
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    // 填充背景
+    ctx.clearRect(0, 0, DISPLAY_SIZE, DISPLAY_SIZE)
     ctx.fillStyle = '#1a1a1a'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillRect(0, 0, DISPLAY_SIZE, DISPLAY_SIZE)
 
-    ctx.save()
-    ctx.translate(offset.x, offset.y)
-
-    // 画布背景
+    // 画布内容区域
     ctx.fillStyle = '#FFFFFF'
-    ctx.fillRect(0, 0, canvasW, canvasH)
+    ctx.fillRect(ox, oy, canvasW, canvasH)
 
     // 绘制像素
     pixelMap.forEach((color, key) => {
@@ -242,7 +238,7 @@ export default function CanvasPage() {
       const px = parseInt(key.substring(0, sep))
       const py = parseInt(key.substring(sep + 1))
       ctx.fillStyle = color
-      ctx.fillRect(px * cellSize, py * cellSize, cellSize, cellSize)
+      ctx.fillRect(ox + px * cellSize, oy + py * cellSize, cellSize, cellSize)
     })
 
     // 网格线
@@ -250,31 +246,29 @@ export default function CanvasPage() {
       ctx.strokeStyle = 'rgba(0,0,0,0.08)'
       ctx.lineWidth = 0.5
       for (let i = 0; i <= canvasInfo.width; i++) {
-        ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvasH); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(ox + i * cellSize, oy); ctx.lineTo(ox + i * cellSize, oy + canvasH); ctx.stroke()
       }
       for (let i = 0; i <= canvasInfo.height; i++) {
-        ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvasW, i * cellSize); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(ox, oy + i * cellSize); ctx.lineTo(ox + canvasW, oy + i * cellSize); ctx.stroke()
       }
+    }
+
+    // 悬停预览
+    if (hoverPos && zoom >= 1.5) {
+      ctx.fillStyle = 'rgba(0,0,0,0.12)'
+      ctx.fillRect(ox + hoverPos.x * cellSize, oy + hoverPos.y * cellSize, cellSize, cellSize)
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'
+      ctx.lineWidth = 1.5
+      ctx.strokeRect(ox + hoverPos.x * cellSize, oy + hoverPos.y * cellSize, cellSize, cellSize)
     }
 
     // 刚刚放置的像素高亮
     if (placedPixel) {
       ctx.strokeStyle = '#FFD700'
       ctx.lineWidth = 3
-      ctx.strokeRect(placedPixel.x * cellSize, placedPixel.y * cellSize, cellSize, cellSize)
+      ctx.strokeRect(ox + placedPixel.x * cellSize, oy + placedPixel.y * cellSize, cellSize, cellSize)
     }
-
-    // 悬停预览
-    if (hoverPos && zoom >= 1.5) {
-      ctx.fillStyle = 'rgba(0,0,0,0.12)'
-      ctx.fillRect(hoverPos.x * cellSize, hoverPos.y * cellSize, cellSize, cellSize)
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)'
-      ctx.lineWidth = 1.5
-      ctx.strokeRect(hoverPos.x * cellSize, hoverPos.y * cellSize, cellSize, cellSize)
-    }
-
-    ctx.restore()
-  }, [canvasInfo, pixelMap, zoom, offset, hoverPos, placedPixel])
+  }, [canvasInfo, pixelMap, zoom, hoverPos, placedPixel])
 
   useEffect(() => {
     const frame = requestAnimationFrame(renderCanvas)
@@ -288,16 +282,23 @@ export default function CanvasPage() {
     return () => clearTimeout(t)
   }, [placedPixel])
 
-  // 屏幕坐标 -> 逻辑坐标
+  // 屏幕坐标 -> 逻辑坐标（像素在画布上的位置）
   const screenToCanvas = useCallback((screenX: number, screenY: number) => {
-    const rect = canvasRef.current?.getBoundingClientRect()
-    if (!rect || !canvasInfo) return null
-    const cellSize = CELL_BASE * zoom
-    const x = Math.floor((screenX - rect.left - offset.x) / cellSize)
-    const y = Math.floor((screenY - rect.top - offset.y) / cellSize)
+    const canvas = canvasRef.current
+    if (!canvas || !canvasInfo) return null
+    const rect = canvas.getBoundingClientRect()
+    // fitSize 是 canvas 物理像素（也是 CSS 渲染尺寸，因为两者已同步）
+    const fitSize = rect.width
+    const cellSize = fitSize / canvasInfo.width
+    // 内容在 canvas 内的居中偏移
+    const ox = (fitSize - canvasInfo.width * cellSize) / 2
+    const oy = (fitSize - canvasInfo.height * cellSize) / 2
+    // 坐标 = (屏幕点击 - canvas rect 左边/顶边 - 内容偏移) / cellSize
+    const x = Math.floor((screenX - rect.left - ox) / cellSize)
+    const y = Math.floor((screenY - rect.top - oy) / cellSize)
     if (x < 0 || x >= canvasInfo.width || y < 0 || y >= canvasInfo.height) return null
     return { x, y }
-  }, [canvasInfo, zoom, offset])
+  }, [canvasInfo])
 
   // 鼠标事件：仅点击放置像素，无平移缩放
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -537,20 +538,20 @@ export default function CanvasPage() {
         )}
       </div>
 
-      {/* Canvas */}
-      <div ref={containerRef}
-        className="flex-1 mx-6 md:mx-12 border border-dark-700 overflow-hidden relative bg-dark-900 rounded-sm"
-        style={{
-          minHeight: '60vh',
-          cursor: 'crosshair',
-          touchAction: 'auto',
-        }}
+      {/* Canvas — 固定 600x600，居中显示 */}
+      <div
+        ref={containerRef}
+        className="flex items-center justify-center cursor-crosshair mx-auto"
+        style={{ width: '600px', height: '600px', touchAction: 'none' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onContextMenu={handleRightClick}
       >
-        <canvas ref={canvasRef} className="w-full h-full" />
+        <canvas
+          ref={canvasRef}
+          style={{ imageRendering: 'pixelated' }}
+        />
 
         {/* 像素信息弹窗 */}
         {pixelInfo && (() => {

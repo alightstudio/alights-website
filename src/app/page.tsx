@@ -1,8 +1,20 @@
 import { prisma } from '@/lib/prisma'
 import HomeClient from './HomeClient'
 import { COMPANY_NAME, SLOGAN } from '@/lib/site-constants'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: `首页 | 栖光文化 ALIGHTS`,
+  description: `${SLOGAN} · 光栖之处，自有答案。专注高端TVC广告、产品动画、AIGC视觉特效、发布会大屏视觉、影视剧制作。`,
+  keywords: '栖光,视效,TVC广告,AIGC,产品动画,发布会大屏,影视剧,3D渲染,CG',
+  openGraph: {
+    title: `${COMPANY_NAME} | ${SLOGAN}`,
+    description: '专注高端TVC广告、产品动画、AIGC视觉特效、发布会大屏视觉、影视剧制作',
+    type: 'website',
+  },
+}
 
 const DEFAULT_HERO = { title: '栖光', titleEn: 'ALIGHTS', subtitle: SLOGAN, subtitleEn: 'Where Alights There Essence', tags: ['TVC广告', '产品动画', 'AIGC', '发布会', '影视剧'] }
 const DEFAULT_BRAND_DISPLAY = { opacity: 0.75, opacityHover: 1, grayscale: true, grayscaleHover: true }
@@ -109,10 +121,26 @@ async function getInitialWorks() {
 }
 
 export default async function HomePage() {
-  const [initialConfig, initialWorks] = await Promise.all([
-    getInitialConfig(),
-    getInitialWorks(),
-  ])
+  let initialConfig = {
+    hero: DEFAULT_HERO,
+    company: DEFAULT_COMPANY,
+    services: DEFAULT_SERVICES,
+    brands: DEFAULT_BRANDS,
+    brandDisplay: DEFAULT_BRAND_DISPLAY,
+    navigation: null,
+    particle: null,
+    spotlight: null,
+  }
+  let initialWorks: any[] = []
+
+  try {
+    ;[initialConfig, initialWorks] = await Promise.all([
+      getInitialConfig(),
+      getInitialWorks(),
+    ])
+  } catch {
+    // fall through with defaults
+  }
 
   return <HomeClient initialConfig={initialConfig} initialWorks={initialWorks} />
 }

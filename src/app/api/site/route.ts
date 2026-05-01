@@ -164,7 +164,14 @@ export async function GET() {
       contact: { phone: configMap.contact?.phone || DEFAULT_CONTACT.phone, email: configMap.contact?.email || DEFAULT_CONTACT.email, address: configMap.contact?.address || DEFAULT_CONTACT.address, wechat: configMap.contact?.wechat || "" },
       seo: configMap.seo || DEFAULT_SEO,
       hero: (() => { const h = configMap.hero || DEFAULT_HERO; if (h && typeof h.tags === 'string') h.tags = h.tags.split(',').map((t: string) => t.trim()); return h; })(),
-      featuredWorks: configMap.featuredWorks || [],
+      featuredWorks: (() => {
+        try {
+          const cached = configMap.featuredWorks
+          if (cached && Array.isArray(cached) && cached.length > 0) return cached
+          // Fallback: 同步返回空数组，后续 works page 会处理无数据情况
+        } catch {}
+        return []
+      })(),
       services: configMap.services || [],
       brands: configMap.brands || [],
       brandDisplay: configMap.brandDisplay || { opacity: 0.75, opacityHover: 1, grayscale: true, grayscaleHover: true },

@@ -80,7 +80,7 @@ export default function CanvasGallery() {
     if (c.pixels && c.pixels.length > 0) {
       const cellSize = Math.floor(200 / Math.max(c.width, c.height))
       const offsetX = Math.floor((240 - c.width * cellSize) / 2)
-      const offsetY = Math.floor((180 - c.height * cellSize) / 2)
+      const offsetY = Math.floor((240 - c.height * cellSize) / 2)
       for (const p of c.pixels) {
         if (p.x < c.width && p.y < c.height) {
           ctx.fillStyle = p.color

@@ -11,7 +11,6 @@ const DEFAULT_FOOTER: FooterConfig = {
       { label: '作品集', href: '/works', order: 0 },
       { label: '创意灵感', href: '/gallery', order: 1 },
       { label: '社区', href: '/community', order: 2 },
-      { label: '画板', href: '/canvas', order: 3 },
       { label: '关于我们', href: '/about', order: 4 },
       { label: '联系方式', href: '/contact', order: 5 },
     ]},
@@ -38,7 +37,8 @@ function buildContactItems(contact: { wechat?: string; email?: string; address?:
 }
 
 export default function Footer({ initialFooter, initialContact }: FooterProps) {
-  const cfg = initialFooter || DEFAULT_FOOTER
+  // 空对象 {} 是 truthy，需要检查 keys 长度来触发 fallback
+  const cfg = (initialFooter && Object.keys(initialFooter).length > 0) ? initialFooter : DEFAULT_FOOTER
 
   // 动态覆盖联系栏：优先使用 contact 配置生成，否则用 footer 中的静态 items
   const dynamicContactItems = buildContactItems(initialContact)

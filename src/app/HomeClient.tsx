@@ -100,7 +100,8 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-dark-900"><NoiseBg /></div>
-        {particleConfig && <ParticleBackground config={particleConfig} />}
+        {/* 粒子效果：config 为 null 时组件使用 DEFAULTS 默认值 */}
+        <ParticleBackground config={particleConfig ?? null} />
         <div className="absolute inset-0 bg-gradient-to-b from-dark-900/50 via-dark-800/80 to-dark-900" />
         <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent-gold/20 to-transparent" />
         <div className="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-accent-gold/10 to-transparent" />

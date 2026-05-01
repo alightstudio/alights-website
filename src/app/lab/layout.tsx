@@ -1,20 +1,14 @@
 import type { Metadata } from 'next'
-import '../globals.css'
-import { COMPANY_NAME } from '@/lib/site-constants'
+import LabPage from './page'
 
 export const metadata: Metadata = {
-  title: '栖光实验室 | Alights Lab',
-  description: `${COMPANY_NAME} - 交互实验空间`,
+  title: '实验室 | 栖光文化 ALIGHTS',
+  description: '栖光文化创意实验室——像素画布、光迹特效等互动实验项目，探索视觉艺术的边界。',
+  openGraph: {
+    title: '实验室 | 栖光文化 ALIGHTS',
+    description: '像素画布、光迹特效等互动实验项目，探索视觉艺术的边界。',
+    type: 'website',
+  },
 }
 
-export default function LabLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <div className="bg-dark-950 min-h-screen">
-      {children}
-    </div>
-  )
-}
+export default LabPage

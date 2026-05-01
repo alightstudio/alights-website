@@ -26,6 +26,10 @@ const nextConfig = {
         destination: '/experiments/sinuous/index.html',
       },
       {
+        source: '/lab/sonic',
+        destination: '/experiments/sonic/index.html',
+      },
+      {
         source: '/lab/touch',
         destination: '/experiments/touch/index.html',
       },

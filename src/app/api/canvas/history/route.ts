@@ -32,7 +32,7 @@ export async function GET() {
           where: { canvasId: c.id },
           select: { x: true, y: true, color: true },
           orderBy: { placedAt: 'desc' },
-          take: 576,
+          // 返回所有像素用于缩略图渲染，最大 25600 像素（160x160）
         })
 
         // 获取用户放置的像素数（排除 SYSTEM）

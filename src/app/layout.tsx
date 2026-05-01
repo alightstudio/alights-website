@@ -99,13 +99,21 @@ async function fetchFontCSS(fonts: FontOption[], text?: string): Promise<{ fontC
     if (local) {
       return local.cssContent
     }
-    const url = googleFontUrl(font, text)
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(5000),
-      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
-    })
-    if (!res.ok) return ''
-    return await res.text()
+    // Google Fonts 需要外部网络请求，Vercel serverless 可能无法访问，失败时优雅降级
+    try {
+      const url = googleFontUrl(font, text)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+      })
+      clearTimeout(timeoutId)
+      if (!res.ok) return ''
+      return await res.text()
+    } catch {
+      return ''
+    }
   }))
   const allCSS = results.map(r => r.status === 'fulfilled' ? r.value : '').filter(Boolean).join('\n')
   // 收集所有字体文件 URL（包括本地和 Google）
@@ -137,29 +145,36 @@ function extractSubsetChars(...objects: any[]): string {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { fonts, cssVars } = await getThemeConfig()
+  let fonts: FontOption[] = []
+  let cssVars: Record<string, string> = {}
+  try { ({ fonts, cssVars } = await getThemeConfig()) } catch {}
 
-  const [heroCfg, companyCfg, servicesCfg, navCfg, footerCfg, contactCfg] = await Promise.all([
-    prisma.siteConfig.findFirst({ where: { key: 'hero' } }),
-    prisma.siteConfig.findFirst({ where: { key: 'company' } }),
-    prisma.siteConfig.findFirst({ where: { key: 'services' } }),
-    prisma.siteConfig.findFirst({ where: { key: 'navigation' } }),
-    prisma.siteConfig.findFirst({ where: { key: 'footer' } }),
-    prisma.siteConfig.findFirst({ where: { key: 'contact' } }),
-  ])
-
-  const heroVal = heroCfg ? JSON.parse(heroCfg.value) : {}
-  const companyVal = companyCfg ? JSON.parse(companyCfg.value) : {}
-  const servicesVal = servicesCfg ? JSON.parse(servicesCfg.value) : {}
-  const navVal = navCfg ? JSON.parse(navCfg.value) : {}
-  const footerVal = footerCfg ? JSON.parse(footerCfg.value) : {}
-  const contactVal = contactCfg ? JSON.parse(contactCfg.value) : null
+  let heroVal: Record<string, any> = {}; let companyVal: Record<string, any> = {}; let servicesVal: Record<string, any> = {}; let navVal: Record<string, any> = {}; let footerVal: Record<string, any> = {}; let contactVal: any = null
+  try {
+    const [heroCfg, companyCfg, servicesCfg, navCfg, footerCfg, contactCfg] = await Promise.all([
+      prisma.siteConfig.findFirst({ where: { key: 'hero' } }),
+      prisma.siteConfig.findFirst({ where: { key: 'company' } }),
+      prisma.siteConfig.findFirst({ where: { key: 'services' } }),
+      prisma.siteConfig.findFirst({ where: { key: 'navigation' } }),
+      prisma.siteConfig.findFirst({ where: { key: 'footer' } }),
+      prisma.siteConfig.findFirst({ where: { key: 'contact' } }),
+    ])
+    heroVal = heroCfg ? JSON.parse(heroCfg.value) : {}
+    companyVal = companyCfg ? JSON.parse(companyCfg.value) : {}
+    servicesVal = servicesCfg ? JSON.parse(servicesCfg.value) : {}
+    navVal = navCfg ? JSON.parse(navCfg.value) : {}
+    footerVal = footerCfg ? JSON.parse(footerCfg.value) : {}
+    contactVal = contactCfg ? JSON.parse(contactCfg.value) : null
+  } catch {
+    // all defaults remain
+  }
 
   const basicChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.·:：!？，。、；（）—&©'
   const pageChars = extractSubsetChars(heroVal, companyVal, servicesVal, navVal, footerVal)
   const fontSubsetText = basicChars + pageChars
 
-  const { fontCSS, fontUrls } = fonts.length > 0 ? await fetchFontCSS(fonts, fontSubsetText) : { fontCSS: '', fontUrls: [] }
+  let fontCSS = ''; let fontUrls: string[] = []
+  try { ({ fontCSS, fontUrls } = fonts.length > 0 ? await fetchFontCSS(fonts, fontSubsetText) : { fontCSS: '', fontUrls: [] }) } catch {}
   const styleContent = fontCSS
     ? `${fontCSS}\n:root{${Object.entries(cssVars).map(([k, v]) => `${k}:${v}`).join(';')}}`
     : `:root{${Object.entries(cssVars).map(([k, v]) => `${k}:${v}`).join(';')}}`
@@ -175,14 +190,30 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     contact: 'Contact',
     lab: 'Lab',
   }
-  let items = navSite?.items?.filter((i: any) => i.visible !== false && i.href !== '/canvas') || []
-  // 添加英文和实验室入口（放在联系合作后面）
-  if (!items.find((i: any) => i.href === '/lab')) {
-    items.push({ id: 'lab', label: '实验室', labelEn: 'Lab', href: '/lab', visible: true, order: items.length })
+  // Fallback 默认导航（数据库不可用时也保证完整菜单，不含像素画布入口，画布只在 /lab 中提供）
+  const DEFAULT_NAV_ITEMS = [
+    { id: 'home', label: '首页', labelEn: 'Home', href: '/', visible: true, order: 0 },
+    { id: 'works', label: '作品集', labelEn: 'Works', href: '/works', visible: true, order: 1 },
+    { id: 'gallery', label: '创意灵感', labelEn: 'Inspiration', href: '/gallery', visible: true, order: 2 },
+    { id: 'community', label: '社区', labelEn: 'Community', href: '/community', visible: true, order: 4 },
+    { id: 'about', label: '关于我们', labelEn: 'About', href: '/about', visible: true, order: 5 },
+    { id: 'contact', label: '联系合作', labelEn: 'Contact', href: '/contact', visible: true, order: 6 },
+    { id: 'lab', label: '实验室', labelEn: 'Lab', href: '/lab', visible: true, order: 7 },
+  ]
+  // 始终过滤掉 /canvas 入口，画布仅在 /lab 实验室中提供
+  let items = navSite?.items?.filter((i: any) => i.visible !== false && i.href !== '/canvas' && i.href !== '/canvas/gallery') || []
+  // 数据库为空时使用默认导航
+  if (items.length === 0) {
+    items = DEFAULT_NAV_ITEMS
+  } else {
+    // 添加实验室入口（如果不在列表中）
+    if (!items.find((i: any) => i.href === '/lab')) {
+      items.push({ id: 'lab', label: '实验室', labelEn: 'Lab', href: '/lab', visible: true, order: items.length })
+    }
   }
   // 补上英文标签
   items = items.map((i: any) => ({ ...i, labelEn: i.labelEn || EN_LABELS[i.id] || '' }))
-  const footer = footerVal || null
+  const footer = footerVal as any || null
 
   return (
     <html lang="zh-CN">

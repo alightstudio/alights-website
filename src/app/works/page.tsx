@@ -11,6 +11,7 @@ interface FeaturedWork {
   category: string
   categoryEn: string
   image: string
+  coverUrl?: string
   homepageOrder: number | null
   videoUrl?: string
   views?: number
@@ -63,7 +64,7 @@ export default function WorksPage() {
 
   const filteredWorks = activeCategory === '全部'
     ? allWorks
-    : allWorks.filter(work => work.category === activeCategory)
+    : allWorks.filter(work => (work as any).category === activeCategory)
 
   if (loading) {
     return (
@@ -153,12 +154,12 @@ export default function WorksPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.04 }}
               className="group relative aspect-video bg-dark-700 overflow-hidden cursor-pointer"
-              onClick={() => { trackWorkClick(work.id); work.videoUrl && window.open(work.videoUrl, '_blank') }}
+              onClick={() => { trackWorkClick(work.id); (work as any).videoUrl && window.open((work as any).videoUrl, '_blank') }}
             >
               {/* Thumbnail */}
               <img
-                src={work.image}
-                alt={work.title}
+                src={(work as any).image || (work as any).coverUrl || ''}
+                alt={(work as any).title}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(e) => {
@@ -175,9 +176,9 @@ export default function WorksPage() {
               />
 
               {/* Views Badge (top left) */}
-              {work.views && work.views > 0 && (
+              {(work as any).views && (work as any).views > 0 && (
                 <div className="absolute top-3 left-3 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5 z-10">
-                  🔥 {work.views.toLocaleString()}
+                  🔥 {(work as any).views.toLocaleString()}
                 </div>
               )}
 
@@ -189,7 +190,7 @@ export default function WorksPage() {
                   </span>
                 )}
                 <span className="bg-black/60 text-gray-300 text-xs px-2 py-0.5">
-                  {work.category}
+                  {(work as any).category}
                 </span>
               </div>
 
@@ -198,14 +199,14 @@ export default function WorksPage() {
               
               {/* Info */}
               <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                <h3 className="text-lg font-light mb-1 leading-snug">{work.title}</h3>
-                {work.views != null && (
-                  <p className="text-xs text-accent-gold/60">🔥 {work.views.toLocaleString()} 次播放</p>
+                <h3 className="text-lg font-light mb-1 leading-snug">{(work as any).title}</h3>
+                {(work as any).views != null && (
+                  <p className="text-xs text-accent-gold/60">🔥 {(work as any).views.toLocaleString()} 次播放</p>
                 )}
               </div>
 
               {/* Play Button */}
-              {work.videoUrl && (
+              {(work as any).videoUrl && (
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="w-16 h-16 rounded-full border border-white/30 flex items-center justify-center">
                     <div className="w-0 h-0 border-l-[10px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { trackWorkClick } from '@/lib/points'
+import { proxyImageUrl } from '@/lib/proxy-image'
 import stash176Raw from '@/data/stash-works.json'
 import stash175Raw from '@/data/stash175.json'
 import stash174Raw from '@/data/stash174.json'
@@ -35,6 +36,11 @@ import stash146Raw from '@/data/stash146.json'
 import stash145Raw from '@/data/stash145.json'
 import stash150Raw from '@/data/stash150.json'
 import stash160Raw from '@/data/stash160.json'
+import stash144Raw from '@/data/stash144.json'
+import stash143Raw from '@/data/stash143.json'
+import stash142Raw from '@/data/stash142.json'
+import stash141Raw from '@/data/stash141.json'
+import stash140Raw from '@/data/stash140.json'
 
 interface StashWork {
   id: string
@@ -47,6 +53,7 @@ interface StashWork {
   likes: number
   collects: number
   heat: number
+  score: number
   author: string
 }
 
@@ -61,12 +68,13 @@ function transform(w: any): StashWork {
     views: w.count_view,
     likes: w.count_like,
     collects: w.count_collect,
-    heat: w.count_view + w.count_like * 5 + w.count_collect * 10,
+    heat: w.count_score ?? (w.count_view + w.count_like * 5 + w.count_collect * 10),
+    score: w.count_score ?? 0,
     author: w.author || '未知',
   }
 }
 
-function sortByHeat(a: StashWork, b: StashWork) { return (b.heat || 0) - (a.heat || 0) }
+function sortByHeat(a: StashWork, b: StashWork) { return (b.score || b.heat || 0) - (a.score || a.heat || 0) }
 function sortByViews(a: StashWork, b: StashWork) { return (b.views || 0) - (a.views || 0) }
 
 const stash176Data: StashWork[] = stash176Raw.map(transform).sort(sortByHeat)
@@ -101,6 +109,11 @@ const stash148Data: StashWork[] = stash148Raw.map(transform).sort(sortByHeat)
 const stash147Data: StashWork[] = stash147Raw.map(transform).sort(sortByHeat)
 const stash146Data: StashWork[] = stash146Raw.map(transform).sort(sortByHeat)
 const stash145Data: StashWork[] = stash145Raw.map(transform).sort(sortByHeat)
+const stash144Data: StashWork[] = stash144Raw.map(transform).sort(sortByHeat)
+const stash143Data: StashWork[] = stash143Raw.map(transform).sort(sortByHeat)
+const stash142Data: StashWork[] = stash142Raw.map(transform).sort(sortByHeat)
+const stash141Data: StashWork[] = stash141Raw.map(transform).sort(sortByHeat)
+const stash140Data: StashWork[] = stash140Raw.map(transform).sort(sortByHeat)
 
 const allStashes = [
   { id: '176', label: 'Stash 176', data: stash176Data },
@@ -135,6 +148,11 @@ const allStashes = [
   { id: '147', label: 'Stash 147', data: stash147Data },
   { id: '146', label: 'Stash 146', data: stash146Data },
   { id: '145', label: 'Stash 145', data: stash145Data },
+  { id: '144', label: 'Stash 144', data: stash144Data },
+  { id: '143', label: 'Stash 143', data: stash143Data },
+  { id: '142', label: 'Stash 142', data: stash142Data },
+  { id: '141', label: 'Stash 141', data: stash141Data },
+  { id: '140', label: 'Stash 140', data: stash140Data },
 ]
 
 const totalWorks = allStashes.reduce((s, st) => s + st.data.length, 0)
@@ -162,6 +180,7 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
   }, [sortMode, works])
 
   const totalPlays = works.reduce((s, w) => s + (w.views || 0), 0)
+  const totalScore = works.reduce((s, w) => s + (w.score || 0), 0)
 
   return (
     <div className="mb-16">
@@ -180,7 +199,7 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
         <div className="hidden sm:block flex-1 h-px bg-dark-700" />
         <span className="text-sm text-gray-500">{works.length} 部作品</span>
         {totalViews !== undefined && (
-          <span className="text-xs text-accent-gold/50">🔥 累计 {totalPlays.toLocaleString()}</span>
+          <span className="text-xs text-accent-gold/50">🔥 累计 {totalScore.toLocaleString()} 人气</span>
         )}
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -198,9 +217,9 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
           >
             <div className="relative aspect-video bg-dark-800 border border-dark-700 overflow-hidden mb-3">
               <img
-                src={work.thumbnail}
+                src={proxyImageUrl(work.thumbnail)}
                 alt={work.title}
-                referrerPolicy="no-referrer"
+                
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
@@ -219,11 +238,14 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
                   parent.appendChild(div)
                 }}
               />
+              <div className="absolute top-2 left-2 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5">
+                🔥 {(work.score || work.views).toLocaleString()}
+              </div>
               <div className="absolute top-2 right-2 bg-black/70 text-xs text-gray-400 px-2 py-0.5">
                 {formatDuration(work.duration)}
               </div>
-              <div className="absolute top-2 left-2 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5">
-                🔥 {work.views.toLocaleString()}
+              <div className="absolute bottom-2 left-2 bg-black/70 text-xs text-gray-400 px-2 py-0.5">
+                👁 {work.views.toLocaleString()} 播放
               </div>
               <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="text-4xl">▶</span>
@@ -234,7 +256,7 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
             </h3>
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span className="truncate mr-2">{work.categories || work.author}</span>
-              <span className="text-accent-gold/50 shrink-0">{work.views.toLocaleString()} 播放</span>
+              <span className="text-accent-gold/50 shrink-0">🔥 {(work.score || work.views).toLocaleString()}</span>
             </div>
           </motion.a>
         ))}
@@ -257,7 +279,7 @@ export default function GalleryPage() {
     { label: '最新收藏 (170-176)', stashes: allStashes.filter(s => parseInt(s.id) >= 170) },
     { label: '中期收藏 (160-169)', stashes: allStashes.filter(s => parseInt(s.id) >= 160 && parseInt(s.id) < 170) },
     { label: '早期收藏 (150-159)', stashes: allStashes.filter(s => parseInt(s.id) >= 150 && parseInt(s.id) < 160) },
-    { label: '更早收藏 (145-149)', stashes: allStashes.filter(s => parseInt(s.id) < 150) },
+    { label: '更早收藏 (140-149)', stashes: allStashes.filter(s => parseInt(s.id) >= 140 && parseInt(s.id) < 150) },
   ]
 
   return (

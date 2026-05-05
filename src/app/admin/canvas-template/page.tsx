@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { FAMOUS_PAINTINGS, TEMPLATE_SIZE, PaintingTemplate } from '@/lib/famous-paintings'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +17,8 @@ export default function CanvasTemplateAdmin() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [total, setTotal] = useState(0)
+  const [thumbMap, setThumbMap] = useState<Map<string, string[][]>>(new Map())
 
   useEffect(() => {
     loadData()
@@ -25,10 +26,22 @@ export default function CanvasTemplateAdmin() {
 
   async function loadData() {
     try {
-      const res = await fetch('/api/admin/canvas-template')
-      const data = await res.json()
-      setPaintings(data.paintings || [])
-      setCurrent(data.current || 'starry-night')
+      const [tmplRes, thumbRes] = await Promise.all([
+        fetch('/api/admin/canvas-template'),
+        fetch('/api/admin/canvas-template/thumbnails'),
+      ])
+      const tmplData = await tmplRes.json()
+      const thumbData = await thumbRes.json()
+      setPaintings(tmplData.paintings || [])
+      setCurrent(tmplData.current || 'starry-night')
+      setTotal(tmplData.paintings?.length || 0)
+      if (thumbData.thumbnails) {
+        const map: Map<string, string[][]> = new Map()
+        for (const t of thumbData.thumbnails as any[]) {
+          map.set(t.id, t.grid)
+        }
+        setThumbMap(map)
+      }
     } catch (e) {
       setError('加载失败')
     } finally {
@@ -68,8 +81,8 @@ export default function CanvasTemplateAdmin() {
 
       <div className="max-w-6xl">
         <p className="text-gray-400 mb-6">
-          选择画布自动填充时使用的名画底稿。填充时 100% 由底稿引导（位置+颜色均来自底稿），画面更协调。
-          画布尺寸：{TEMPLATE_SIZE}×{TEMPLATE_SIZE}（共 {TEMPLATE_SIZE * TEMPLATE_SIZE} 格）。
+          选择画布自动填充时使用的名画底稿。每次自动填充时，严格按底稿坐标（位置+颜色）引导，100% 循底稿，无随机色彩。
+          画布尺寸：40×40 → 80×80（满格自动扩展）。名画库共 {total} 幅，每天自动随机切换。
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
@@ -77,6 +90,7 @@ export default function CanvasTemplateAdmin() {
             <PaintingCard
               key={p.id}
               painting={p}
+              thumbGrid={thumbMap.get(p.id)}
               isSelected={current === p.id}
               onClick={() => setCurrent(p.id)}
             />
@@ -104,34 +118,33 @@ export default function CanvasTemplateAdmin() {
   )
 }
 
-// ─── 单张画卡（含像素预览） ───
+// ─── 单张画卡（含真实像素缩略图） ───
 
-function PaintingCard({ painting, isSelected, onClick }: {
+function PaintingCard({ painting, thumbGrid, isSelected, onClick }: {
   painting: PaintingItem
+  thumbGrid?: string[][]
   isSelected: boolean
   onClick: () => void
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
+  // 绘制 40×40 缩略图到 canvas（80×80 像素，每格 2px）
   useEffect(() => {
-    // 通过 id 找到完整像素数据
-    const full = FAMOUS_PAINTINGS.find(p => p.id === painting.id)
-    if (!full || !canvasRef.current) return
-
-    const cvs = canvasRef.current
-    const ctx = cvs.getContext('2d')
+    const canvas = canvasRef.current
+    if (!canvas || !thumbGrid) return
+    canvas.width = 80
+    canvas.height = 80
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
-
-    const size = full.pixelData.length
-    const cellSize = cvs.width / size
-
+    const size = 40 // 40×40 网格
+    const cellSize = 80 / size // 2px per cell
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
-        ctx.fillStyle = full.pixelData[y][x]
-        ctx.fillRect(x * cellSize, y * cellSize, Math.ceil(cellSize), Math.ceil(cellSize))
+        ctx.fillStyle = thumbGrid[y]?.[x] ?? '#000'
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
       }
     }
-  }, [painting.id])
+  }, [thumbGrid])
 
   return (
     <div
@@ -142,13 +155,22 @@ function PaintingCard({ painting, isSelected, onClick }: {
       }`}
       onClick={onClick}
     >
-      <canvas
-        ref={canvasRef}
-        width={160}
-        height={160}
-        className="w-full aspect-square rounded mb-2 block"
-        style={{ imageRendering: 'pixelated' }}
-      />
+      {/* 像素缩略图 */}
+      <div className="w-full aspect-square rounded mb-2 overflow-hidden bg-black/40">
+        {thumbGrid ? (
+          <canvas
+            ref={canvasRef}
+            width={80}
+            height={80}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs animate-pulse">
+            加载中...
+          </div>
+        )}
+      </div>
+
       <h3 className="font-medium text-sm truncate">{painting.title}</h3>
       <p className="text-xs text-gray-400 truncate">{painting.artist}（{painting.year}）</p>
       {isSelected && (

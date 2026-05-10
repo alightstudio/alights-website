@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
+import { awardPoints } from '@/lib/points'
 
 import { verifyAdminSession } from '@/lib/admin-auth'
 
@@ -48,6 +49,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     data: { content: content.trim(), postId, authorId: userId },
     include: { author: { select: { id: true, name: true } } },
   })
+
+  // 评论奖励积分（每日最多10次，每次2分）
+  awardPoints(userId, 2, 'comment_create', 20).catch(console.error)
+
   return NextResponse.json(comment, { status: 201 })
 }
 

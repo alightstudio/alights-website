@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import SpotlightText, { resolveSpotlightConfig, SpotlightConfig } from '@/components/SpotlightText'
 import topInspirations from '@/data/top-inspirations.json'
 import { COMPANY_NAME, SLOGAN } from '@/lib/site-constants'
+import { proxyImageUrl } from '@/lib/proxy-image'
 
 // 禁用 SSR 以避免水合不匹配（Canvas 组件在服务端无 DOM）
 const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), { ssr: false })
@@ -127,12 +128,14 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
               />
             </div>
             <div className="mt-2 text-center">
-              <SpotlightText
-                text={hero.subtitleEn}
-                config={spotlightConfig}
-                className="text-sm tracking-wide"
-                glowClassName="text-sm tracking-wide"
-              />
+              <div className="inline-block text-center">
+                <SpotlightText
+                  text={hero.subtitleEn}
+                  config={spotlightConfig}
+                  className="text-sm tracking-wide"
+                  glowClassName="text-sm tracking-wide"
+                />
+              </div>
             </div>
             <div className="flex flex-wrap justify-center gap-4 mt-6 text-xs text-gray-600 tracking-wider">
               {(Array.isArray(hero.tags) ? hero.tags : []).map((tag: string, i: number) => (
@@ -218,9 +221,8 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                 className="group cursor-pointer block">
                 <div className="relative aspect-video bg-dark-800 border border-dark-700 overflow-hidden mb-3">
                   <img
-                    src={work.thumbnail}
+                    src={proxyImageUrl(work.thumbnail)}
                     alt={work.title}
-                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700"
                     loading="lazy"
                   />
@@ -230,7 +232,10 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                     {Math.floor(work.duration / 60)}:{String(work.duration % 60).padStart(2, '0')}
                   </div>
                   <div className="absolute top-2 left-2 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5">
-                    🔥 {work.views.toLocaleString()}
+                    🔥 {(work.heat || work.views).toLocaleString()}
+                  </div>
+                  <div className="absolute bottom-2 left-2 bg-black/70 text-xs text-gray-400 px-2 py-0.5">
+                    👁 {work.views.toLocaleString()} 播放
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-2xl text-accent-gold">查看详情</span>
@@ -239,8 +244,6 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                 <h3 className="text-sm font-light mb-1 group-hover:text-accent-gold/80 transition-colors leading-snug">{work.title}</h3>
                 <div className="flex items-center gap-2 text-xs text-gray-600">
                   <span>{work.categories}</span>
-                  <span>·</span>
-                  <span>{work.views.toLocaleString()} 播放</span>
                 </div>
               </Link>
             ))}
@@ -295,7 +298,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {works.length > 0 ? works.map((work: any) => (
               <Link key={work.id} href="/works" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
-                <Image src={work.coverUrl || ''} alt={work.title} referrerPolicy="no-referrer" fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+                <Image src={proxyImageUrl(work.coverUrl || '')} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                 <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -308,7 +311,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
               </Link>
             )) : DEFAULT_WORKS_PLACEHOLDER.map((work, i) => (
               <Link key={i} href="/works" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
-                <Image src={work.image} alt={work.title} referrerPolicy="no-referrer" fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+                <Image src={proxyImageUrl(work.image)} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                 <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -327,19 +330,41 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
         </div>
       </section>
 
-      {/* Contact CTA */}
-      <section className="py-32 px-6 md:px-12 lg:px-24 bg-dark-800 relative">
+      {/* Contact CTA — Immersive Fullscreen */}
+      <section className="min-h-screen flex flex-col items-center justify-center px-6 relative overflow-hidden">
         <NoiseBg />
-        <div className="max-w-4xl mx-auto text-center relative">
-          <p className="text-xs text-accent-gold/60 tracking-[0.3em] uppercase mb-4">Contact</p>
-          <h2 className="font-display text-4xl md:text-5xl font-light mb-2">开启合作</h2>
-          <p className="text-sm text-gray-500 tracking-wider mb-8">LET&apos;S CREATE TOGETHER</p>
-          <p className="text-gray-400 mb-4 max-w-2xl mx-auto leading-relaxed">无论您的项目规模大小,我们都将用心对待。期待与您一起,用光影创造不凡。</p>
-          <p className="text-gray-600 text-sm mb-12 max-w-2xl mx-auto leading-relaxed">No matter the scale of your project, we approach it with dedication. Let&apos;s create something extraordinary together with light and shadow.</p>
-          <Link href="/contact" className="inline-block border border-accent-gold/40 text-accent-gold px-12 py-4 text-sm tracking-widest uppercase hover:bg-accent-gold/10 transition-all duration-500">
-            联系合作 · Get In Touch
+        <ParticleBackground config={particleConfig ?? null} />
+        {/* Slogan */}
+        <div className="relative z-10 text-center">
+          <p className="text-lg md:text-xl font-light tracking-wider text-gray-400 mb-3">
+            光栖之处·自有答案
+          </p>
+          <p className="text-sm tracking-wide text-gray-600 mb-16 md:mb-20">
+            Where Alights There Essence
+          </p>
+          <Link
+            href="/contact"
+            className="group relative inline-block px-14 py-5 text-sm tracking-[0.3em] uppercase text-accent-gold/80 transition-all duration-700"
+          >
+            <span className="absolute inset-0 border border-accent-gold/20 group-hover:border-accent-gold/50 transition-colors duration-700" />
+            <span className="absolute inset-0 bg-accent-gold/0 group-hover:bg-accent-gold/5 transition-colors duration-700" />
+            <span className="relative">开始对话</span>
           </Link>
+          <div className="mt-5">
+            <Link
+              href="/lab"
+              className="group relative inline-block px-10 py-3.5 text-xs tracking-[0.3em] uppercase text-gray-500 transition-all duration-700"
+            >
+              <span className="absolute inset-0 border border-white/5 group-hover:border-white/20 transition-colors duration-700" />
+              <span className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.02] transition-colors duration-700" />
+              <span className="relative">实验室</span>
+            </Link>
+          </div>
         </div>
+        {/* Bottom line */}
+        <p className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-gray-700 tracking-[0.3em] uppercase whitespace-nowrap">
+          alights.cn
+        </p>
       </section>
     </div>
   )

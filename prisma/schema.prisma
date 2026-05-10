@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
 }
 
 datasource db {
@@ -124,7 +125,30 @@ model ForumPost {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  views       Int      @default(0)
+  likes       Int      @default(0)
+  favorites   Int      @default(0)
+
   comments    ForumComment[]
+  likesRelation ForumPostLike[]
+  tags        ForumPostTag[]
+}
+
+model ForumTag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  posts     ForumPostTag[]
+}
+
+model ForumPostTag {
+  postId String
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    ForumTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
 }
 
 model ForumComment {
@@ -138,6 +162,16 @@ model ForumComment {
   post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+}
+
+model ForumPostLike {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId]) // 一个用户只能给一个帖子点一次赞
 }
 
 // ===== 积分系统 =====
@@ -194,12 +228,14 @@ model Pixel {
   y         Int
   color     String   // hex "#RRGGBB"
   userId    String   @map("user_id")
+  source    String   @default("RANDOM") // TEMPLATE=底稿引导, RANDOM=随机/用户放置
   placedAt  DateTime @default(now())
 
   canvas    Canvas   @relation(fields: [canvasId], references: [id], onDelete: Cascade)
 
   @@unique([canvasId, x, y])
   @@index([canvasId])
+  @@index([canvasId, source])
 }
 
 model CanvasExpansion {

@@ -5,9 +5,10 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
-    // ===== 全时段排行 =====
+    // ===== 全时段排行（排除 SYSTEM，SYSTEM 不计入归属）=====
     const allTimeRaw = await prisma.pixel.groupBy({
       by: ['userId'],
+      where: { userId: { not: 'SYSTEM' } },
       _count: true,
       orderBy: { _count: { userId: 'desc' } },
       take: 50,
@@ -59,7 +60,7 @@ export async function GET() {
     if (activeCanvas) {
       const activeRaw = await prisma.pixel.groupBy({
         by: ['userId'],
-        where: { canvasId: activeCanvas.id },
+        where: { canvasId: activeCanvas.id, userId: { not: 'SYSTEM' } },
         _count: true,
         orderBy: { _count: { userId: 'desc' } },
         take: 20,
@@ -88,8 +89,8 @@ export async function GET() {
     }
 
     // ===== 全局统计 =====
-    const totalUsers = await prisma.pixel.groupBy({ by: ['userId'] })
-    const totalPixelsAll = await prisma.pixel.count()
+    const totalUsers = await prisma.pixel.groupBy({ by: ['userId'], where: { userId: { not: 'SYSTEM' } } })
+    const totalPixelsAll = await prisma.pixel.count() // 含 SYSTEM（统计用）
 
     return NextResponse.json({
       allTime,

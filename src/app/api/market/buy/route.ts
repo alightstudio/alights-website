@@ -39,59 +39,79 @@ export async function POST(request: NextRequest) {
     if (!buyer) return NextResponse.json({ error: '用户不存在' }, { status: 404 })
 
     const price = listing.currentBid || listing.startPrice
-    if (buyer.points < price) {
-      return NextResponse.json({ error: `积分不足，需要 ${price} 积分，当前 ${buyer.points}` }, { status: 400 })
-    }
+
+    // 获取当前烧毁总量（事务外先读，避免锁竞争）
+    const currentBurned = await prisma.siteConfig.findUnique({ where: { key: 'total_burned' } })
+    const newTotalBurned = (currentBurned ? parseInt(currentBurned.value) : 0) + Math.floor(price * BURN_RATE)
 
     // 5% 燃烧，95% 给卖家
     const burnAmount = Math.floor(price * BURN_RATE)
     const sellerGets = price - burnAmount
 
-    // 获取当前烧毁总量
-    const currentBurned = await prisma.siteConfig.findUnique({ where: { key: 'total_burned' } })
-    const newTotalBurned = (currentBurned ? parseInt(currentBurned.value) : 0) + burnAmount
+    // 第一阶段：SELECT FOR UPDATE 锁定买家并检查余额（防止并发双花）
+    let buyerPointsSnapshot: number
+    try {
+      buyerPointsSnapshot = await prisma.$transaction(async (tx) => {
+        const [row] = await tx.$queryRaw<{ id: string; points: number }[]>
+          `SELECT id, points FROM "User" WHERE id = ${userId} FOR UPDATE`
+        if (!row || row.points < price) {
+          throw new Error('INSUFFICIENT_POINTS')
+        }
+        return row.points
+      })
+    } catch (err) {
+      if (err instanceof Error && err.message === 'INSUFFICIENT_POINTS') {
+        return NextResponse.json({ error: `积分不足，需要 ${price}，当前 ${buyer.points}` }, { status: 400 })
+      }
+      return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    }
 
-    const [updatedListing] = await prisma.$transaction([
-      prisma.marketplaceListing.update({
+    // 第二阶段：执行购买（余额已在第一阶段保证，不会超支）
+    const updatedListing = await prisma.$transaction(async (tx) => {
+      // 标记已售
+      await tx.marketplaceListing.update({
         where: { id: listingId },
         data: { status: 'SOLD' },
-      }),
-      prisma.user.update({
+      })
+      // 扣买家积分
+      await tx.user.update({
         where: { id: userId },
         data: { points: { decrement: price } },
-      }),
-      prisma.user.update({
+      })
+      // 给卖家打款
+      await tx.user.update({
         where: { id: listing.sellerId },
         data: { points: { increment: sellerGets } },
-      }),
-      prisma.canvas.update({
+      })
+      // 转移画布所有权
+      await tx.canvas.update({
         where: { id: listing.canvasId },
         data: { ownerId: userId },
-      }),
-      // 买家支出记录
-      prisma.transaction.create({
+      })
+      // 买家支出流水
+      await tx.transaction.create({
         data: {
           userId,
           type: 'trade',
           amount: -price,
-          balance: Math.max(0, buyer.points - price),
+          balance: buyerPointsSnapshot - price,
           refId: listing.canvasId,
           note: `购买画布，燃烧 ${burnAmount}`,
         },
-      }),
-      // 卖家收入记录
-      prisma.transaction.create({
+      })
+      // 卖家收入流水
+      await tx.transaction.create({
         data: {
           userId: listing.sellerId,
           type: 'trade',
           amount: sellerGets,
           balance: 0,
           refId: listing.canvasId,
-          note: `售出画布（扣 ${BURN_RATE*100}% 燃烧）`,
+          note: `售出画布（扣 ${BURN_RATE * 100}% 燃烧）`,
         },
-      }),
-      // 燃烧记录
-      prisma.transaction.create({
+      })
+      // 燃烧流水
+      await tx.transaction.create({
         data: {
           userId: 'SYSTEM',
           type: 'burn',
@@ -100,19 +120,21 @@ export async function POST(request: NextRequest) {
           refId: listing.canvasId,
           note: `5% 交易燃烧，来自 ${listing.canvasId}`,
         },
-      }),
+      })
       // 更新全局燃烧计数
-      prisma.siteConfig.upsert({
+      await tx.siteConfig.upsert({
         where: { key: 'total_burned' },
         update: { value: String(newTotalBurned) },
         create: { key: 'total_burned', value: String(newTotalBurned) },
-      }),
-    ])
+      })
+
+      return tx.marketplaceListing.findUnique({ where: { id: listingId } })
+    })
 
     return NextResponse.json({
       success: true,
       listing: updatedListing,
-      burn: { rate: `${BURN_RATE*100}%`, amount: burnAmount, totalBurned: newTotalBurned },
+      burn: { rate: `${BURN_RATE * 100}%`, amount: burnAmount, totalBurned: newTotalBurned },
     })
   } catch (error) {
     // P0-1: hidden

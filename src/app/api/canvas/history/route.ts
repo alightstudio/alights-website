@@ -1,67 +1,77 @@
 import { NextResponse } from 'next/server'
 
-// 禁止 Vercel CDN 缓存此动态端点
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 
-// GET /api/canvas/history — 获取已归档画布列表
+// GET /api/canvas/history — 获取已归档画布列表（含像素预览数据）
 export async function GET() {
   try {
+    // 取最近 30 个归档画布（显示所有历史）
     const canvases = await prisma.canvas.findMany({
       where: { status: 'ARCHIVED' },
       orderBy: { endTime: 'desc' },
-      take: 50,
-      include: {
-        _count: { select: { pixels: true } },
-      },
+      take: 30,
+      include: { _count: { select: { pixels: true } } },
     })
 
-    const result = await Promise.all(
-      canvases.map(async (c) => {
-        // 获取像素贡献排行（排除 SYSTEM 自动填充）
-        const leaderboard = await prisma.pixel.groupBy({
-          by: ['userId'],
-          where: { canvasId: c.id, userId: { not: 'SYSTEM' } },
-          _count: { id: true },
-          orderBy: { _count: { id: 'desc' } },
-          take: 3,
-        })
+    if (canvases.length === 0) {
+      return NextResponse.json({ canvases: [] })
+    }
 
-        // 获取像素数据用于缩略图预览（最多 576 个，防止响应过大导致页面崩溃）
-        const pixels = await prisma.pixel.findMany({
-          where: { canvasId: c.id },
-          select: { x: true, y: true, color: true },
-          orderBy: { placedAt: 'desc' },
-          // 返回所有像素用于缩略图渲染，最大 25600 像素（160x160）
-        })
+    const canvasIds = canvases.map(c => c.id)
 
-        // 获取用户放置的像素数（排除 SYSTEM）
-        const userPixelCount = await prisma.pixel.count({
-          where: { canvasId: c.id, userId: { not: 'SYSTEM' } },
-        })
+    // 批量获取所有画布的像素（用于生成缩略图）
+    const allPixels = await prisma.pixel.findMany({
+      where: { canvasId: { in: canvasIds } },
+      select: { canvasId: true, x: true, y: true, color: true, userId: true },
+    })
 
-        return {
-          id: c.id,
-          width: c.width,
-          height: c.height,
-          name: c.name,
-          endTime: c.endTime,
-          pixelCount: userPixelCount,
-          totalPixels: c.width * c.height,
-          fillRate: Math.round((c._count.pixels / (c.width * c.height)) * 100),
-          ownerId: c.ownerId,
-          topUsers: leaderboard.map(l => ({
-            userId: l.userId,
-            count: l._count.id,
-          })),
-          pixels: pixels,
-        }
-      })
-    )
+    // 批量获取所有画布的贡献数据
+    const allCounts = await prisma.pixel.groupBy({
+      by: ['canvasId', 'userId'],
+      where: { canvasId: { in: canvasIds }, userId: { not: 'SYSTEM' } },
+      _count: { id: true },
+    })
+
+    // 按 canvasId 分组
+    const pixelsByCanvas = new Map<string, typeof allPixels>()
+    for (const p of allPixels) {
+      const list = pixelsByCanvas.get(p.canvasId) || []
+      list.push(p)
+      pixelsByCanvas.set(p.canvasId, list)
+    }
+    const byCanvas = new Map<string, typeof allCounts>()
+    for (const r of allCounts) {
+      const list = byCanvas.get(r.canvasId) || []
+      list.push(r)
+      byCanvas.set(r.canvasId, list)
+    }
+
+    const result = canvases.map(c => {
+      const total = c.width * c.height
+      const pixels = pixelsByCanvas.get(c.id) || []
+      const entries = (byCanvas.get(c.id) || [])
+        .sort((a, b) => b._count.id - a._count.id)
+        .slice(0, 3)
+
+      return {
+        id: c.id,
+        width: c.width,
+        height: c.height,
+        name: c.name,
+        startTime: c.startTime,
+        endTime: c.endTime,
+        fillRate: Math.round((c._count.pixels / total) * 100),
+        pixels: pixels.map(p => ({ x: p.x, y: p.y, color: p.color })),
+        totalPixels: total,
+        pixelCount: c._count.pixels,
+        ownerId: c.ownerId,
+        topUsers: entries.map(l => ({ userId: l.userId, count: l._count.id })),
+      }
+    })
 
     return NextResponse.json({ canvases: result })
-  } catch (error) {
-    // P0-1: hidden
-    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ error: '服务器错误', detail: error.message }, { status: 500 })
   }
 }

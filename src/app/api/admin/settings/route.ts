@@ -43,10 +43,11 @@ const DEFAULT_CONFIG = {
   },
   featuredWorks: [],
   services: [
-    { id: "1", title: "TVC广告", titleEn: "TVC COMMERCIAL", desc: "高端商业广告制作", descEn: "Premium Commercial Production", order: 1 },
-    { id: "2", title: "产品动画", titleEn: "PRODUCT ANIMATION", desc: "三维产品可视化", descEn: "3D Product Visualization", order: 2 },
-    { id: "3", title: "发布会", titleEn: "EVENT SCREEN", desc: "沉浸式视觉体验", descEn: "Immersive Visual Experience", order: 3 },
-    { id: "4", title: "影视剧", titleEn: "FILM & TV", desc: "电影级特效制作", descEn: "Cinematic VFX Production", order: 4 }
+    { id: "1", title: "AIGC", titleEn: "AIGC", desc: "AI 生成式视效创作", descEn: "AI-Generated Visual Effects", order: 1 },
+    { id: "2", title: "TVC广告", titleEn: "TVC COMMERCIAL", desc: "高端商业广告制作", descEn: "Premium Commercial Production", order: 2 },
+    { id: "3", title: "产品动画", titleEn: "PRODUCT ANIMATION", desc: "三维产品可视化", descEn: "3D Product Visualization", order: 3 },
+    { id: "4", title: "产品发布会", titleEn: "PRODUCT LAUNCH", desc: "发布会大屏视觉设计与制作", descEn: "Event Screen Visual Design", order: 4 },
+    { id: "5", title: "影视剧", titleEn: "FILM & TV", desc: "电影级特效制作", descEn: "Cinematic VFX Production", order: 5 }
   ],
   brands: [],
   brandDisplay: {
@@ -72,13 +73,14 @@ const DEFAULT_CONFIG = {
     tagline: SLOGAN,
     columns: [
       { id: 'nav', title: '导航', type: 'links', links: [
-        { label: '作品集', href: '/works', order: 0 },
-        { label: '创意灵感', href: '/gallery', order: 1 },
-        { label: '社区', href: '/community', order: 2 },
-        { label: '关于我们', href: '/about', order: 3 },
-        { label: '联系方式', href: '/contact', order: 4 },
+        { label: '首页', href: '/', order: 0 },
+        { label: '作品集', href: '/works', order: 1 },
+        { label: '创意灵感', href: '/gallery', order: 2 },
+        { label: '社区', href: '/community', order: 3 },
+        { label: '关于我们', href: '/about', order: 4 },
+        { label: '联系合作', href: '/contact', order: 5 },
       ]},
-      { id: 'services', title: '服务', type: 'text', items: ['TVC广告', '产品动画', '发布会', '影视剧'] },
+      { id: 'services', title: '服务', type: 'text', items: ['AIGC', 'TVC广告', '产品动画', '产品发布会', '影视剧'] },
       { id: 'contact', title: '联系', type: 'contact' }
     ],
     copyright: COPYRIGHT,

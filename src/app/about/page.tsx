@@ -13,16 +13,17 @@ const VALUE_DEFAULTS = [
 ]
 
 const SERVICE_DEFAULTS = [
+  { title: 'AIGC', desc: 'AI 驱动的内容生成，以前沿技术加速创意落地' },
   { title: 'TVC广告', desc: '高端商业广告制作，为品牌打造令人难忘的视觉体验' },
   { title: '产品动画', desc: '三维产品可视化，展现产品的每一个精彩细节' },
-  { title: '发布会大屏', desc: '沉浸式视觉体验，让发布会成为难忘的盛会' },
-  { title: '影视剧', desc: '电影级特效制作，为故事增添无限可能' },
+  { title: '产品发布会', desc: '沉浸式大屏视觉，让发布会成为值得记住的瞬间' },
+  { title: '影视剧', desc: '电影级特效制作，为叙事增添无限可能' },
 ]
 
 const STORY_TEXT = [
-  `${COMPANY_NAME}，专注于高端视效制作领域。我们相信，每一个品牌都有属于自己的独特光芒。`,
-  '从 TVC 广告到产品动画，从发布会大屏到影视剧特效，我们用光影艺术，为客户打造令人难忘的视觉体验。',
-  '我们追求极致的视觉品质，注重每一个细节的打磨。减到不能减，精到不能精——这是我们的设计哲学。',
+  '光，是栖光的第一语言。AIGC 生成、CG 渲染、实拍布光——我们用一切手段捕捉和创造光。',
+  '我们的工作，本质上在做同一件事：为每个品牌找到最合适的视觉表达。它可以是一支 TVC 广告里的精密布光，一次产品动画的材质打磨，也可以是一场发布会现场的光影叙事。',
+  '不设边界，不贴标签。从影视级视效到 AI 驱动的创新内容，只要与视觉相关，就是我们的领域。',
 ]
 
 interface SiteData {
@@ -82,7 +83,7 @@ export default function AboutPage() {
 
   const company = config?.company
   const aboutTitle = company?.name ? `关于${company.name}` : '关于栖光'
-  const tagline = company?.slogan || '以光影为笔，以创意为墨，为品牌讲述动人故事'
+  const tagline = company?.slogan || '光栖之处·自有答案'
   const services = config?.services?.length ? config.services : SERVICE_DEFAULTS
   const aboutDesc = company?.description || ''
 
@@ -150,7 +151,10 @@ export default function AboutPage() {
                 onError={e => {
                   const el = e.target as HTMLImageElement
                   el.style.display = 'none'
-                  el.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-600 text-sm">团队照片</div>'
+                  const fallback = document.createElement('div')
+                  fallback.className = 'w-full h-full flex items-center justify-center text-gray-600 text-sm'
+                  fallback.textContent = '团队照片'
+                  el.parentElement?.appendChild(fallback)
                 }}
               />
             </motion.div>

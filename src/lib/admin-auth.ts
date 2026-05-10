@@ -10,11 +10,9 @@ const getSecret = (): string => {
   const env = process.env.ADMIN_JWT_SECRET
   if (env && env.length > 0) return env
   if (process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production') {
-    // 构建时 env 可能尚未注入，静默回退避免构建失败
-    console.warn('[WARN] ADMIN_JWT_SECRET not available at build time, using fallback')
-    return 'dev-only-admin-secret-do-not-use-in-prod'
+    console.error('[FATAL] ADMIN_JWT_SECRET not set in production — all admin auth will fail')
+    return '' // 空 secret 导致所有签名不匹配 → 登录失败
   }
-  // 开发环境回退到固定值
   return 'dev-only-admin-secret-do-not-use-in-prod'
 }
 const SECRET = getSecret()
@@ -31,6 +29,7 @@ function b64urlDecode(str: string): string {
 
 // 生成一个带 HMAC 签名的 session token（无状态）
 export function createSessionToken(): string {
+  if (!SECRET) throw new Error('ADMIN_JWT_SECRET not configured')
   const payload = JSON.stringify({ 
     admin: true, 
     exp: Date.now() + SESSION_TTL,

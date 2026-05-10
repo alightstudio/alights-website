@@ -48,41 +48,45 @@ export default function AIChatWidget() {
       timestamp: new Date(),
     }
 
-    setMessages(prev => [...prev, userMessage])
-    setInput('')
-    setIsLoading(true)
-
-    try {
-      const res = await fetch('/api/chat', {
+    // 使用 functional update 避免闭包 stale：messages 在 fetch 时已是最新状态
+    setMessages(prev => {
+      const newMessages = [...prev, userMessage]
+      // 立即发送，不要 await
+      void fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage.content,
-          history: messages.map(m => ({ role: m.role, content: m.content })),
+          history: newMessages.map(m => ({ role: m.role, content: m.content })),
         }),
       })
-
-      const data = await res.json()
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.response || `抱歉，我暂时无法回答这个问题。您可以拨打 ${CONTACT.phone} 直接联系我们。`,
-        timestamp: new Date(),
-      }
-
-      setMessages(prev => [...prev, assistantMessage])
-    } catch {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `抱歉，服务暂时不可用。请拨打 ${CONTACT.phone} 或发送邮件至 ${CONTACT.email} 联系我们。`,
-        timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, errorMessage])
-    } finally {
-      setIsLoading(false)
-    }
+        .then(res => res.json())
+        .then(data => {
+          setMessages(msgs => [
+            ...msgs,
+            {
+              id: (Date.now() + 1).toString(),
+              role: 'assistant',
+              content: data.response || `抱歉，我暂时无法回答。您可拨打 ${CONTACT.phone} 联系我们。`,
+              timestamp: new Date(),
+            },
+          ])
+        })
+        .catch(() => {
+          setMessages(msgs => [
+            ...msgs,
+            {
+              id: (Date.now() + 1).toString(),
+              role: 'assistant',
+              content: `抱歉，服务暂时不可用。请拨打 ${CONTACT.phone} 或邮件至 ${CONTACT.email} 联系。`,
+              timestamp: new Date(),
+            },
+          ])
+        })
+      return newMessages
+    })
+    setInput('')
+    setIsLoading(false)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

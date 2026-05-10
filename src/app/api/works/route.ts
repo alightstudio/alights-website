@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 // 禁止 Vercel CDN 缓存此动态端点
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
-import { cookies } from 'next/headers'
+
 
 // 数据库不可用时的静态备用作品（包含真实图片链接）
 const FALLBACK_WORKS = [
@@ -16,17 +16,17 @@ const FALLBACK_WORKS = [
 
 
 // 获取当前用户
-async function getCurrentUser() {
-  const cookieStore = await cookies()
-  const userId = cookieStore.get('userId')?.value
+async function getCurrentUser(req: Request): Promise<{ id: string; name: string; phone: string } | null> {
+  const { getVerifiedUserId } = await import('@/lib/user-auth')
+  const userId = getVerifiedUserId(req as any)
   if (!userId) return null
-  return prisma.user.findUnique({ where: { id: userId } })
+  return prisma.user.findUnique({ where: { id: userId } }) as any
 }
 
 // 提交作品
 export async function POST(request: Request) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser(request)
     if (!user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 })
     }
@@ -66,22 +66,14 @@ export async function POST(request: Request) {
 // 获取作品列表
 export async function GET() {
   try {
-    const user = await getCurrentUser()
-
     // 优先从 Work 表查询公司作品集
     let works = []
 
-    if (user) {
-      works = await prisma.work.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: 'desc' },
-      })
-    } else {
-      works = await prisma.work.findMany({
-        where: { status: 'APPROVED' },
-        orderBy: { createdAt: 'desc' },
-      })
-    }
+    // 公开作品列表（所有人可见）
+    works = await prisma.work.findMany({
+      where: { status: 'APPROVED' },
+      orderBy: { viewCount: 'desc' },
+    })
 
     // 如果 Work 表为空，从 SiteConfig.featuredWorks 读取（与首页一致）
     if (works.length === 0) {
@@ -115,12 +107,7 @@ export async function GET() {
       if (!w.image) {
         w.image = w.coverUrl || w.thumbnail || ''
       }
-    })
-    // 调试：打印第一个元素的字段
-    if (works.length > 0) {
-      console.log('First work keys:', Object.keys(works[0]))
-      console.log('First work image:', works[0].image)
-    }
+    })    
     return NextResponse.json(works)
   } catch (error) {
     const msg = error instanceof Error ? error.message : '服务器错误'

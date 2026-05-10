@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 
@@ -55,12 +55,19 @@ export default function ProfilePage() {
   const [bio, setBio] = useState('')
   const [saving, setSaving] = useState(false)
 
+  // 头像
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
   // 计算注册天数
   const daysSinceRegistration = profile
     ? Math.floor((Date.now() - new Date(profile.createdAt).getTime()) / (24 * 60 * 60 * 1000))
     : 0
 
-  // 修改密码
+  // 我的帖子
+  const [myPosts, setMyPosts] = useState<any[]>([])
+  const [loadingPosts, setLoadingPosts] = useState(true)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [currentPwd, setCurrentPwd] = useState('')
   const [newPwd, setNewPwd] = useState('')
@@ -75,6 +82,14 @@ export default function ProfilePage() {
   // 积分记录
   const [recentRecords, setRecentRecords] = useState<PointsRecord[]>([])
   const [dailyLimit] = useState(100)
+
+  // 签到
+  const [checkinStatus, setCheckinStatus] = useState<{
+    checkedIn: boolean
+    streak: number
+    nextBonus: number
+  } | null>(null)
+  const [checkingIn, setCheckingIn] = useState(false)
 
   // 邀请相关
   const [referralInfo, setReferralInfo] = useState<{
@@ -96,7 +111,41 @@ export default function ProfilePage() {
     fetchPoints()
     fetchCanvasStats()
     fetchReferral()
+    fetchMyPosts()
+    fetchCheckin()
   }, [])
+
+  const fetchCheckin = async () => {
+    try {
+      const res = await fetch('/api/points/checkin')
+      if (res.ok) setCheckinStatus(await res.json())
+    } catch {}
+  }
+
+  const handleCheckin = async () => {
+    setCheckingIn(true)
+    try {
+      const res = await fetch('/api/points/checkin', { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        setCheckinStatus(prev => prev ? { ...prev, checkedIn: true, streak: data.streak } : null)
+        if (data.awarded > 0) {
+          setSuccess(`签到成功！获得 +${data.awarded} 积分${data.streak % 7 === 0 ? ' 🎉 连续7天奖励！' : ''}`)
+          fetchPoints()
+          fetchProfile()
+        } else {
+          setSuccess('今日已签到')
+        }
+      } else {
+        const err = await res.json()
+        setError(err.error || '签到失败')
+      }
+    } catch {
+      setError('签到失败，请重试')
+    } finally {
+      setCheckingIn(false)
+    }
+  }
 
   const fetchProfile = async () => {
     try {
@@ -104,6 +153,7 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error('获取失败')
       const data = await res.json()
       setProfile(data)
+      setAvatarUrl(data.avatar || null)
       setName(data.name)
       setEmail(data.email || '')
       setCompany(data.company || '')
@@ -157,12 +207,70 @@ export default function ProfilePage() {
       const data = await res.json()
       localStorage.setItem('userName', data.name)
       setProfile(prev => prev ? { ...prev, ...data } : null)
-      setSuccess('个人信息已更新')
+      if (data.avatar) setAvatarUrl(data.avatar)
+    setSuccess('个人信息已更新')
     } catch (err: any) {
       setError(err.message)
     } finally {
       setSaving(false)
     }
+  }
+
+  // 头像上传
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      setError('图片超过 2MB，请压缩后重试')
+      e.target.value = ''
+      return
+    }
+    setUploadingAvatar(true)
+    setError('')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      
+      // 先尝试验证 JSON，失败时读取原文帮助调试
+      let data: any
+      try {
+        data = await res.json()
+      } catch {
+        const text = await res.text()
+        const snippet = text.substring(0, 200)
+        throw new Error(`服务器返回异常: ${res.status} ${res.statusText} — ${snippet}`)
+      }
+      
+      if (!res.ok) throw new Error(data.error || '上传失败')
+      const { url } = data
+      // 保存头像URL到用户资料
+      const saveRes = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar: url }),
+      })
+      if (!saveRes.ok) {
+        const saveErr = await saveRes.json().catch(() => ({ error: '保存头像失败' }))
+        throw new Error(saveErr.error || '保存头像失败')
+      }
+      setAvatarUrl(url)
+      setProfile(prev => prev ? { ...prev, avatar: url } : null)
+      setSuccess('头像已更新')
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setUploadingAvatar(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+  }
+
+  const fetchMyPosts = async () => {
+    try {
+      const res = await fetch('/api/user/posts')
+      if (res.ok) setMyPosts(await res.json().then(d => d.posts))
+    } catch {}
+    setLoadingPosts(false)
   }
 
   const handleChangePassword = async () => {
@@ -205,6 +313,10 @@ export default function ProfilePage() {
     comment: '发表评论',
     referral_signup: '邀请注册',
     referral_invite: '邀请奖励',
+    daily_checkin: '每日签到',
+    post_create: '发布帖子',
+    comment_create: '发表评论',
+    like_received: '帖子被赞',
   }
 
   if (loading) {
@@ -223,9 +335,52 @@ export default function ProfilePage() {
           <h1 className="font-display text-4xl font-light mb-2">个人中心</h1>
           <p className="text-gray-500 text-sm mb-10">管理您的个人信息和积分</p>
 
-          {/* 注册信息 */}
+          {/* 头像 + 注册信息 */}
           {profile && (
-            <div className="mb-10 text-center">
+            <div className="mb-10 flex flex-col items-center">
+              {/* 头像 */}
+              <div className="relative group mb-5">
+                {avatarUrl ? (
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-accent-gold/30">
+                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-dark-700 border-2 border-accent-gold/30 flex items-center justify-center">
+                    <span className="text-2xl text-accent-gold/60 font-display">
+                      {profile.name[0].toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="absolute inset-0 w-full h-full rounded-full bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center"
+                >
+                  <span className="opacity-0 group-hover:opacity-100 text-xs text-white transition-opacity">
+                    {uploadingAvatar ? '上传中...' : '更换头像'}
+                  </span>
+                </button>
+              </div>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              <label className="mt-2 inline-block cursor-pointer">
+                <span className="text-xs text-gray-600 hover:text-accent-gold transition-colors">
+                  {uploadingAvatar ? '⏳ 上传中...' : '📷 点击选择头像'}
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
+              </label>
+
+              {/* 已加入天数 */}
               <div className="inline-flex items-center gap-1.5 bg-dark-800/50 border border-dark-700/50 px-5 py-2.5">
                 <span className="text-gray-500 text-xs tracking-wider">已加入</span>
                 <span className="text-accent-gold/80 text-lg font-display mx-1">{daysSinceRegistration}</span>
@@ -234,8 +389,8 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* 积分总览 */}
-          <div className="grid grid-cols-3 gap-4 mb-10">
+          {/* 积分总览 + 签到 */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-dark-800 border border-dark-600 p-6 text-center">
               <div className="text-3xl text-accent-gold font-display mb-1">{profile?.points || 0}</div>
               <div className="text-gray-500 text-xs tracking-widest uppercase">总积分</div>
@@ -247,6 +402,73 @@ export default function ProfilePage() {
             <div className="bg-dark-800 border border-dark-600 p-6 text-center">
               <div className="text-3xl text-gray-400 font-display mb-1">{dailyLimit}</div>
               <div className="text-gray-500 text-xs tracking-widest uppercase">每日上限</div>
+            </div>
+          </div>
+
+          {/* 签到卡片 */}
+          <div className="bg-dark-800 border border-dark-600 p-6 mb-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-sm text-white/70">每日签到</span>
+                  {checkinStatus?.streak ? (
+                    <span className="text-xs text-accent-gold/60">
+                      已连续 {checkinStatus.streak} 天
+                      {checkinStatus.streak >= 7 && ' 🏆'}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {checkinStatus?.nextBonus === 15
+                    ? '🎉 连续7天奖励 +15 积分'
+                    : `签到可获得 +3 积分`}
+                </div>
+              </div>
+              <button
+                onClick={handleCheckin}
+                disabled={checkingIn || checkinStatus?.checkedIn}
+                className={`px-6 py-2 text-sm tracking-wider transition-all duration-300 ${checkinStatus?.checkedIn
+                  ? 'bg-dark-700 text-gray-600 border border-dark-600 cursor-not-allowed'
+                  : 'bg-accent-gold/10 text-accent-gold border border-accent-gold/30 hover:bg-accent-gold/20'
+                }`}
+              >
+                {checkingIn ? '签到中...' : checkinStatus?.checkedIn ? '已签到 ✓' : '签到'}
+              </button>
+            </div>
+            {/* 进度条 */}
+            <div className="mt-4 flex items-center gap-2">
+              <div className="flex-1 h-1 bg-dark-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-accent-gold/40 rounded-full transition-all duration-500"
+                  style={{ width: `${((checkinStatus?.streak || 0) % 7) / 7 * 100}%` }}
+                />
+              </div>
+              <span className="text-xs text-gray-600 w-12 text-right">
+                {7 - ((checkinStatus?.streak || 0) % 7)}天
+              </span>
+            </div>
+          </div>
+
+          {/* 积分获取方式 */}
+          <div className="bg-dark-800 border border-dark-600 p-6 mb-10">
+            <h2 className="text-lg font-light mb-4 text-white/70">获取积分</h2>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              {[
+                { icon: '📅', label: '每日签到', desc: '+3/天', limit: '连续7天+15' },
+                { icon: '💬', label: '发帖', desc: '+5/次', limit: '限3次/天' },
+                { icon: '✏️', label: '评论', desc: '+2/次', limit: '限10次/天' },
+                { icon: '❤️', label: '帖子被赞', desc: '+1/次', limit: '限20次/天' },
+                { icon: '👆', label: '浏览作品', desc: '+2/次', limit: '上限100分/天' },
+                { icon: '🔗', label: '邀请注册', desc: '10~50/人', limit: '阶梯递增' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 bg-dark-900/40 border border-dark-700/50 p-3">
+                  <span className="text-base">{item.icon}</span>
+                  <div>
+                    <div className="text-white/70 mb-0.5">{item.label}</div>
+                    <div className="text-gray-500">{item.desc} <span className="text-gray-600">· {item.limit}</span></div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -398,6 +620,51 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </>
+            )}
+          </div>
+
+          {/* 我的帖子 */}
+          <div className="bg-dark-800 border border-dark-600 p-8 mb-6">
+            <h2 className="text-lg font-light mb-6 text-white/80">我的帖子</h2>
+            {loadingPosts ? (
+              <div className="text-gray-600 text-sm animate-pulse">加载中...</div>
+            ) : myPosts.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600 text-sm mb-3">暂无帖子</p>
+                <a href="/community" className="text-accent-gold text-xs hover:underline">
+                  去社区发布 →
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {myPosts.map(post => (
+                  <a
+                    key={post.id}
+                    href={`/community/post/${post.id}`}
+                    className="block group"
+                  >
+                    <div className="flex items-center justify-between py-3 px-4 border border-dark-700 hover:border-gray-600 transition-colors">
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] text-gray-600">{post.category.icon} {post.category.name}</span>
+                        </div>
+                        <h4 className="text-sm text-gray-300 group-hover:text-white transition-colors truncate">
+                          {post.title}
+                        </h4>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-600 flex-shrink-0">
+                        <span>💬 {post._count.comments}</span>
+                        <span>{new Date(post.createdAt).toLocaleDateString('zh-CN')}</span>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+                <div className="text-center pt-3">
+                  <a href="/community" className="text-xs text-gray-600 hover:text-accent-gold transition-colors">
+                    查看全部 →
+                  </a>
+                </div>
+              </div>
             )}
           </div>
 

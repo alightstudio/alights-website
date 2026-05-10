@@ -75,9 +75,12 @@ export default function Navigation({ initialLogo, initialNavItems }: NavigationP
                 <Link
                   key={item.id}
                   href={item.href}
-                  className="text-sm transition-colors tracking-wide text-gray-400 hover:text-white"
+                  className="flex flex-col items-center transition-colors tracking-wide text-gray-400 hover:text-white"
                 >
-                  {item.label}
+                  <span className="text-sm">{item.label}</span>
+                  {item.labelEn && (
+                    <span className="text-[10px] tracking-[0.15em] text-gray-600">{item.labelEn}</span>
+                  )}
                 </Link>
               ))}
               {mounted && loggedIn ? (

@@ -9,23 +9,20 @@ import { NextRequest } from 'next/server'
 // C-2 修复：强制要求环境变量，冷启动不再回退 randomBytes 导致登出
 // 修复：NODE_ENV=production 在构建时也会触发，检查 VERCEL_ENV 以区分构建期 / 运行时
 const USER_SESSION_SECRET = (() => {
-  if (process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production') {
-    // 生产环境运行时：环境变量由 Vercel 提供
-    const secret = process.env.USER_SESSION_SECRET
-    if (secret && secret.length >= 16) return secret
-    // 首次冷启动时可能 env 尚未注入，静默回退避免构建失败
-    console.warn('[WARN] USER_SESSION_SECRET not available at build time, using fallback')
-    return 'dev-only-user-secret-do-not-use-in-prod-16ch'
-  }
-  // 开发环境 / Preview
   const secret = process.env.USER_SESSION_SECRET
   if (secret && secret.length >= 16) return secret
+  // 生产环境不回退到不安全的默认值——冷启动时签名操作将直接失败
+  if (process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production') {
+    console.error('[FATAL] USER_SESSION_SECRET not set in production — all auth operations will fail')
+    return '' // 空 secret 导致所有签名不匹配 → 用户需重新登录
+  }
   console.warn('[WARN] USER_SESSION_SECRET not set, using dev fallback. DO NOT use in production.')
   return 'dev-only-user-secret-do-not-use-in-prod-16ch'
 })()
 const USER_COOKIE_NAME = 'userId'
 
 function signUserId(userId: string): string {
+  if (!USER_SESSION_SECRET) throw new Error('USER_SESSION_SECRET not configured')
   // M-4 修复：payload 加入 exp 字段（7天过期）
   const exp = Date.now() + 7 * 24 * 60 * 60 * 1000
   const payload = `${userId}.${exp}`
@@ -36,7 +33,7 @@ function signUserId(userId: string): string {
   return `${payload}.${sig}`
 }
 
-function verifySignedUserId(token: string): string | null {
+export function verifySignedUserId(token: string): string | null {
   const parts = token.split('.')
   if (parts.length !== 3) return null
 

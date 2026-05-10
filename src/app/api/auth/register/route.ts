@@ -53,7 +53,16 @@ async function generateReferralCode(): Promise<string> {
   return 'REF' + randomBytes(4).toString('hex').toUpperCase()
 }
 
-const REFERRAL_BONUS = 10 // 双方各得积分
+/**
+ * 阶梯邀请奖励
+ * 第1-3人: 10分，第4-10人: 20分，第11-30人: 30分，30+: 50分
+ */
+function getReferralBonus(referralCount: number): number {
+  if (referralCount < 4) return 10
+  if (referralCount < 11) return 20
+  if (referralCount < 31) return 30
+  return 50
+}
 
 export async function POST(request: Request) {
   try {
@@ -134,19 +143,26 @@ export async function POST(request: Request) {
       },
     })
 
-    // 新用户注册奖励 + 邀请奖励
+    // 新用户注册奖励 + 邀请奖励（阶梯制）
+    let bonus = 0
     if (referrer) {
       const today = new Date().toISOString().split('T')[0]
+
+      // 查询邀请人已有邀请数量（在本次之前）
+      const existingReferrals = await prisma.referral.count({
+        where: { referrerId: referrer.id },
+      })
+      bonus = getReferralBonus(existingReferrals)
 
       // 新用户获积分
       await prisma.user.update({
         where: { id: user.id },
-        data: { points: { increment: REFERRAL_BONUS } },
+        data: { points: { increment: bonus } },
       })
       await prisma.pointsRecord.create({
         data: {
           userId: user.id,
-          points: REFERRAL_BONUS,
+          points: bonus,
           reason: 'referral_signup',
           date: today,
         },
@@ -155,12 +171,12 @@ export async function POST(request: Request) {
       // 邀请人获积分
       await prisma.user.update({
         where: { id: referrer.id },
-        data: { points: { increment: REFERRAL_BONUS } },
+        data: { points: { increment: bonus } },
       })
       await prisma.pointsRecord.create({
         data: {
           userId: referrer.id,
-          points: REFERRAL_BONUS,
+          points: bonus,
           reason: 'referral_invite',
           date: today,
         },
@@ -176,12 +192,12 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      message: '注册成功' + (referrer ? '，获得邀请奖励 +' + REFERRAL_BONUS + ' 积分' : ''),
+      message: '注册成功' + (referrer ? '，获得邀请奖励 +' + bonus + ' 积分' : ''),
       user: {
         id: user.id,
         name: user.name,
         phone: user.phone,
-        points: referrer ? REFERRAL_BONUS : 0,
+        points: referrer ? bonus : 0,
       },
     })
   } catch (error) {

@@ -8,13 +8,14 @@ const DEFAULT_FOOTER: FooterConfig = {
   tagline: SLOGAN,
   columns: [
     { id: 'nav', title: '导航', type: 'links', links: [
-      { label: '作品集', href: '/works', order: 0 },
-      { label: '创意灵感', href: '/gallery', order: 1 },
-      { label: '社区', href: '/community', order: 2 },
+      { label: '首页', href: '/', order: 0 },
+      { label: '作品集', href: '/works', order: 1 },
+      { label: '创意灵感', href: '/gallery', order: 2 },
+      { label: '社区', href: '/community', order: 3 },
       { label: '关于我们', href: '/about', order: 4 },
-      { label: '联系方式', href: '/contact', order: 5 },
+      { label: '联系合作', href: '/contact', order: 5 },
     ]},
-    { id: 'services', title: '服务', type: 'text', items: ['TVC广告', '产品动画', '发布会', '影视剧'] },
+    { id: 'services', title: '服务', type: 'text', items: ['AIGC', 'TVC广告', '产品动画', '产品发布会', '影视剧'] },
     { id: 'contact', title: '联系', type: 'contact', items: [] },
   ],
   copyright: COPYRIGHT,
@@ -42,9 +43,19 @@ export default function Footer({ initialFooter, initialContact }: FooterProps) {
 
   // 动态覆盖联系栏：优先使用 contact 配置生成，否则用 footer 中的静态 items
   const dynamicContactItems = buildContactItems(initialContact)
+  const defaultLinks = DEFAULT_FOOTER.columns?.find(c => c.type === 'links')?.links || []
+  const defaultServicesItems = DEFAULT_FOOTER.columns?.find(c => c.id === 'services')?.items || []
   const columns = cfg.columns?.map(col => {
     if (col.type === 'contact' && dynamicContactItems.length > 0) {
       return { ...col, items: dynamicContactItems }
+    }
+    // 导航栏：始终使用默认导航链接（与实际导航对齐）
+    if (col.type === 'links') {
+      return { ...col, links: defaultLinks }
+    }
+    // 服务栏：始终使用默认值覆盖（数据库可能存了旧数据）
+    if (col.id === 'services' && col.type === 'text') {
+      return { ...col, items: defaultServicesItems }
     }
     return col
   }) || []

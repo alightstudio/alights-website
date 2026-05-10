@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { trackWorkClick } from '@/lib/points'
 import { proxyImageUrl } from '@/lib/proxy-image'
-import stash176Raw from '@/data/stash-works.json'
+import stash176Raw from '@/data/stash176.json'
 import stash175Raw from '@/data/stash175.json'
 import stash174Raw from '@/data/stash174.json'
 import stash173Raw from '@/data/stash173.json'
@@ -156,6 +157,7 @@ const allStashes = [
 ]
 
 const totalWorks = allStashes.reduce((s, st) => s + st.data.length, 0)
+const totalHeatAll = allStashes.reduce((s, st) => s + st.data.reduce((ss, w) => ss + (w.score || 0), 0), 0)
 
 function TabBtn({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
   return (
@@ -272,7 +274,23 @@ function formatDuration(seconds: number) {
 }
 
 export default function GalleryPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!localStorage.getItem('userId')) {
+      router.replace('/login')
+    }
+  }, [router])
   const [activeTab, setActiveTab] = useState('176')
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const allWorksFlat = useMemo(() => allStashes.flatMap(st => st.data), [])
+
+  const searchResults = useMemo(() => {
+    if (!searchTerm.trim()) return []
+    const term = searchTerm.toLowerCase().trim()
+    return allWorksFlat.filter(w => w.title.toLowerCase().includes(term))
+  }, [searchTerm])
 
   // 按年代分组
   const stashGroups = [
@@ -296,8 +314,11 @@ export default function GalleryPage() {
               创意灵感
             </h1>
             <div className="w-24 h-px bg-accent-gold/40 mb-4" />
-            <p className="text-sm text-gray-600 tracking-wide mb-4">
+            <p className="text-sm text-gray-600 tracking-wide mb-1">
               {allStashes.length} 个收藏集 · 共 <span className="text-accent-gold/60">{totalWorks.toLocaleString()}</span> 部作品
+            </p>
+            <p className="text-sm text-gray-600 tracking-wide mb-4">
+              累计 <span className="text-accent-gold/60">{totalHeatAll.toLocaleString()}</span> 人气
             </p>
             <p className="text-lg text-gray-400 max-w-3xl leading-relaxed">
               汇聚优秀创作者的视觉作品，激发无限灵感
@@ -312,17 +333,53 @@ export default function GalleryPage() {
       {/* Works Grid */}
       <section className="px-6 md:px-12 lg:px-24">
         <div className="max-w-7xl mx-auto">
-          {/* Tab Bar - 统一滑动选择 */}
-          <div className="flex gap-1 mb-12 border-b border-dark-700 overflow-x-auto scrollbar-none">
-            {allStashes.map(st => (
-              <TabBtn key={st.id} label={st.label} count={st.data.length} active={activeTab===st.id} onClick={()=>setActiveTab(st.id)} />
-            ))}
-          </div>
+          {/* Search Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-8"
+          >
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="搜索作品标题..."
+                className="w-full bg-dark-800 border border-dark-600 text-gray-300 placeholder-gray-600 px-12 py-3.5 text-sm tracking-wide focus:outline-none focus:border-accent-gold/40 transition-colors"
+              />
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">🔍</span>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-sm"
+                >✕</button>
+              )}
+            </div>
+          </motion.div>
 
-          {/* Tab Content */}
-          {allStashes.map(st => activeTab === st.id && (
-            <StashSection key={st.id} works={st.data} label={st.label} totalViews={0} />
-          ))}
+          {/* Search Results or Tab Bar */}
+          {searchTerm.trim() ? (
+            <StashSection
+              works={searchResults}
+              label={`搜索 "${searchTerm.trim()}"`}
+              totalViews={0}
+            />
+          ) : (
+            <>
+              {/* Tab Bar */}
+              <div className="flex gap-1 mb-12 border-b border-dark-700 overflow-x-auto scrollbar-none">
+                {allStashes.map(st => (
+                  <TabBtn key={st.id} label={st.label} count={st.data.length} active={activeTab===st.id} onClick={()=>setActiveTab(st.id)} />
+                ))}
+              </div>
+
+              {/* Tab Content */}
+              {allStashes.map(st => activeTab === st.id && (
+                <StashSection key={st.id} works={st.data} label={st.label} totalViews={0} />
+              ))}
+            </>
+          )}
         </div>
       </section>
 

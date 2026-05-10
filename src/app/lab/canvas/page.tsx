@@ -47,6 +47,7 @@ interface CanvasInfo {
   totalPixels: number
   placedPixels: number
   leader: { userId: string; count: number } | null
+  ownerId: string | null
 }
 
 interface PixelInfo {
@@ -141,9 +142,18 @@ export default function CanvasPage() {
   }, [])
 
   useEffect(() => { fetchCanvas() }, [fetchCanvas])
+  // 画布状态轮询（15秒间隔，标签页不可见时暂停节省资源）
   useEffect(() => {
-    const iv = setInterval(fetchCanvas, 5000)
-    return () => clearInterval(iv)
+    let iv: ReturnType<typeof setInterval> | null = null
+    const startPolling = () => { iv = setInterval(fetchCanvas, 15000) }
+    const stopPolling = () => { if (iv) { clearInterval(iv); iv = null } }
+    const onVisibility = () => {
+      if (document.hidden) stopPolling()
+      else { fetchCanvas(); startPolling() }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    startPolling()
+    return () => { stopPolling(); document.removeEventListener('visibilitychange', onVisibility) }
   }, [fetchCanvas])
 
   // 每60秒触发一次随机填充（与 OpenClaw cron 互补，API 端50秒节流防重）
@@ -174,12 +184,12 @@ export default function CanvasPage() {
     return () => clearInterval(iv)
   }, [])
 
-  // 随机填充倒计时（每60秒）
+  // 随机填充倒计时（每10分钟）
   useEffect(() => {
     if (!lastRandomChangeAt) return
     const tick = () => {
       const elapsed = Date.now() - lastRandomChangeAt
-      const interval = 60 * 1000
+      const interval = 10 * 60 * 1000
       const remain = Math.max(0, interval - elapsed)
       const m = Math.floor(remain / 60000)
       const s = Math.floor((remain % 60000) / 1000)
@@ -190,14 +200,23 @@ export default function CanvasPage() {
     return () => clearInterval(iv)
   }, [lastRandomChangeAt])
 
-  // Canvas 尺寸：固定 600x600，不随窗口变化
+  // Canvas 尺寸：响应式，适配移动端
+  const [displaySize, setDisplaySize] = useState(600)
+  useEffect(() => {
+    const updateSize = () => {
+      const maxSize = Math.min(600, window.innerWidth - 32)
+      setDisplaySize(maxSize)
+    }
+    updateSize()
+    window.addEventListener('resize', updateSize)
+    return () => window.removeEventListener('resize', updateSize)
+  }, [])
   useEffect(() => {
     if (!canvasInfo) return
-    const DISPLAY_SIZE = 600
-    const computedZoom = DISPLAY_SIZE / (canvasInfo.width * CELL_BASE)
+    const computedZoom = displaySize / (canvasInfo.width * CELL_BASE)
     setZoom(computedZoom)
     setOffset({ x: 0, y: 0 })
-  }, [canvasInfo])
+  }, [canvasInfo, displaySize])
 
   // Canvas 渲染
   const renderCanvas = useCallback(() => {
@@ -206,27 +225,27 @@ export default function CanvasPage() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // 固定 canvas 尺寸为 600x600，不依赖容器大小
-    const DISPLAY_SIZE = 600
+    // 响应式 canvas 尺寸
+    const DS = displaySize
 
     // 关键：同时设置物理像素和 CSS 尺寸，两者都是正方形
-    canvas.width = DISPLAY_SIZE
-    canvas.height = DISPLAY_SIZE
-    canvas.style.width = DISPLAY_SIZE + 'px'
-    canvas.style.height = DISPLAY_SIZE + 'px'
+    canvas.width = DS
+    canvas.height = DS
+    canvas.style.width = DS + 'px'
+    canvas.style.height = DS + 'px'
 
     // 画布内容尺寸（可能不是正方形，如 160×120）
-    const cellSize = DISPLAY_SIZE / canvasInfo.width
+    const cellSize = DS / canvasInfo.width
     const canvasW = canvasInfo.width * cellSize
     const canvasH = canvasInfo.height * cellSize
     // 内容在 canvas 内的居中偏移
-    const ox = (DISPLAY_SIZE - canvasW) / 2
-    const oy = (DISPLAY_SIZE - canvasH) / 2
+    const ox = (DS - canvasW) / 2
+    const oy = (DS - canvasH) / 2
 
     // 填充背景
-    ctx.clearRect(0, 0, DISPLAY_SIZE, DISPLAY_SIZE)
+    ctx.clearRect(0, 0, DS, DS)
     ctx.fillStyle = '#1a1a1a'
-    ctx.fillRect(0, 0, DISPLAY_SIZE, DISPLAY_SIZE)
+    ctx.fillRect(0, 0, DS, DS)
 
     // 画布内容区域
     ctx.fillStyle = '#FFFFFF'
@@ -452,11 +471,11 @@ export default function CanvasPage() {
       {/* 画布描述 */}
       <div className="px-6 md:px-12 mb-3">
         <p className="text-xs text-gray-500 leading-relaxed">
-          协作像素画布 — 底稿来自世界名画，70% 系统填充遵循底稿引导，30% 为随机色彩。
+          协作像素画布 — 底稿来自世界名画，系统填充像素严格遵循底稿引导（位置与颜色均取自名画）。
           填满后自动扩张至原有 2 倍尺寸（一个像素拆为 4 个），延续已有画面并提升精度。
         </p>
         <p className="text-xs text-gray-600 leading-relaxed mt-1">
-          {'\uD83C\uDF1F'} 系统每分钟按底稿引导在空位自动填充彩色像素 — 当你离开时，画布也在悄悄生长。
+          {'\uD83C\uDF1F'} 系统每 10 分钟按底稿引导在空位自动填充 10 个彩色像素 — 当你离开时，画布也在悄悄生长。
         </p>
         <p className="text-xs text-gray-600 leading-relaxed mt-1">
           {'\u23F0'} 每天 {'\u5348\u591C'} 自动结算归档，放置像素最多的用户成为画布所有者。
@@ -475,12 +494,15 @@ export default function CanvasPage() {
             }
             {' \u00B7 '}
             自动填充 <span className="text-purple-400/70">{randomCountdown}</span>
+            {canvasInfo?.ownerId && (
+              <>{' \u00B7 '}所有者 <span className="text-amber-400/70">{canvasInfo.ownerId}</span></>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-4 text-sm">
           {canvasInfo && canvasInfo.leader && (
             <span className="text-gray-500">
-              领先: <span className="text-accent-gold/70">{canvasInfo.leader.count}px</span>
+              领先: <span className="text-accent-gold/70">{canvasInfo.leader.userId}</span> <span className="text-gray-600">({canvasInfo.leader.count}px)</span>
             </span>
           )}
           {isLoggedIn ? (
@@ -538,11 +560,11 @@ export default function CanvasPage() {
         )}
       </div>
 
-      {/* Canvas — 固定 600x600，居中显示 */}
+      {/* Canvas — 响应式，居中显示 */}
       <div
         ref={containerRef}
         className="flex items-center justify-center cursor-crosshair mx-auto"
-        style={{ width: '600px', height: '600px', touchAction: 'none' }}
+        style={{ width: displaySize + 'px', height: displaySize + 'px', touchAction: 'none' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -595,7 +617,7 @@ export default function CanvasPage() {
         <span>{'\uD83D\uDDB1\uFE0F'} 点击放置</span>
         <span>右键 取色</span>
         <span>1像素 = 1积分</span>
-        <span>{'\uD83C\uDF1F'} 每分钟自动填充</span>
+        <span>{'\uD83C\uDF1F'} 每10分钟自动填充</span>
       </div>
 
       {/* 历史作品链接 */}
@@ -655,34 +677,21 @@ export default function CanvasPage() {
             <div className="bg-dark-800/30 border border-dark-700 rounded-xl p-6">
               <h3 className="text-base font-medium text-white mb-4 flex items-center gap-2">🏆 画布结算奖励</h3>
               <p className="text-sm text-gray-400 mb-4">
-                每张画布的寿命为 <span className="text-accent-gold/70">24 小时</span>，
-                每天 <span className="text-accent-gold/70">00:00</span> 自动结算。
-                画布归档后,放置像素最多的用户成为画布所有者。
+                每张画布寿命约 <span className="text-accent-gold/70">24 小时</span>，
+                每天 <span className="text-accent-gold/70">00:00</span> 自动结算归档。
+                画布归档后，放置像素最多的用户成为画布所有者，获得积分奖励（奖励值 = 贡献像素数 × 50%）。
+                次名与季军不另发奖励。
               </p>
               <p className="text-xs text-gray-500 mb-4">
-                {'\uD83C\uDF1F'} 系统每分钟按世界名画底稿引导在空位填充彩色像素，70% 循底稿、30% 随机，即使无人参与画布也在持续生长。
+                {'\uD83C\uDF1F'} 系统每 10 分钟按世界名画底稿引导在空位填充 10 个彩色像素，即使无人参与画布也在持续生长。
               </p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
                   <div>
-                    <p className="text-sm text-white">画布所有者奖励</p>
-                    <p className="text-xs text-gray-500">成为画布所有者可获得积分奖励</p>
+                    <p className="text-sm text-white">画布所有者</p>
+                    <p className="text-xs text-gray-500">每日结算后，贡献像素最多的用户</p>
                   </div>
-                  <span className="text-accent-gold font-mono text-lg">+50</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
-                  <div>
-                    <p className="text-sm text-white">亚军奖励</p>
-                    <p className="text-xs text-gray-500">像素数第二的用户</p>
-                  </div>
-                  <span className="text-gray-400 font-mono text-lg">+20</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-dark-900/50 rounded-lg border border-dark-800">
-                  <div>
-                    <p className="text-sm text-white">季军奖励</p>
-                    <p className="text-xs text-gray-500">像素数第三的用户</p>
-                  </div>
-                  <span className="text-gray-400 font-mono text-lg">+10</span>
+                  <span className="text-accent-gold font-mono text-lg">贡献像素 × 50%</span>
                 </div>
               </div>
             </div>
@@ -733,7 +742,7 @@ export default function CanvasPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent-gold/70 mt-0.5">•</span>
-                  <span>每分钟按名画底稿引导在空位自动填充彩色像素</span>
+                  <span>每 10 分钟按名画底稿引导在空位自动填充 10 个彩色像素</span>
                 </li>
               </ul>
             </div>

@@ -2,6 +2,12 @@
 const nextConfig = {
   // L-5 修复：隐藏 Next.js 指纹
   poweredByHeader: false,
+  // 支持 ESM 外部模块
+  experimental: {
+    esmExternals: 'loose',
+  },
+  // 强制转译 Spline 包
+  transpilePackages: ['@splinetool/react-spline', '@splinetool/runtime'],
   images: {
     domains: ['localhost'],
     unoptimized: true,
@@ -17,34 +23,12 @@ const nextConfig = {
         },
       }
     }
+
     return config
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/lab/flow',
-        destination: '/experiments/sinuous/index.html',
-      },
-      {
-        source: '/lab/sonic',
-        destination: '/experiments/sonic/index.html',
-      },
-      {
-        source: '/lab/touch',
-        destination: '/experiments/touch/index.html',
-      },
-      {
-        source: '/lab/propagation',
-        destination: '/experiments/bacterium/index.html',
-      },
-      {
-        source: '/lab/tide',
-        destination: '/experiments/magnetic/index.html',
-      },
-    ]
   },
   async redirects() {
     return [
+      // 画布重定向
       {
         source: '/canvas',
         destination: '/lab/canvas',
@@ -55,8 +39,35 @@ const nextConfig = {
         destination: '/lab/canvas/:path*',
         permanent: true,
       },
+      // 实验室实验全屏跳转（无 iframe，全屏显示）
+      {
+        source: '/lab/flow',
+        destination: '/experiments/sinuous/index.html',
+        permanent: false,
+      },
+      {
+        source: '/lab/sonic',
+        destination: '/experiments/sonic/index.html',
+        permanent: false,
+      },
+      {
+        source: '/lab/touch',
+        destination: '/experiments/touch/index.html',
+        permanent: false,
+      },
+      {
+        source: '/lab/propagation',
+        destination: '/experiments/bacterium/index.html',
+        permanent: false,
+      },
+      {
+        source: '/lab/tide',
+        destination: '/experiments/magnetic/index.html',
+        permanent: false,
+      },
     ]
   },
+
   async headers() {
     return [
       {
@@ -72,7 +83,7 @@ const nextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'SAMEORIGIN',
           },
           {
             key: 'Permissions-Policy',
@@ -88,13 +99,14 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googletagmanager.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://www.googletagmanager.com https://www.googletagmanager.com https://hm.baidu.com",
+              "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com https://alights.cn",
-              "img-src 'self' data: blob: https://images.unsplash.com https://cdn.inew.land https://open.snmc.io https://*.vercel-blob.com https://*.public.blob.vercel-staging.com https://*.xpccdn.com https://*.xinpianchang.com",
-              "media-src 'self' https://*.vercel-blob.com https://*.public.blob.vercel-staging.com blob:",
-              "connect-src 'self' https://www.googletagmanager.com https://api.openweathermap.org https://ipgeolocation.abstractapi.com https://api.cloudflare.com",
-              "frame-src 'none'",
+              "img-src 'self' data: blob: https://images.unsplash.com https://cdn.inew.land https://open.snmc.io https://*.vercel-blob.com https://*.public.blob.vercel-staging.com https://*.public.blob.vercel-storage.com https://*.xpccdn.com https://*.xinpianchang.com https://prod.spline.design https://*.spline.design https://hm.baidu.com",
+              "media-src 'self' https://*.vercel-blob.com https://*.public.blob.vercel-staging.com https://*.public.blob.vercel-storage.com blob: https://gleitz.github.io",
+              "connect-src 'self' https://www.googletagmanager.com https://api.openweathermap.org https://ipgeolocation.abstractapi.com https://api.cloudflare.com https://prod.spline.design https://*.spline.design https://unpkg.com https://gleitz.github.io https://hm.baidu.com",
+              "frame-src 'self' 'unsafe-inline'",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

@@ -12,6 +12,15 @@ const experiences = [
     bg: 'from-dark-900 via-dark-800 to-dark-900',
   },
   {
+    id: 'spirit',
+    name: '光灵',
+    eng: 'Light Spirit',
+    desc: '交互 · 3D 探索',
+    color: '#A78BFA',
+    href: '/lab/spirit',
+    bg: 'from-dark-900 via-violet-950/20 to-dark-900',
+  },
+  {
     id: 'flow',
     name: '光流',
     eng: 'Light Flow',
@@ -55,6 +64,15 @@ const experiences = [
     color: '#BE8ABF',
     href: '/lab/sonic',
     bg: 'from-dark-900 via-purple-950/20 to-dark-900',
+  },
+  {
+    id: 'piano',
+    name: '光音',
+    eng: 'Light Tone',
+    desc: '弹奏 · 指尖钢琴',
+    color: '#A78BFA',
+    href: '/lab/piano',
+    bg: 'from-dark-900 via-violet-950/20 to-dark-900',
   },
 ]
 

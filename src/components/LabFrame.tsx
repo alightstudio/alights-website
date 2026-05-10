@@ -43,12 +43,26 @@ export default function LabFrame({ src, title, subtitle }: LabFrameProps) {
         {title}
       </span>
 
+      {/* 使用 meta refresh 跳转到实验页面（全屏） */}
+      <meta httpEquiv="refresh" content={`0;url=${src}`} />
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark-950">
+        <div className="text-white/20 text-xs tracking-widest mb-4">正在启动实验...</div>
+        <div className="text-white/10 text-xs tracking-widest mb-12">{title}</div>
+        <div className="animate-pulse text-white/5 text-[10px] tracking-widest">LOADING</div>
+        <noscript>
+          <a href={src} className="mt-8 px-6 py-3 border border-white/20 text-white/30 text-xs tracking-widest">
+            点击进入实验
+          </a>
+        </noscript>
+      </div>
+      {/* 同时加载 iframe 以防 meta refresh 不工作 */}
       <iframe
         ref={iframeRef}
         src={src}
-        className={`w-full h-full border-none transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 w-screen h-screen border-none transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         title={title}
         onLoad={() => setLoaded(true)}
+        style={{ zIndex: 1, left: 0, top: 0 }}
       />
     </div>
   )

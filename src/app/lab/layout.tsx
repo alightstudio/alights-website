@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import LabPage from './page'
 
 export const metadata: Metadata = {
   title: '实验室 | 栖光文化 ALIGHTS',
@@ -11,4 +10,6 @@ export const metadata: Metadata = {
   },
 }
 
-export default LabPage
+export default function LabLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
+}

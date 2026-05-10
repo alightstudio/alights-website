@@ -263,12 +263,16 @@ export default function CanvasGallery() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs">
-                    {c.topUsers.length > 0 && (
+                    {c.ownerId ? (
+                      <span className="text-amber-400/50" title="所有者">
+                        {'👑'}{c.ownerId.slice(-8)}
+                      </span>
+                    ) : c.topUsers.length > 0 ? (
                       <span className="text-accent-gold/50">
                         {c.topUsers[0].count}px
                       </span>
-                    )}
-                    <span className="text-gray-600">{c.endTime ? fmtDate(c.endTime) : ''}</span>
+                    ) : null}
+                    <span className="text-gray-600">{c.startTime ? fmtDate(c.startTime) : ''}</span>
                   </div>
                   <div className="flex-shrink-0">
                     <span className={'text-xs px-1.5 py-0.5 rounded-sm ' +
@@ -338,11 +342,11 @@ export default function CanvasGallery() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                     <div className="bg-dark-800 border border-dark-700 rounded-sm p-3">
                       <div className="text-xs text-gray-600 mb-1">创建时间</div>
-                      <div className="text-sm text-gray-300">{fmtDate(selectedCanvas.startTime)}</div>
+                      <div className="text-sm text-gray-300">{selectedCanvas.startTime ? fmtDate(selectedCanvas.startTime) : '--'}</div>
                     </div>
                     <div className="bg-dark-800 border border-dark-700 rounded-sm p-3">
                       <div className="text-xs text-gray-600 mb-1">结算时间</div>
-                      <div className="text-sm text-gray-300">{fmtDate(selectedCanvas.endTime)}</div>
+                      <div className="text-sm text-gray-300">{selectedCanvas.endTime ? fmtDate(selectedCanvas.endTime) : '--'}</div>
                     </div>
                     <div className="bg-dark-800 border border-dark-700 rounded-sm p-3">
                       <div className="text-xs text-gray-600 mb-1">像素总数</div>
@@ -353,6 +357,17 @@ export default function CanvasGallery() {
                       <div className="text-sm text-gray-300">{selectedCanvas.fillRate}%</div>
                     </div>
                   </div>
+
+                  {/* 画布所有者 */}
+                  {selectedCanvas.ownerId && (
+                    <div className="mt-3 bg-dark-800 border border-dark-700 rounded-sm p-3">
+                      <div className="text-xs text-gray-600 mb-1">画布所有者</div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-amber-400/80">{'👑'}</span>
+                        <span className="text-amber-400/70">{selectedCanvas.ownerId}</span>
+                      </div>
+                    </div>
+                  )}
 
                   {selectedCanvas.topUsers.length > 0 && (
                     <div className="mt-4 bg-dark-800 border border-dark-700 rounded-sm p-3">

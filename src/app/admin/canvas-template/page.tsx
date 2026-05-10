@@ -128,16 +128,16 @@ function PaintingCard({ painting, thumbGrid, isSelected, onClick }: {
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // 绘制 40×40 缩略图到 canvas（80×80 像素，每格 2px）
+  // 绘制 80×80 缩略图到 canvas（160×160 物理像素，每格 2px）
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !thumbGrid) return
-    canvas.width = 80
-    canvas.height = 80
+    const size = thumbGrid.length  // 80
+    canvas.width = size * 2  // 160
+    canvas.height = size * 2 // 160
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    const size = 40 // 40×40 网格
-    const cellSize = 80 / size // 2px per cell
+    const cellSize = 2  // 每格 2 物理像素
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         ctx.fillStyle = thumbGrid[y]?.[x] ?? '#000'

@@ -18,7 +18,7 @@ export async function PUT(
 
   try {
     const body = await req.json()
-    const { name, phone, email, company, bio, points } = body
+    const { name, phone, email, company, bio, avatar, points } = body
 
     const data: any = {}
     if (name !== undefined) data.name = name
@@ -26,6 +26,7 @@ export async function PUT(
     if (email !== undefined) data.email = email
     if (company !== undefined) data.company = company
     if (bio !== undefined) data.bio = bio
+    if (avatar !== undefined) data.avatar = avatar || null
     if (points !== undefined) data.points = typeof points === 'number' ? points : parseInt(points)
 
     const user = await prisma.user.update({
@@ -33,7 +34,7 @@ export async function PUT(
       data,
       select: {
         id: true, name: true, phone: true, email: true,
-        company: true, bio: true, points: true,
+        company: true, bio: true, avatar: true, points: true,
         createdAt: true,
       },
     })

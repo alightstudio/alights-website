@@ -40,11 +40,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '坐标超出画布范围' }, { status: 400 })
     }
 
-    // P2 #15 修复：扩张检查合并到同一事务，消除并发竞态窗口
+    // P2 #15 修复 + P0 #2 竞态修复：
+    // $transaction 内用 SELECT FOR UPDATE 锁定用户行，防止并发双花
     const result = await prisma.$transaction(async (tx) => {
-      // 检查积分（1像素 = 1积分）
-      const user = await tx.user.findUnique({ where: { id: userId } })
-      if (!user || user.points < 1) {
+      // 锁定用户行（悲观锁），防止并发请求同时通过 points >= 1 检查
+      const user = await tx.$queryRaw<{ id: string; points: number }[]>
+        `SELECT id, points FROM "User" WHERE id = ${userId} FOR UPDATE`
+      if (!user[0] || user[0].points < 1) {
         throw new Error('INSUFFICIENT_POINTS')
       }
 
@@ -66,62 +68,16 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      // 放置/更新像素
+      // 放置/更新像素（用户放置的标记为 RANDOM）
       const pixel = await tx.pixel.upsert({
         where: { canvasId_x_y: { canvasId, x, y } },
-        update: { color, userId, placedAt: new Date() },
-        create: { canvasId, x, y, color, userId },
+        update: { color, userId, source: 'RANDOM', placedAt: new Date() },
+        create: { canvasId, x, y, color, userId, source: 'RANDOM' },
       })
 
-      // P2 #15: 在事务内检查画布是否已满并同步扩张
-      const currentCanvas = await tx.canvas.findUnique({ where: { id: canvasId } })
-      if (currentCanvas && currentCanvas.status === 'ACTIVE') {
-        const totalPixels = currentCanvas.width * currentCanvas.height
-        const placedPixels = await tx.pixel.count({ where: { canvasId } })
-        if (placedPixels >= totalPixels) {
-          // 原子归档 — 只有第一个能成功
-          const archived = await tx.canvas.updateMany({
-            where: { id: canvasId, status: 'ACTIVE' },
-            data: { status: 'ARCHIVED', endTime: new Date() },
-          })
-          if (archived.count > 0) {
-            const newSize = Math.min(currentCanvas.width * 2, 480)
-            const newCanvas = await tx.canvas.create({
-              data: { width: newSize, height: newSize, status: 'ACTIVE' },
-            })
-            await tx.canvasExpansion.create({
-              data: {
-                oldCanvasId: canvasId,
-                canvasId: newCanvas.id,
-                oldSize: currentCanvas.width,
-                newSize,
-              },
-            })
-            // 映射旧像素到 2×2
-            const scale = newSize / currentCanvas.width
-            if (scale === 2) {
-              const oldPixels = await tx.pixel.findMany({ where: { canvasId } })
-              const batch: any[] = []
-              for (const p of oldPixels) {
-                for (let dx = 0; dx < 2; dx++) {
-                  for (let dy = 0; dy < 2; dy++) {
-                    batch.push({
-                      canvasId: newCanvas.id,
-                      x: p.x * 2 + dx,
-                      y: p.y * 2 + dy,
-                      color: p.color,
-                      userId: p.userId,
-                    })
-                  }
-                }
-              }
-              if (batch.length > 0) {
-                await tx.pixel.createMany({ data: batch, skipDuplicates: true })
-              }
-            }
-          }
-        }
-      }
+      // 画布满时：原地扩展（不归档，只有 daily-settle 才归档）
+      // 扩展逻辑由 random-pixel cron 在下次执行时处理
+      // 这里只放置像素，不触发扩张
 
       return { pixel, pointsRemaining: updated.points }
     })

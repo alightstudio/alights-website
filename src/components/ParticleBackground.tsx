@@ -54,6 +54,12 @@ function scaleParticleConfig(cfg: ParticleConfig, scale: number): ParticleConfig
 export default function ParticleBackground({ config: userConfig }: { config?: Partial<ParticleConfig> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const baseCfg = { ...DEFAULTS, ...userConfig }
+  // 用 ref 保存事件处理器，确保 cleanup 可以 remove 同一个函数引用
+  const onMoveRef = useRef<((e: MouseEvent | Touch) => void) | null>(null)
+  const onTouchMoveRef = useRef<(e: TouchEvent) => void>(() => {})
+  const onLeaveRef = useRef<() => void>(() => {})
+  const onResizeRef = useRef<() => void>(() => {})
+  const onTouchEndRef = useRef<() => void>(() => {})
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -177,9 +183,19 @@ export default function ParticleBackground({ config: userConfig }: { config?: Pa
     }
     // Pointer events attach to window (canvas has pointer-events:none)
     window.addEventListener('mousemove', onMove as EventListener)
-    window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; mouse.active = false })
-    window.addEventListener('touchmove', (e: TouchEvent) => { onMove(e.touches[0]) }, { passive: true })
-    window.addEventListener('touchend', () => { mouse.x = -9999; mouse.y = -9999; mouse.active = false })
+    const onLeave = () => { mouse.x = -9999; mouse.y = -9999; mouse.active = false }
+    window.addEventListener('mouseleave', onLeave)
+    const onTouchMove = (e: TouchEvent) => { onMove(e.touches[0]) }
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    const onTouchEnd = () => { mouse.x = -9999; mouse.y = -9999; mouse.active = false }
+    window.addEventListener('touchend', onTouchEnd)
+
+    // 保存引用供 cleanup 使用（确保 remove 的是同一个函数对象）
+    onMoveRef.current = onMove
+    onTouchMoveRef.current = onTouchMove
+    onLeaveRef.current = onLeave
+    onResizeRef.current = resize
+    onTouchEndRef.current = onTouchEnd
 
     // 初始化粒子
     function initParticles() {
@@ -256,6 +272,10 @@ export default function ParticleBackground({ config: userConfig }: { config?: Pa
     return () => {
       cancelAnimationFrame(animId)
       window.removeEventListener('resize', resize)
+      if (onMoveRef.current) window.removeEventListener('mousemove', onMoveRef.current as EventListener)
+      if (onLeaveRef.current) window.removeEventListener('mouseleave', onLeaveRef.current)
+      if (onTouchMoveRef.current) window.removeEventListener('touchmove', onTouchMoveRef.current)
+      if (onTouchEndRef.current) window.removeEventListener('touchend', onTouchEndRef.current)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

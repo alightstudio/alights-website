@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import xpcWorksData from '@/data/xpc-works.json'
 import HomeClient from './HomeClient'
 import { COMPANY_NAME, SLOGAN } from '@/lib/site-constants'
 import type { Metadata } from 'next'
@@ -95,29 +96,22 @@ async function getInitialConfig() {
   }
 }
 
-/** 服务端读取精选作品（从数据库 featuredWorks 配置按热度排序） */
-async function getInitialWorks() {
-  try {
-    const config = await prisma.siteConfig.findUnique({ where: { key: 'featuredWorks' } })
-    if (!config?.value) return []
-    const works = JSON.parse(config.value) as any[]
-    // 按热度(views)降序，取前6
-    works.sort((a, b) => (b.views || 0) - (a.views || 0))
-    return works.slice(0, 6).map(w => ({
-      id: w.id,
-      title: w.title,
-      titleEn: w.titleEn || '',
-      coverUrl: w.image || '',
-      thumbnail: w.image || '', // 兼容 HomeClient 中同时使用 coverUrl 和 thumbnail
-      category: w.category || '',
-      categoryEn: w.categoryEn || '',
-      views: w.views || 0,
-      videoUrl: w.videoUrl || '',
-      heat: w.views || 0,
-    }))
-  } catch {
-    return []
-  }
+/** 从 xpc-works.json 读取精选作品，按人气值(score)降序取前9 */
+function getInitialWorks() {
+  const works = xpcWorksData as any[]
+  works.sort((a, b) => (b.count_score || 0) - (a.count_score || 0))
+  return works.slice(0, 9).map(w => ({
+    id: w.id.toString(),
+    title: w.title,
+    titleEn: '',
+    coverUrl: w.cover || '',
+    thumbnail: w.cover || '',
+    category: (w.categories || '').split(',')[0] || '',
+    categoryEn: (w.categories || '').split(',')[1] || '',
+    views: w.count_score || 0,
+    videoUrl: w.web_url || '',
+    heat: w.count_score || 0,
+  }))
 }
 
 export default async function HomePage() {

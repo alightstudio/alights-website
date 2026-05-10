@@ -15,7 +15,7 @@ import {
 
 /* ─── Types ─── */
 interface Work { id: string; title: string; description: string | null; category: string; videoUrl: string | null; coverUrl: string | null; status: string; creatorName: string; creatorPhone: string; createdAt: string }
-interface User { id: string; name: string; phone: string; email: string | null; company: string | null; bio?: string; points?: number; createdAt: string; _count?: { works: number } }
+interface User { id: string; name: string; phone: string; email: string | null; company: string | null; avatar?: string | null; bio?: string; points?: number; createdAt: string; _count?: { works: number } }
 interface Stats { totalWorks: number; pendingWorks: number; approvedWorks: number; totalUsers: number; recentWorks: Work[] }
 interface ContactMsg { id: string; name: string; email: string; phone?: string; subject?: string; message: string; createdAt: string; read: boolean }
 interface SiteConfig { [key: string]: any }
@@ -782,6 +782,7 @@ export default function AdminPage() {
                 <table className="w-full text-sm">
                   <thead><tr className="border-b border-white/5">
                     <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium">用户</th>
+                    <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium">头像</th>
                     <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium hidden md:table-cell">联系方式</th>
                     <th className="px-4 py-3 text-left text-[11px] text-gray-500 uppercase tracking-wider font-medium hidden lg:table-cell">公司</th>
                     <th className="px-4 py-3 text-center text-[11px] text-gray-500 uppercase tracking-wider font-medium">作品</th>
@@ -791,8 +792,21 @@ export default function AdminPage() {
                     {filteredUsers.map((u: User) => (
                       <tr key={u.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                         <td className="px-4 py-3">
-                          <p className="text-sm text-white font-medium">{u.name}</p>
-                          <p className="text-[11px] text-gray-500">{u.createdAt?.substring(0, 10)}</p>
+                          <div className="flex items-center gap-3">
+                            {u.avatar ? (
+                              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+                                <img src={u.avatar} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
+                                <span className="text-xs text-gray-500 font-medium">{u.name[0]?.toUpperCase()}</span>
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-sm text-white font-medium">{u.name}</p>
+                              <p className="text-[11px] text-gray-500">{u.createdAt?.substring(0, 10)}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-gray-400 text-sm hidden md:table-cell">
                           {u.phone}<br/><span className="text-[11px] text-gray-600">{u.email || '-'}</span>
@@ -1614,7 +1628,7 @@ function CanvasAdmin() {
           <p>• 每日 <span className="text-accent-gold/70">00:00</span> 自动结算</p>
           <p>• 画布生命周期 24 小时</p>
           <p>• 结算时像素数最多的用户获得画布所有权</p>
-          <p>• 画布满后自动扩张（2×尺寸，最大 480px）</p>
+          <p>• 画布最大尺寸 80×80（填满时自动扩张 2 倍）</p>
           <p>• 每 10 分钟系统自动在随机空位放置彩色像素</p>
         </div>
       </div>

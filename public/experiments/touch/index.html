@@ -7,8 +7,8 @@
   <base href="/experiments/touch/">
   <link rel="stylesheet" href="index.css">
   <style>
-    html, body { background: #1a1a2e; margin: 0; padding: 0; width: 100%; height: 100%; }
-    #gl-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; }
+    html, body { background: #1a1a2e; margin: 0; padding: 0; width: 100%; height: 100%; touch-action: none; overflow: hidden; }
+    #gl-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; touch-action: none; }
     .lab-back {
         position: fixed; top: 16px; left: 16px; z-index: 9999;
         padding: 6px 12px; font-size: 12px; color: rgba(255,255,255,0.4);
@@ -81,18 +81,95 @@
     </div>
   </div>
 
+  <script>
+    // ═══ 移动端 AudioContext 安全垫 ═══
+    // 部分移动端浏览器（某些 Android WebView、旧 iOS）
+    // 在无用户手势时 new AudioContext() 会抛 NotAllowedError
+    // 导致整个 App init 崩溃。此处用安全包装避免崩溃。
+    (function() {
+      var OrigAC = window.AudioContext || window.webkitAudioContext;
+      if (!OrigAC) return;
+      var SafeAC = function() {
+        try { return new OrigAC(); }
+        catch(e) {
+          console.warn('[光触] AudioContext 不可用，已跳过音频');
+          var noop = function() { return this; };
+          var gain = { connect: noop, disconnect: noop, gain: { value: 0, setValueAtTime: noop } };
+          return {
+            createGain: function() { return Object.create(gain); },
+            createBufferSource: function() {
+              return { buffer: null, connect: noop, disconnect: noop, start: noop, stop: noop, loop: false, addEventListener: noop, removeEventListener: noop };
+            },
+            createConvolver: function() { return { connect: noop, disconnect: noop, buffer: null } },
+            createMediaElementSource: function() { return { connect: noop, disconnect: noop } },
+            destination: {},
+            sampleRate: 44100,
+            decodeAudioData: function(buf, cb) { if (cb) setTimeout(function() { cb(null); }, 0); return { then: function(cb) { setTimeout(cb, 0); return this; } }; },
+            state: 'running',
+            suspend: function() { return Promise.resolve(); },
+            resume: function() { return Promise.resolve(); },
+            close: function() { return Promise.resolve(); },
+            currentTime: 0
+          };
+        }
+      };
+      SafeAC.prototype = OrigAC.prototype;
+      window.AudioContext = SafeAC;
+      if (window.webkitAudioContext) window.webkitAudioContext = SafeAC;
+    })();
+  </script>
   <script src="cannon.min.js"></script>
   <script src="main.js"></script>
   <script>
     // prevent scroll on mobile / touchpad
-    document.addEventListener('touchmove', function(e) {e.preventDefault();}, false);
+    document.addEventListener('touchmove', function(e) {e.preventDefault();}, {passive:false});
 
-    var app;
-    try { app = new App() } catch(e) {
-      console.error('App init failed:', e);
-      document.getElementById('section-loading').innerHTML = 
-        '<p style="color:#666;text-align:center;padding:40% 20px;font-size:14px">设备兼容性提示<br><span style="font-size:11px;color:#444">您的设备可能不支持 3D 渲染，请在电脑端访问以获得最佳体验</span></p>';
-    }
+    (function() {
+      var canvas = document.getElementById('gl-canvas');
+      var isLoading = true;
+
+      function bootApp() {
+        if (!isLoading) return;
+        isLoading = false;
+        // 移除 start-overlay
+        var overlay = document.getElementById('start-overlay');
+        if (overlay) overlay.remove();
+        // 预设关闭 CSS transition，让 canvas 立刻可见
+        canvas.classList.add('active');
+        // 启动 app
+        var app;
+        try { app = new App(); } catch(e) {
+          console.error('App init failed:', e);
+          var loading = document.getElementById('section-loading');
+          if (loading) loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">设备兼容性提示<br><span style="font-size:11px;color:#444">此设备可能不支持 3D 渲染</span></p>';
+        }
+        // 播放背景音乐（需要用户手势）
+        var audio = document.getElementById('soundtrack');
+        if (audio) audio.play().catch(function(){});
+      }
+
+      // 判断是否移动端
+      var isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+      if (isMobile) {
+        // 添加点击启动覆盖层
+        var overlay = document.createElement('div');
+        overlay.id = 'start-overlay';
+        overlay.innerHTML = '<div style="position:fixed;inset:0;z-index:10000;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer">'
+          + '<div style="margin-bottom:20px;width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center">'
+          + '<svg width="28" height="28" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"><path d="M8 5v14l11-7z"/></svg>'
+          + '</div>'
+          + '<p style="margin:0;color:rgba(255,255,255,0.4);font-size:16px;letter-spacing:0.1em">点击开始</p>'
+          + '<p style="margin:8px 0 0;color:rgba(255,255,255,0.15);font-size:11px;letter-spacing:0.05em">Tap to interact</p>'
+          + '</div>';
+        document.body.appendChild(overlay);
+        // 点击 / 触摸后启动
+        overlay.addEventListener('click', bootApp);
+        overlay.addEventListener('touchstart', function(e) { e.preventDefault(); bootApp(); }, {passive: false});
+      } else {
+        // 桌面端直接启动
+        bootApp();
+      }
+    })();
   </script>
 </body>
 </html>

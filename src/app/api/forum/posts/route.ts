@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
+import { awardPoints } from '@/lib/points'
 
 
 // P1-4 修复：论坛内容安全 — 长度限制 + HTML 过滤
@@ -50,9 +51,12 @@ export async function GET(req: NextRequest) {
   const [posts, total] = await Promise.all([
     prisma.forumPost.findMany({
       where,
-      include: {
-        author: { select: { id: true, name: true } },
+      select: {
+        id: true, title: true, content: true, videoUrl: true, coverUrl: true,
+        createdAt: true, views: true, likes: true, favorites: true,
+        author: { select: { id: true, name: true, avatar: true } },
         category: { select: { id: true, name: true, icon: true } },
+        tags: { select: { tag: { select: { id: true, name: true } } } },
         _count: { select: { comments: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -71,7 +75,7 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
   const body = await req.json()
-  const { title, content, videoUrl, coverUrl, categoryId } = body
+  const { title, content, videoUrl, coverUrl, categoryId, tags } = body
 
   // P1-4 修复：验证必填字段 + 长度限制
   const cleanTitle = sanitizeForumTitle(title)
@@ -83,12 +87,41 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '标题至少2个字符' }, { status: 400 })
   }
 
+  // Handle tags: create any new ones, connect existing
+  let tagConnections: { tagId: string }[] = []
+  if (Array.isArray(tags) && tags.length > 0) {
+    for (const tagName of tags.slice(0, 5)) {
+      const cleanName = tagName.trim().toLowerCase().slice(0, 20)
+      if (!cleanName) continue
+      // upsert: create if doesn't exist, get id either way
+      const tag = await prisma.forumTag.upsert({
+        where: { name: cleanName },
+        update: {},
+        create: { name: cleanName },
+      })
+      tagConnections.push({ tagId: tag.id })
+    }
+  }
+
   const post = await prisma.forumPost.create({
-    data: { title: cleanTitle, content: cleanContent, videoUrl, coverUrl, categoryId, authorId: userId },
+    data: {
+      title: cleanTitle,
+      content: cleanContent,
+      videoUrl,
+      coverUrl,
+      categoryId,
+      authorId: userId,
+      tags: tagConnections.length > 0 ? { create: tagConnections } : undefined,
+    },
     include: {
-      author: { select: { id: true, name: true } },
+      author: { select: { id: true, name: true, avatar: true } },
       category: { select: { id: true, name: true, icon: true } },
+      tags: { select: { tag: { select: { id: true, name: true } } } },
     },
   })
+
+  // 发帖奖励积分（每日最多3次）
+  awardPoints(userId, 5, 'post_create', 15).catch(console.error)
+
   return NextResponse.json(post, { status: 201 })
 }

@@ -218,11 +218,25 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="zh-CN">
       <head>
+        <meta name="baidu-site-verification" content="codeva-AATsu7GQOk" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {fontUrls.map((url, i) => (
           <link key={i} rel="preload" as="font" crossOrigin="anonymous" href={url} />
         ))}
         <style dangerouslySetInnerHTML={{ __html: styleContent }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?2604bbc018b88c1f7444020bcc68df41";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+          `,
+          }}
+        />
       </head>
       <body className="bg-dark-900 text-white antialiased" suppressHydrationWarning>
         <Navigation initialLogo={logo} initialNavItems={items} />

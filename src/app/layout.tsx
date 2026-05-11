@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
+import AnalyticsTracker from '@/components/AnalyticsTracker'
 import { prisma } from '@/lib/prisma'
 import { findFont, googleFontUrl } from '@/lib/fonts'
 import type { FontOption } from '@/lib/fonts'
@@ -244,6 +245,7 @@ var _hmt = _hmt || [];
           {children}
         </main>
         <Footer initialFooter={footer} initialContact={contactVal} />
+        <AnalyticsTracker />
       </body>
     </html>
   )

@@ -166,7 +166,16 @@ export async function GET(request: Request) {
     })
 
     const totalPv = dailyStats.reduce((sum, d) => sum + d.pv, 0)
-    const totalUv = dailyStats.reduce((sum, d) => sum + d.uv, 0)
+    
+    // 修复 UV 计算：跨时间段对 visitorIds 去重，而非简单相加
+    const allVisitorIds = new Set<string>()
+    for (const d of dailyStats) {
+      for (const id of d.visitorIds) {
+        allVisitorIds.add(id)
+      }
+    }
+    const totalUv = allVisitorIds.size
+    
     const avgDailyPv = dailyStats.length > 0 ? Math.round(totalPv / dailyStats.length) : 0
 
     // 按日期合并

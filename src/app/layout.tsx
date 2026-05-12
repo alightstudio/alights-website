@@ -253,7 +253,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?2604bbc018b88c1f7444020bcc68df41";
+  hm.src = "https://hm.baidu.com/hm.js?8142bd1f12c3864f19af492928dddf78";
   var s = document.getElementsByTagName("script")[0];
   s.parentNode.insertBefore(hm, s);
 })();

@@ -8,12 +8,17 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: `首页 | 栖光文化 ALIGHTS`,
-  description: `${SLOGAN} · 光栖之处，自有答案。专注高端TVC广告、产品动画、AIGC视觉特效、发布会大屏视觉、影视剧制作。`,
+  description: `${SLOGAN}。专注高端TVC广告、产品动画、AIGC视觉特效、发布会大屏视觉、影视剧制作。`,
   keywords: '栖光,视效,TVC广告,AIGC,产品动画,发布会大屏,影视剧,3D渲染,CG',
   openGraph: {
     title: `${COMPANY_NAME} | ${SLOGAN}`,
     description: '专注高端TVC广告、产品动画、AIGC视觉特效、发布会大屏视觉、影视剧制作',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: `${COMPANY_NAME} | ${SLOGAN}`,
+    description: '专注高端TVC广告、产品动画、AIGC视觉特效、发布会大屏视觉、影视剧制作',
   },
 }
 

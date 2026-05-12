@@ -9,8 +9,8 @@ import type { FontOption } from '@/lib/fonts'
 import { BRAND_NAME, BRAND_NAME_EN, COMPANY_NAME, SLOGAN } from '@/lib/site-constants'
 
 const DEFAULT_SEO = {
-  title: `${BRAND_NAME} | ${BRAND_NAME_EN} `,
-  description: `${COMPANY_NAME}，专注于高端视效制作领域。TVC广告、产品动画、AIGC、发布会大屏、影视剧。`,
+  title: `${BRAND_NAME} | ${BRAND_NAME_EN}`,
+  description: `${COMPANY_NAME}，专注于高端视效制作领域。TVC广告、产品动画、AIGC、发布会大屏、影视剧。${SLOGAN}`,
   keywords: '栖光,视效,TVC广告,AIGC,产品动画,发布会大屏,影视剧,3D渲染,CG',
 }
 
@@ -25,9 +25,31 @@ export async function generateMetadata(): Promise<Metadata> {
       title: seo.title || DEFAULT_SEO.title,
       description: seo.description || DEFAULT_SEO.description,
       keywords: seo.keywords || DEFAULT_SEO.keywords,
+      openGraph: {
+        title: seo.title || DEFAULT_SEO.title,
+        description: seo.description || DEFAULT_SEO.description,
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary',
+        title: seo.title || DEFAULT_SEO.title,
+        description: seo.description || DEFAULT_SEO.description,
+      },
     }
   } catch {
-    return DEFAULT_SEO
+    return {
+      ...DEFAULT_SEO,
+      openGraph: {
+        title: DEFAULT_SEO.title,
+        description: DEFAULT_SEO.description,
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary',
+        title: DEFAULT_SEO.title,
+        description: DEFAULT_SEO.description,
+      },
+    }
   }
 }
 

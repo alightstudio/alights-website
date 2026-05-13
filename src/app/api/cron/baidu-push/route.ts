@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const BAIDU_PUSH_URL = 'http://data.zz.baidu.com/urls?site=https://www.alights.cn&token=affCAR7MWNuBHLXq'
+const BAIDU_PUSH_TOKEN = process.env.BAIDU_PUSH_TOKEN || ''
+const BAIDU_PUSH_URL = `http://data.zz.baidu.com/urls?site=https://www.alights.cn&token=${BAIDU_PUSH_TOKEN}`
 const CRON_SECRET = process.env.CRON_SECRET || ''
 
 const PAGES = [

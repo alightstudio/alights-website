@@ -201,13 +201,18 @@ export async function PUT(request: NextRequest) {
     if (!section || data === undefined) {
       return NextResponse.json({ error: '缺少 section 或 data 参数' }, { status: 400 })
     }
+    // 安全修复：限制单次写入数据大小（防止数据库被恶意塞满）
+    const serialized = JSON.stringify(data)
+    if (serialized.length > 500_000) { // 500KB 上限
+      return NextResponse.json({ error: '数据过大，最大允许 500KB' }, { status: 400 })
+    }
 
     await saveSection(section, data)
 
     return NextResponse.json({ success: true, section, data })
   } catch (error) {
     // P0-1: hidden
-    return NextResponse.json({ error: '更新配置失败', details: "Internal error" }, { status: 500 })
+    return NextResponse.json({ error: '更新配置失败' }, { status: 500 })
   }
 }
 
@@ -224,16 +229,21 @@ export async function PATCH(request: NextRequest) {
     if (!section || data === undefined) {
       return NextResponse.json({ error: '缺少 section 或 data 参数' }, { status: 400 })
     }
+    // 安全修复：限制单次写入数据大小（防止数据库被恶意塞满）
+    const serialized = JSON.stringify(data)
+    if (serialized.length > 500_000) { // 500KB 上限
+      return NextResponse.json({ error: '数据过大，最大允许 500KB' }, { status: 400 })
+    }
 
     // 读取现有配置
     const config = await readConfig()
     const merged = { ...config[section], ...data }
-    
+
     await saveSection(section, merged)
 
     return NextResponse.json({ success: true, section, data: merged })
   } catch (error) {
     // P0-1: hidden
-    return NextResponse.json({ error: '更新配置失败', details: "Internal error" }, { status: 500 })
+    return NextResponse.json({ error: '更新配置失败' }, { status: 500 })
   }
 }

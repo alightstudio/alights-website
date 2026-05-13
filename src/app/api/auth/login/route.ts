@@ -3,78 +3,45 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { cookies } from 'next/headers'
+import { setUserCookie } from '@/lib/user-auth'
+import { createRateLimiter } from '@/lib/rate-limit'
 
-// 频率限制
-const loginAttempts = new Map<string, { count: number; resetTime: number }>()
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000
-const MAX_ATTEMPTS = 20
-
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
-  const now = Date.now()
-  const record = loginAttempts.get(ip)
-
-  if (!record || now > record.resetTime) {
-    loginAttempts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
-    return { allowed: true, remaining: MAX_ATTEMPTS - 1 }
-  }
-
-  if (record.count >= MAX_ATTEMPTS) {
-    return { allowed: false, remaining: 0 }
-  }
-
-  record.count++
-  return { allowed: true, remaining: MAX_ATTEMPTS - record.count }
-}
-
-function getClientIP(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) return forwarded.split(',')[0].trim()
-  return request.headers.get('x-real-ip') || 'unknown'
-}
+// 数据库持久化速率限制：15分钟窗口，最多20次
+const userLoginRateLimiter = createRateLimiter('user_login', 20, 15 * 60 * 1000)
 
 export async function POST(request: Request) {
+  // 速率限制（数据库持久化，serverless 多实例共享有效）
+  const req = request as unknown as NextRequest
+  const rateCheck = await userLoginRateLimiter.check(req, '')
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: '登录尝试过于频繁，请15分钟后再试' },
+      { status: 429 }
+    )
+  }
+
   try {
-    const ip = getClientIP(request)
-    const rateCheck = checkRateLimit(ip)
-
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: '登录尝试过于频繁，请15分钟后再试' },
-        { status: 429 }
-      )
-    }
-
     const body = await request.json()
     const { phone, password } = body
 
     // 查找用户
-    const user = await prisma.user.findUnique({
-      where: { phone },
-    })
+    const user = await prisma.user.findUnique({ where: { phone } })
 
     if (!user) {
-      return NextResponse.json(
-        { error: '用户不存在' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: '用户不存在' }, { status: 401 })
     }
 
     // 验证密码
     const isValid = await bcrypt.compare(password, user.password)
 
     if (!isValid) {
-      return NextResponse.json(
-        { error: '密码错误' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: '密码错误' }, { status: 401 })
     }
 
-    // 登录成功，清除限制记录
-    loginAttempts.delete(ip)
+    // 登录成功：清除限速记录
+    await userLoginRateLimiter.reset(req, '')
 
     // 设置签名 session cookie
-    const { setUserCookie } = await import('@/lib/user-auth')
     await setUserCookie(user.id)
 
     return NextResponse.json({
@@ -85,8 +52,7 @@ export async function POST(request: Request) {
         phone: user.phone,
       },
     })
-  } catch (error) {
-    // P0-1: hidden
+  } catch {
     return NextResponse.json(
       { error: '服务器错误，请稍后重试' },
       { status: 500 }

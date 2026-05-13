@@ -1,39 +1,28 @@
 // 禁止 Vercel CDN 缓存此动态端点
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { createSessionToken } from '@/lib/admin-auth'
+import { createRateLimiter } from '@/lib/rate-limit'
 
-// C-3 修复：管理员凭据必须通过环境变量或数据库设置
+// 管理员用户名（从环境变量读取）
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || ''
-// 不再提供默认密码回退，必须设置 ADMIN_PASSWORD 或在数据库中存储密码
-const ENV_PASSWORD = process.env.ADMIN_PASSWORD || ''
 
-// 简单的频率限制（内存存储，生产环境建议用 Redis）
-const loginAttempts = new Map<string, { count: number; resetTime: number }>()
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15分钟
-const MAX_ATTEMPTS = 10 // 最多10次
+// 数据库持久化速率限制：15分钟窗口，最多10次
+const adminLoginRateLimiter = createRateLimiter('admin_login', 10, 15 * 60 * 1000)
 
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
-  const now = Date.now()
-  const record = loginAttempts.get(ip)
-  if (!record || now > record.resetTime) {
-    loginAttempts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
-    return { allowed: true, remaining: MAX_ATTEMPTS - 1 }
+/**
+ * 恒定时间字符串比较（防 Timing Attack）
+ */
+function timingSafeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  const len = a.length
+  let diff = 0
+  for (let i = 0; i < len; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
   }
-  if (record.count >= MAX_ATTEMPTS) {
-    return { allowed: false, remaining: 0 }
-  }
-  record.count++
-  return { allowed: true, remaining: MAX_ATTEMPTS - record.count }
-}
-
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) return forwarded.split(',')[0].trim()
-  return request.headers.get('x-real-ip') || 'unknown'
+  return diff === 0
 }
 
 async function verifyPassword(inputPwd: string): Promise<boolean> {
@@ -43,7 +32,6 @@ async function verifyPassword(inputPwd: string): Promise<boolean> {
     if (stored) {
       const creds = JSON.parse(stored.value)
       if (creds.password.startsWith('$2')) {
-        // bcrypt hash
         return bcrypt.compare(inputPwd, creds.password)
       }
       // 明文密码 — 自动升级为 bcrypt
@@ -61,6 +49,7 @@ async function verifyPassword(inputPwd: string): Promise<boolean> {
     // 数据库查询失败，回退到环境变量
   }
   // 环境变量密码（仅支持 bcrypt hash 或非空明文）
+  const ENV_PASSWORD = process.env.ADMIN_PASSWORD || ''
   if (!ENV_PASSWORD) return false
   if (ENV_PASSWORD.startsWith('$2')) {
     return bcrypt.compare(inputPwd, ENV_PASSWORD)
@@ -69,20 +58,20 @@ async function verifyPassword(inputPwd: string): Promise<boolean> {
 }
 
 export async function POST(request: NextRequest) {
+  // 速率限制（数据库持久化，serverless 多实例共享有效）
+  const rateCheck = await adminLoginRateLimiter.check(request, '')
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: '登录尝试过于频繁，请15分钟后再试' },
+      { status: 429 }
+    )
+  }
+
   try {
-    const ip = getClientIP(request)
-    const rateCheck = checkRateLimit(ip)
-
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: '登录尝试过于频繁，请15分钟后再试' },
-        { status: 429 }
-      )
-    }
-
     const { username, password } = await request.json()
 
-    if (username !== ADMIN_USERNAME) {
+    // 恒定时间用户名比较（防 timing attack）
+    if (!timingSafeCompare(username, ADMIN_USERNAME)) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 })
     }
 
@@ -91,8 +80,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 })
     }
 
-    // 登录成功
-    loginAttempts.delete(ip)
+    // 登录成功：清除限速记录
+    await adminLoginRateLimiter.reset(request, '')
+
     const sessionToken = createSessionToken()
     const response = NextResponse.json({ success: true })
     response.cookies.set('admin_session', sessionToken, {
@@ -100,7 +90,7 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
-      path: '/'
+      path: '/',
     })
     return response
   } catch {

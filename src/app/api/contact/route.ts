@@ -1,46 +1,23 @@
 // 禁止 Vercel CDN 缓存此动态端点
 export const dynamic = 'force-dynamic'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createRateLimiter } from '@/lib/rate-limit'
 
-// 频率限制
-const contactAttempts = new Map<string, { count: number; resetTime: number }>()
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000 // 1小时
-const MAX_ATTEMPTS = 5
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const record = contactAttempts.get(ip)
-
-  if (!record || now > record.resetTime) {
-    contactAttempts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
-    return true
-  }
-
-  if (record.count >= MAX_ATTEMPTS) {
-    return false
-  }
-
-  record.count++
-  return true
-}
-
-function getClientIP(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) return forwarded.split(',')[0].trim()
-  return request.headers.get('x-real-ip') || 'unknown'
-}
+// 数据库持久化速率限制：1小时窗口，最多5次
+const contactRateLimiter = createRateLimiter('contact', 5, 60 * 60 * 1000)
 
 export async function POST(request: Request) {
-  try {
-    const ip = getClientIP(request)
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json(
-        { error: '提交过于频繁，请稍后再试' },
-        { status: 429 }
-      )
-    }
+  const req = request as unknown as NextRequest
+  const rateCheck = await contactRateLimiter.check(req, '')
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: '提交过于频繁，请稍后再试' },
+      { status: 429 }
+    )
+  }
 
+  try {
     const body = await request.json()
     const { name, phone, email, company, message } = body
 

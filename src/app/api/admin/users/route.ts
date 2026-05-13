@@ -15,11 +15,19 @@ export async function GET() {
   try {
     const users = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: { works: true }
-        }
-      }
+      select: {
+        id: true,
+        name: true,
+        phone: false,   // 隐藏手机号防泄露
+        email: true,
+        company: true,
+        bio: true,
+        avatar: true,
+        points: true,
+        referralCode: true,
+        createdAt: true,
+        _count: { select: { works: true } },
+      },
     })
 
     return NextResponse.json(users)

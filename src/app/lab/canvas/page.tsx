@@ -358,6 +358,29 @@ export default function CanvasPage() {
     setPixelInfo(null)
   }
 
+  // 触摸事件：移动端支持
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault() // 防止滚动
+    if (e.touches.length === 1) {
+      const touch = e.touches[0]
+      const pos = screenToCanvas(touch.clientX, touch.clientY)
+      if (pos) placePixel(pos.x, pos.y)
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault()
+    if (e.touches.length === 1) {
+      const touch = e.touches[0]
+      const pos = screenToCanvas(touch.clientX, touch.clientY)
+      setHoverPos(pos)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    setHoverPos(null)
+  }
+
   const handleRightClick = (e: React.MouseEvent) => {
     const pos = screenToCanvas(e.clientX, e.clientY)
     if (!pos) return
@@ -569,6 +592,9 @@ export default function CanvasPage() {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onContextMenu={handleRightClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <canvas
           ref={canvasRef}

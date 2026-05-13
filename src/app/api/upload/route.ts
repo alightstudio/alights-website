@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { getVerifiedUserId } from '@/lib/user-auth'
+import { randomBytes } from 'crypto'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
@@ -21,7 +22,9 @@ export async function POST(req: NextRequest) {
     if (file.size > MAX_SIZE) return NextResponse.json({ error: '图片大小超过 2MB 限制' }, { status: 400 })
 
     const ext = file.name.split('.').pop() || 'jpg'
-    const filename = `community/${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    // 安全审计修复：用 crypto.randomBytes 生成不可预测的文件名，防止 URL 枚举攻击
+    const rand = randomBytes(8).toString('hex')
+    const filename = `community/${userId}/${Date.now()}-${rand}.${ext}`
 
     const blob = await put(filename, file, {
       access: 'public',

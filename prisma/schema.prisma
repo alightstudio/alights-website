@@ -299,3 +299,16 @@ model Referral {
   referrer    User     @relation("ReferralReferrer", fields: [referrerId], references: [id])
   referee     User     @relation("ReferralReferee", fields: [refereeId], references: [id])
 }
+
+// 数据库持久化速率限制表（解决 serverless 内存不共享问题）
+model RateLimitEntry {
+  id        String   @id @default(cuid())
+  key       String   // 限速key，如 IP 地址或 IP+用户名组合
+  type      String   // 限速类型：admin_login | user_login | chat | contact | register | points_click
+  count     Int      @default(1) // 当前窗口内失败次数
+  expiresAt DateTime // 本次限速窗口过期时间
+  createdAt DateTime @default(now())
+
+
+  @@index([key, type])
+}

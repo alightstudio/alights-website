@@ -2,12 +2,9 @@
 const nextConfig = {
   // L-5 修复：隐藏 Next.js 指纹
   poweredByHeader: false,
-  // 支持 ESM 外部模块
-  experimental: {
-    esmExternals: 'loose',
-  },
-  // 强制转译 Spline 包
+  // 强制转译 Spline 包（Next.js 14+ 标准配置）
   transpilePackages: ['@splinetool/react-spline', '@splinetool/runtime'],
+  experimental: {},
   images: {
     domains: ['localhost'],
     unoptimized: true,
@@ -94,22 +91,25 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
-          // P3 修复：添加 CSP (Content-Security-Policy) 头部
+          // 安全审计修复：移除 'unsafe-eval'（可被 XSS 利用执行任意代码）；
+          // 'unsafe-inline' 暂时保留以兼容 React hydration，后续可通过 nonce 方案消除；
+          // frame-src 中的 'unsafe-inline' 已移除（原无意义）
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://www.googletagmanager.com https://www.googletagmanager.com https://hm.baidu.com",
+              "script-src 'self' 'unsafe-inline' 'nonce-{}' blob: https://www.googletagmanager.com https://hm.baidu.com",
               "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com https://alights.cn",
               "img-src 'self' data: blob: https://images.unsplash.com https://cdn.inew.land https://open.snmc.io https://*.vercel-blob.com https://*.public.blob.vercel-staging.com https://*.public.blob.vercel-storage.com https://*.xpccdn.com https://*.xinpianchang.com https://prod.spline.design https://*.spline.design https://hm.baidu.com",
               "media-src 'self' https://*.vercel-blob.com https://*.public.blob.vercel-staging.com https://*.public.blob.vercel-storage.com blob: https://gleitz.github.io",
               "connect-src 'self' https://www.googletagmanager.com https://api.openweathermap.org https://ipgeolocation.abstractapi.com https://api.cloudflare.com https://prod.spline.design https://*.spline.design https://unpkg.com https://gleitz.github.io https://hm.baidu.com",
-              "frame-src 'self' 'unsafe-inline'",
+              "frame-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
+              "upgrade-insecure-requests",
             ].join('; '),
           },
           // P3 修复：添加 X-XSS-Protection

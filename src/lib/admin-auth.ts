@@ -47,17 +47,16 @@ export function isValidSession(token: string | undefined): boolean {
   if (dot < 1) return false
   const enc = token.substring(0, dot)
   const sig = token.substring(dot + 1)
-  
-  // 验证签名
+
+  // 验证签名（HMAC + 恒定时间比较）
   const expected = createHmac('sha256', SECRET).update(enc).digest('base64url')
   if (sig.length !== expected.length) return false
-  // 恒定时间比较
-  let match = true
+  let diff = 0
   for (let i = 0; i < expected.length; i++) {
-    if (sig.charCodeAt(i) !== expected.charCodeAt(i)) match = false
+    diff |= sig.charCodeAt(i) ^ expected.charCodeAt(i)
   }
-  if (!match) return false
-  
+  if (diff !== 0) return false
+
   // 验证过期
   try {
     const payload = JSON.parse(b64urlDecode(enc))

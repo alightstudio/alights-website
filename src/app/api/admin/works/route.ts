@@ -23,7 +23,7 @@ export async function GET() {
         category: true,
         status: true,
         creatorName: true,
-        creatorPhone: true,
+        creatorPhone: false,  // 隐藏手机号防泄露
         createdAt: true,
         videoUrl: true,
         coverUrl: true,

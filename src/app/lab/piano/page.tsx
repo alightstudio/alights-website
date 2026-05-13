@@ -541,19 +541,16 @@ export default function PianoPage() {
         <span className="text-[9px] text-gray-600">{currentVoice.name}</span>
       </div>
 
-      {/* ───── 键盘（居中 + 限制高度） ───── */}
+      {/* ───── 键盘（居中 + 限制高度 + 横向滚动） ───── */}
       <div
-        className="flex-1 flex items-center justify-center overflow-hidden pb-1 px-2"
-        style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
+        className="flex-1 flex items-center justify-start overflow-x-auto overflow-y-hidden pb-1 px-2"
+        style={{ WebkitUserSelect: 'none', userSelect: 'none', scrollbarWidth: 'none' }}
         onPointerMove={e => handleKeyMove(e.clientX, e.clientY)}
       >
         <div
-          className="relative overflow-x-auto overflow-y-hidden"
+          className="relative flex-shrink-0"
           style={{
-            scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
-            touchAction: 'pan-x pan-y',
-            width: '100%',
-            maxWidth: `${WHITE_KEYS.length * KEY_STEP}px`,
+            width: `${WHITE_KEYS.length * KEY_STEP}px`,
             height: '52vh',
             maxHeight: '380px',
           }}

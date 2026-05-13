@@ -1,13 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // 禁止 Vercel CDN 缓存此动态端点
-// 禁止 Vercel CDN 缓存此动态端点
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
 import { awardPoints } from '@/lib/points'
-
 import { verifyAdminSession } from '@/lib/admin-auth'
+import sanitizeHtml from 'sanitize-html'
+
+const MAX_COMMENT_LEN = 5000
+
+const sanitizeOptions: sanitizeHtml.IOptions = {
+  allowedTags: ['b', 'i', 'em', 'strong', 'u', 'p', 'br', 'blockquote', 'pre', 'code', 'a'],
+  allowedAttributes: {
+    'a': ['href', 'title'],
+    'code': ['class'],
+    'pre': ['class'],
+  },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  transformTags: {
+    a: (tagName, attribs) => {
+      if ((attribs.href || '').startsWith('javascript:')) {
+        return { tagName: 'span', attribs: {} }
+      }
+      return { tagName, attribs: { ...attribs, target: '_blank', rel: 'noopener noreferrer' } }
+    },
+  },
+}
+
+function sanitizeComment(content: string): string {
+  if (!content) return ''
+  const clean = sanitizeHtml(content, sanitizeOptions)
+  if (clean.length > MAX_COMMENT_LEN) return clean.slice(0, MAX_COMMENT_LEN)
+  return clean
+}
 
 // GET /api/forum/posts/[id]/comments — list comments for a post
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -30,29 +56,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const post = await prisma.forumPost.findUnique({ where: { id: postId } })
   if (!post) return NextResponse.json({ error: '帖子不存在' }, { status: 404 })
 
-  let { content } = body
-  // P1-6: forum comment XSS protection + length limit
-  const MAX_COMMENT_LEN = 5000
-  if (!content?.trim() || typeof content !== 'string') {
+  if (!body.content?.trim() || typeof body.content !== 'string') {
     return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
   }
-  content = content.slice(0, MAX_COMMENT_LEN)
-    .replace(/<script[\s\S]*?<\/script\s*>/gi, '')
-    .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>"']+)/gi, '')
-    .replace(/(href|src)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)javascript:/gi, '$1=#')
-    .replace(/<(?:iframe|embed|object|applet|svg|math)[^>]*>/gi, '')
-  if (!content.trim()) {
+
+  const cleanContent = sanitizeComment(body.content)
+  if (!cleanContent.trim()) {
     return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
   }
 
   const comment = await prisma.forumComment.create({
-    data: { content: content.trim(), postId, authorId: userId },
+    data: { content: cleanContent, postId, authorId: userId },
     include: { author: { select: { id: true, name: true } } },
   })
 
-  // 评论奖励积分（每日最多10次，每次2分）
   awardPoints(userId, 2, 'comment_create', 20).catch(console.error)
-
   return NextResponse.json(comment, { status: 201 })
 }
 

@@ -8,34 +8,84 @@ import { getVerifiedUserId } from '@/lib/user-auth'
 import { awardPoints } from '@/lib/points'
 
 
-// P1-4 修复：论坛内容安全 — 长度限制 + HTML 过滤
+// 安全审计修复：使用 sanitize-html（allowlist 方式）替代正则，正则可被绕过
+import sanitizeHtml from 'sanitize-html'
+
 const MAX_TITLE_LEN = 200
 const MAX_CONTENT_LEN = 20000
 
-// 简单的 XSS 防护：去除危险标签和事件处理器
+// sanitize-html 配置：仅允许安全的基础格式标签和链接，禁止所有危险属性
+const sanitizeHtmlOptions: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'b', 'i', 'em', 'strong', 'u', 's',
+    'p', 'br', 'hr',
+    'blockquote', 'pre', 'code',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li',
+    'a', 'img',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'div', 'span',
+  ],
+  allowedAttributes: {
+    'a': ['href', 'title', 'target', 'rel'],
+    'img': ['src', 'alt', 'title', 'width', 'height'],
+    'code': ['class'],
+    'pre': ['class'],
+    'div': ['class'],
+    'span': ['class'],
+    'td': ['align'],
+    'th': ['align'],
+  },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  // 禁止所有数据 URI
+  allowedSchemesByTag: {
+    img: ['http', 'https'],
+  },
+  // 禁止 javascript: 协议
+  transformTags: {
+    a: (tagName, attribs) => {
+      const href = attribs.href || ''
+      if (href.startsWith('javascript:')) {
+        return { tagName: 'span', attribs: {} }
+      }
+      // 给外链自动加 rel=noopener
+      return {
+        tagName,
+        attribs: {
+          ...attribs,
+          rel: 'noopener noreferrer',
+          target: attribs.target || '_blank',
+        },
+      }
+    },
+    img: (tagName, attribs) => {
+      const src = attribs.src || ''
+      if (src.startsWith('data:') || src.startsWith('javascript:')) {
+        return { tagName: 'span', attribs: {} }
+      }
+      return { tagName, attribs }
+    },
+  },
+  // 强制移除所有未列出的标签（而非转义）
+  exclusiveFilter: (frame) => {
+    return false
+  },
+}
+
 function sanitizeForumContent(html: string): string {
   if (!html) return ''
-  let clean = html
-  // 去除 <script> 及内容
-  clean = clean.replace(/<script[\s\S]*?<\/script\s*>/gi, '')
-  // 去除内联事件处理器
-  clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-  // 去除 javascript: 协议
-  clean = clean.replace(/(href|src)\s*=\s*(['"])?javascript:/gi, '$1=$2#')
-  // 去除危险标签
-  clean = clean.replace(/<(?:iframe|embed|object|applet|base|svg|math)[^>]*>/gi, '')
-  clean = clean.replace(/<\/iframe>/gi, '')
-  // 限制长度
+  let clean = sanitizeHtml(html, sanitizeHtmlOptions)
   if (clean.length > MAX_CONTENT_LEN) clean = clean.slice(0, MAX_CONTENT_LEN)
   return clean.trim()
 }
 
 function sanitizeForumTitle(title: string): string {
   if (!title) return ''
-  // 去除所有 HTML 标签
-  let clean = title.replace(/<[^>]*>/g, '')
-  // 去除内联事件
-  clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+  // 标题：允许的标签不适用，直接去除所有 HTML
+  let clean = sanitizeHtml(title, {
+    allowedTags: [],
+    allowedAttributes: {},
+  })
   if (clean.length > MAX_TITLE_LEN) clean = clean.slice(0, MAX_TITLE_LEN)
   return clean.trim()
 }

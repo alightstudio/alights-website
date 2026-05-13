@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/random-pixel",
       "schedule": "30 15 * * *"
+    },
+    {
+      "path": "/api/cron/baidu-push?secret=8b07c99f27a485bfe10c8f43dd5206b0d649d79babea4ff27d2a65a5b51459e7",
+      "schedule": "0 2 * * *"
     }
   ]
 }

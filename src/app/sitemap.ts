@@ -1,9 +1,11 @@
 import { MetadataRoute } from 'next'
+import { prisma } from '@/lib/prisma'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://alights.cn'
 
-  return [
+  // 静态页面
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -53,4 +55,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.4,
     },
   ]
+
+  // 动态：作品详情页
+  const works = await prisma.work.findMany({
+    where: { /* 只查已发布/审核通过的作品 */ },
+    select: { id: true, updatedAt: true },
+  })
+
+  const workPages: MetadataRoute.Sitemap = works.map((work) => ({
+    url: `${baseUrl}/works/${work.id}`,
+    lastModified: work.updatedAt,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }))
+
+  // 动态：社区文章页
+  const posts = await prisma.forumPost.findMany({
+    select: { id: true, updatedAt: true },
+  })
+
+  const postPages: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${baseUrl}/community/post/${post.id}`,
+    lastModified: post.updatedAt,
+    changeFrequency: 'weekly' as const,
+    priority: 0.5,
+  }))
+
+  return [...staticPages, ...workPages, ...postPages]
 }

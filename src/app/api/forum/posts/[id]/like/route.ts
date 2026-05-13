@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { getVerifiedUserId } from '@/lib/user-auth'
 import { awardPoints } from '@/lib/points'
-
-const prisma = new PrismaClient()
 
 // POST - 点赞/取消点赞
 export async function POST(

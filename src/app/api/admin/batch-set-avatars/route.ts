@@ -37,6 +37,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ results })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: '设置头像失败' }, { status: 500 })
   }
 }

@@ -19,7 +19,7 @@ function getClientIP(request: NextRequest): string {
 // 检查 IP 是否在白名单内（cron-job.org 的 IP 段）
 function isTrustedSource(ip: string): boolean {
   // cron-job.org 的常用出口 IP
-  const trustedIPs = ['', '::1', '127.0.0.1']
+  const trustedIPs = ['::1', '127.0.0.1']
   if (trustedIPs.includes(ip)) return true
   // 允许内网/Vercel 环境
   if (ip.startsWith('10.') || ip.startsWith('172.16.') || ip.startsWith('192.168.')) return true

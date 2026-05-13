@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic'
-
 const BAIDU_PUSH_URL = 'http://data.zz.baidu.com/urls?site=https://www.alights.cn&token=affCAR7MWNuBHLXq'
+const CRON_SECRET = process.env.CRON_SECRET || ''
 
 const PAGES = [
   'https://www.alights.cn/',
@@ -14,7 +13,16 @@ const PAGES = [
   'https://www.alights.cn/community',
 ]
 
+function verifyCronSecret(req: NextRequest): boolean {
+  const url = new URL(req.url)
+  return url.searchParams.get('secret') === CRON_SECRET
+}
+
 export async function GET(req: NextRequest) {
+  if (!verifyCronSecret(req)) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 })
+  }
+
   try {
     const body = PAGES.join('\n')
     const response = await fetch(BAIDU_PUSH_URL, {
@@ -36,7 +44,7 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: '推送失败', error: error.message },
+      { success: false, message: '推送失败' },
       { status: 500 }
     )
   }

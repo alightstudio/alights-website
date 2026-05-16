@@ -9,8 +9,8 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/community-post?secret=8b07c99f27a485bfe10c8f43dd5206b0d649d79babea4ff27d2a65a5b51459e7&count=2",
-      "schedule": "0 1,9,17 * * *"
+      "path": "/api/cron/community-post?secret=8b07c99f27a485bfe10c8f43dd5206b0d649d79babea4ff27d2a65a5b51459e7&count=5",
+      "schedule": "0 1 * * *"
     }
   ]
 }

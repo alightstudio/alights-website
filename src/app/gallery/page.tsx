@@ -42,6 +42,16 @@ import stash143Raw from '@/data/stash143.json'
 import stash142Raw from '@/data/stash142.json'
 import stash141Raw from '@/data/stash141.json'
 import stash140Raw from '@/data/stash140.json'
+import stash139Raw from '@/data/stash139.json'
+import stash138Raw from '@/data/stash138.json'
+import stash137Raw from '@/data/stash137.json'
+import stash136Raw from '@/data/stash136.json'
+import stash135Raw from '@/data/stash135.json'
+import stash134Raw from '@/data/stash134.json'
+import stash133Raw from '@/data/stash133.json'
+import stash132Raw from '@/data/stash132.json'
+import stash131Raw from '@/data/stash131.json'
+import stash130Raw from '@/data/stash130.json'
 
 interface StashWork {
   id: string
@@ -115,6 +125,16 @@ const stash143Data: StashWork[] = stash143Raw.map(transform).sort(sortByHeat)
 const stash142Data: StashWork[] = stash142Raw.map(transform).sort(sortByHeat)
 const stash141Data: StashWork[] = stash141Raw.map(transform).sort(sortByHeat)
 const stash140Data: StashWork[] = stash140Raw.map(transform).sort(sortByHeat)
+const stash139Data: StashWork[] = stash139Raw.map(transform).sort(sortByHeat)
+const stash138Data: StashWork[] = stash138Raw.map(transform).sort(sortByHeat)
+const stash137Data: StashWork[] = stash137Raw.map(transform).sort(sortByHeat)
+const stash136Data: StashWork[] = stash136Raw.map(transform).sort(sortByHeat)
+const stash135Data: StashWork[] = stash135Raw.map(transform).sort(sortByHeat)
+const stash134Data: StashWork[] = stash134Raw.map(transform).sort(sortByHeat)
+const stash133Data: StashWork[] = stash133Raw.map(transform).sort(sortByHeat)
+const stash132Data: StashWork[] = stash132Raw.map(transform).sort(sortByHeat)
+const stash131Data: StashWork[] = stash131Raw.map(transform).sort(sortByHeat)
+const stash130Data: StashWork[] = stash130Raw.map(transform).sort(sortByHeat)
 
 const allStashes = [
   { id: '176', label: 'Stash 176', data: stash176Data },
@@ -154,6 +174,16 @@ const allStashes = [
   { id: '142', label: 'Stash 142', data: stash142Data },
   { id: '141', label: 'Stash 141', data: stash141Data },
   { id: '140', label: 'Stash 140', data: stash140Data },
+  { id: '139', label: 'Stash 139', data: stash139Data },
+  { id: '138', label: 'Stash 138', data: stash138Data },
+  { id: '137', label: 'Stash 137', data: stash137Data },
+  { id: '136', label: 'Stash 136', data: stash136Data },
+  { id: '135', label: 'Stash 135', data: stash135Data },
+  { id: '134', label: 'Stash 134', data: stash134Data },
+  { id: '133', label: 'Stash 133', data: stash133Data },
+  { id: '132', label: 'Stash 132', data: stash132Data },
+  { id: '131', label: 'Stash 131', data: stash131Data },
+  { id: '130', label: 'Stash 130', data: stash130Data },
 ]
 
 const totalWorks = allStashes.reduce((s, st) => s + st.data.length, 0)

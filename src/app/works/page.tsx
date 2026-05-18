@@ -94,7 +94,7 @@ export default function WorksPage() {
             <button
               onClick={() => setSortMode('heat')}
               className={`text-xs px-3 py-1 border transition-colors ${sortMode === 'heat' ? 'border-accent-gold/60 text-accent-gold' : 'border-dark-600 text-gray-500 hover:border-gray-500'}`}
-            >🔥 热度</button>
+            >🔥 人气值</button>
             <button
               onClick={() => setSortMode('views')}
               className={`text-xs px-3 py-1 border transition-colors ${sortMode === 'views' ? 'border-accent-gold/60 text-accent-gold' : 'border-dark-600 text-gray-500 hover:border-gray-500'}`}

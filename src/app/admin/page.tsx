@@ -1019,7 +1019,7 @@ export default function AdminPage() {
                       </h3>
                       <div className="space-y-4">
                         <div>
-                          <p className="text-sm text-gray-400 mb-1">刷新新片场热度数据</p>
+                          <p className="text-sm text-gray-400 mb-1">刷新新片场人气值数据</p>
                           <p className="text-xs text-gray-600">从新片场重新拉取所有作品的播放量/点赞/收藏数据，更新主页和作品集的排序。需要本地 Chrome CDP（端口 9222）。</p>
                         </div>
                         <button onClick={doRefresh} disabled={refreshStatus === 'loading'}

@@ -232,7 +232,7 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
                     {Math.floor(work.duration / 60)}:{String(work.duration % 60).padStart(2, '0')}
                   </div>
                   <div className="absolute top-2 left-2 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5">
-                    🔥 {(work.heat || work.views).toLocaleString()}
+                    🔥 {(work.score || 0).toLocaleString()}
                   </div>
                   <div className="absolute bottom-2 left-2 bg-black/70 text-xs text-gray-400 px-2 py-0.5">
                     👁 {work.views.toLocaleString()} 播放

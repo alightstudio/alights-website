@@ -9,24 +9,7 @@
     "count_collect": 74,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 69,
-        "category_name": "二维动画",
-        "sub": {
-          "id": 70,
-          "category_name": "数字动画"
-        }
-      },
-      {
-        "id": 76,
-        "category_name": "视觉探索",
-        "sub": {
-          "id": 148,
-          "category_name": "视觉艺术"
-        }
-      }
-    ],
+    "categories": "二维动画/视觉探索",
     "publish_time": 1778095078,
     "web_url": "https://www.xinpianchang.com/a13676024"
   },
@@ -40,16 +23,7 @@
     "count_collect": 6,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 69,
-        "category_name": "二维动画",
-        "sub": {
-          "id": 70,
-          "category_name": "数字动画"
-        }
-      }
-    ],
+    "categories": "二维动画",
     "publish_time": 1778095071,
     "web_url": "https://www.xinpianchang.com/a13676023"
   },
@@ -63,16 +37,7 @@
     "count_collect": 2,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 304,
-        "category_name": "其他",
-        "sub": {
-          "id": 312,
-          "category_name": "其他"
-        }
-      }
-    ],
+    "categories": "其他",
     "publish_time": 1778095060,
     "web_url": "https://www.xinpianchang.com/a13676022"
   },
@@ -86,16 +51,7 @@
     "count_collect": 2,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778095051,
     "web_url": "https://www.xinpianchang.com/a13676021"
   },
@@ -109,24 +65,7 @@
     "count_collect": 71,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 76,
-        "category_name": "视觉探索",
-        "sub": {
-          "id": 79,
-          "category_name": "概念短片"
-        }
-      },
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "视觉探索/三维CG",
     "publish_time": 1778094890,
     "web_url": "https://www.xinpianchang.com/a13676020"
   },
@@ -140,16 +79,7 @@
     "count_collect": 21,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 76,
-        "category_name": "视觉探索",
-        "sub": {
-          "id": 382,
-          "category_name": "情绪短片"
-        }
-      }
-    ],
+    "categories": "视觉探索",
     "publish_time": 1778095035,
     "web_url": "https://www.xinpianchang.com/a13676019"
   },
@@ -163,24 +93,7 @@
     "count_collect": 34,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 1,
-        "category_name": "广告片",
-        "sub": {
-          "id": 361,
-          "category_name": "产品广告"
-        }
-      },
-      {
-        "id": 1,
-        "category_name": "广告片",
-        "sub": {
-          "id": 2,
-          "category_name": "餐饮食品"
-        }
-      }
-    ],
+    "categories": "广告片/广告片",
     "publish_time": 1778095027,
     "web_url": "https://www.xinpianchang.com/a13676018"
   },
@@ -194,16 +107,7 @@
     "count_collect": 4,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778094866,
     "web_url": "https://www.xinpianchang.com/a13676017"
   },
@@ -217,16 +121,7 @@
     "count_collect": 51,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778095011,
     "web_url": "https://www.xinpianchang.com/a13676016"
   },
@@ -240,16 +135,7 @@
     "count_collect": 33,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 16,
-        "category_name": "宣传片",
-        "sub": {
-          "id": 17,
-          "category_name": "企业形象"
-        }
-      }
-    ],
+    "categories": "宣传片",
     "publish_time": 1778094993,
     "web_url": "https://www.xinpianchang.com/a13676015"
   },
@@ -263,16 +149,7 @@
     "count_collect": 50,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778094839,
     "web_url": "https://www.xinpianchang.com/a13676014"
   },
@@ -286,24 +163,7 @@
     "count_collect": 42,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 76,
-        "category_name": "视觉探索",
-        "sub": {
-          "id": 79,
-          "category_name": "概念短片"
-        }
-      },
-      {
-        "id": 16,
-        "category_name": "宣传片",
-        "sub": {
-          "id": 390,
-          "category_name": "峰会论坛"
-        }
-      }
-    ],
+    "categories": "视觉探索/宣传片",
     "publish_time": 1778094619,
     "web_url": "https://www.xinpianchang.com/a13676012"
   },
@@ -317,16 +177,7 @@
     "count_collect": 49,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 1,
-        "category_name": "广告片",
-        "sub": {
-          "id": 5,
-          "category_name": "汽车"
-        }
-      }
-    ],
+    "categories": "广告片",
     "publish_time": 1778089661,
     "web_url": "https://www.xinpianchang.com/a13675996"
   },
@@ -340,16 +191,7 @@
     "count_collect": 12,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 1,
-        "category_name": "广告片",
-        "sub": {
-          "id": 5,
-          "category_name": "汽车"
-        }
-      }
-    ],
+    "categories": "广告片",
     "publish_time": 1778089652,
     "web_url": "https://www.xinpianchang.com/a13675995"
   },
@@ -363,16 +205,7 @@
     "count_collect": 50,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 69,
-        "category_name": "二维动画",
-        "sub": {
-          "id": 372,
-          "category_name": "手绘动画"
-        }
-      }
-    ],
+    "categories": "二维动画",
     "publish_time": 1778086210,
     "web_url": "https://www.xinpianchang.com/a13675986"
   },
@@ -386,16 +219,7 @@
     "count_collect": 18,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 69,
-        "category_name": "二维动画",
-        "sub": {
-          "id": 70,
-          "category_name": "数字动画"
-        }
-      }
-    ],
+    "categories": "二维动画",
     "publish_time": 1778086076,
     "web_url": "https://www.xinpianchang.com/a13675985"
   },
@@ -409,16 +233,7 @@
     "count_collect": 31,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778085777,
     "web_url": "https://www.xinpianchang.com/a13675983"
   },
@@ -432,16 +247,7 @@
     "count_collect": 25,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 76,
-        "category_name": "视觉探索",
-        "sub": {
-          "id": 148,
-          "category_name": "视觉艺术"
-        }
-      }
-    ],
+    "categories": "视觉探索",
     "publish_time": 1778085769,
     "web_url": "https://www.xinpianchang.com/a13675982"
   },
@@ -455,16 +261,7 @@
     "count_collect": 45,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778085757,
     "web_url": "https://www.xinpianchang.com/a13675981"
   },
@@ -478,16 +275,7 @@
     "count_collect": 2,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778085746,
     "web_url": "https://www.xinpianchang.com/a13675980"
   },
@@ -501,16 +289,7 @@
     "count_collect": 6,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778085583,
     "web_url": "https://www.xinpianchang.com/a13675979"
   },
@@ -524,16 +303,7 @@
     "count_collect": 6,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 69,
-        "category_name": "二维动画",
-        "sub": {
-          "id": 372,
-          "category_name": "手绘动画"
-        }
-      }
-    ],
+    "categories": "二维动画",
     "publish_time": 1778085573,
     "web_url": "https://www.xinpianchang.com/a13675978"
   },
@@ -547,16 +317,7 @@
     "count_collect": 2,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 69,
-        "category_name": "二维动画",
-        "sub": {
-          "id": 70,
-          "category_name": "数字动画"
-        }
-      }
-    ],
+    "categories": "二维动画",
     "publish_time": 1778085717,
     "web_url": "https://www.xinpianchang.com/a13675977"
   },
@@ -570,16 +331,7 @@
     "count_collect": 27,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 69,
-        "category_name": "二维动画",
-        "sub": {
-          "id": 70,
-          "category_name": "数字动画"
-        }
-      }
-    ],
+    "categories": "二维动画",
     "publish_time": 1778085709,
     "web_url": "https://www.xinpianchang.com/a13675975"
   },
@@ -593,24 +345,7 @@
     "count_collect": 24,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 1,
-        "category_name": "广告片",
-        "sub": {
-          "id": 2,
-          "category_name": "餐饮食品"
-        }
-      },
-      {
-        "id": 1,
-        "category_name": "广告片",
-        "sub": {
-          "id": 361,
-          "category_name": "产品广告"
-        }
-      }
-    ],
+    "categories": "广告片/广告片",
     "publish_time": 1778085546,
     "web_url": "https://www.xinpianchang.com/a13675974"
   },
@@ -624,16 +359,7 @@
     "count_collect": 7,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 1,
-        "category_name": "广告片",
-        "sub": {
-          "id": 4,
-          "category_name": "互联网服务"
-        }
-      }
-    ],
+    "categories": "广告片",
     "publish_time": 1778085688,
     "web_url": "https://www.xinpianchang.com/a13675973"
   },
@@ -647,16 +373,7 @@
     "count_collect": 2,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778085679,
     "web_url": "https://www.xinpianchang.com/a13675972"
   },
@@ -670,16 +387,7 @@
     "count_collect": 6,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778085517,
     "web_url": "https://www.xinpianchang.com/a13675971"
   },
@@ -693,16 +401,7 @@
     "count_collect": 8,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 144,
-        "category_name": "学习分享",
-        "sub": {
-          "id": 284,
-          "category_name": "动画/绘画"
-        }
-      }
-    ],
+    "categories": "学习分享",
     "publish_time": 1778085657,
     "web_url": "https://www.xinpianchang.com/a13675970"
   },
@@ -716,16 +415,7 @@
     "count_collect": 29,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778085636,
     "web_url": "https://www.xinpianchang.com/a13675969"
   },
@@ -739,16 +429,7 @@
     "count_collect": 71,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 16,
-        "category_name": "宣传片",
-        "sub": {
-          "id": 25,
-          "category_name": "影视/综艺"
-        }
-      }
-    ],
+    "categories": "宣传片",
     "publish_time": 1778085469,
     "web_url": "https://www.xinpianchang.com/a13675968"
   },
@@ -762,16 +443,7 @@
     "count_collect": 3,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 76,
-        "category_name": "视觉探索",
-        "sub": {
-          "id": 148,
-          "category_name": "视觉艺术"
-        }
-      }
-    ],
+    "categories": "视觉探索",
     "publish_time": 1778004420,
     "web_url": "https://www.xinpianchang.com/a13674591"
   },
@@ -785,16 +457,7 @@
     "count_collect": 23,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778003774,
     "web_url": "https://www.xinpianchang.com/a13674585"
   },
@@ -808,16 +471,7 @@
     "count_collect": 10,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778003765,
     "web_url": "https://www.xinpianchang.com/a13674584"
   },
@@ -831,16 +485,7 @@
     "count_collect": 35,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778003597,
     "web_url": "https://www.xinpianchang.com/a13674583"
   },
@@ -854,16 +499,7 @@
     "count_collect": 4,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 27,
-        "category_name": "音乐/声音",
-        "sub": {
-          "id": 180,
-          "category_name": "其他"
-        }
-      }
-    ],
+    "categories": "音乐/声音",
     "publish_time": 1778003740,
     "web_url": "https://www.xinpianchang.com/a13674582"
   },
@@ -877,16 +513,7 @@
     "count_collect": 25,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778003730,
     "web_url": "https://www.xinpianchang.com/a13674580"
   },
@@ -900,16 +527,7 @@
     "count_collect": 9,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 347,
-        "category_name": "三维CG",
-        "sub": {
-          "id": 353,
-          "category_name": "三维动画"
-        }
-      }
-    ],
+    "categories": "三维CG",
     "publish_time": 1778003719,
     "web_url": "https://www.xinpianchang.com/a13674579"
   },
@@ -923,16 +541,7 @@
     "count_collect": 2,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 304,
-        "category_name": "其他",
-        "sub": {
-          "id": 312,
-          "category_name": "其他"
-        }
-      }
-    ],
+    "categories": "其他",
     "publish_time": 1778003530,
     "web_url": "https://www.xinpianchang.com/a13674578"
   },
@@ -946,16 +555,7 @@
     "count_collect": 2,
     "count_score": 0,
     "author": "栖光文化",
-    "categories": [
-      {
-        "id": 304,
-        "category_name": "其他",
-        "sub": {
-          "id": 312,
-          "category_name": "其他"
-        }
-      }
-    ],
+    "categories": "其他",
     "publish_time": 1778003522,
     "web_url": "https://www.xinpianchang.com/a13674577"
   }

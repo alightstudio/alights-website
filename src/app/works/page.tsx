@@ -140,7 +140,7 @@ export default function WorksPage() {
                 />
                 {/* Top-left: Heat */}
                 <div className="absolute top-2 left-2 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5">
-                  🔥 {(work.score || work.views).toLocaleString()}
+                  🔥 {(work.score || work.heat || 0).toLocaleString()}
                 </div>
                 {/* Top-right: Duration */}
                 <div className="absolute top-2 right-2 bg-black/70 text-xs text-gray-400 px-2 py-0.5">
@@ -160,7 +160,7 @@ export default function WorksPage() {
               </h3>
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <span className="truncate mr-2">{work.categories || work.author}</span>
-                <span className="text-accent-gold/50 shrink-0">🔥 {(work.score || work.views).toLocaleString()}</span>
+                <span className="text-accent-gold/50 shrink-0">🔥 {(work.score || work.heat || 0).toLocaleString()}</span>
               </div>
             </motion.a>
           ))}

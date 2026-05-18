@@ -187,7 +187,7 @@ const allStashes = [
 ]
 
 const totalWorks = allStashes.reduce((s, st) => s + st.data.length, 0)
-const totalHeatAll = allStashes.reduce((s, st) => s + st.data.reduce((ss, w) => ss + (w.score || 0), 0), 0)
+const totalHeatAll = allStashes.reduce((s, st) => s + st.data.reduce((ss, w) => ss + (w.score ?? 0), 0), 0)
 
 function TabBtn({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
   return (
@@ -212,7 +212,7 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
   }, [sortMode, works])
 
   const totalPlays = works.reduce((s, w) => s + (w.views || 0), 0)
-  const totalScore = works.reduce((s, w) => s + (w.score || 0), 0)
+  const totalScore = works.reduce((s, w) => s + (w.score ?? 0), 0)
 
   return (
     <div className="mb-16">
@@ -271,7 +271,7 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
                 }}
               />
               <div className="absolute top-2 left-2 bg-accent-gold/90 text-dark-900 text-xs font-medium px-2 py-0.5">
-                🔥 {(work.score || work.heat || 0).toLocaleString()}
+                🔥 {(work.score || 0).toLocaleString()}
               </div>
               <div className="absolute top-2 right-2 bg-black/70 text-xs text-gray-400 px-2 py-0.5">
                 {formatDuration(work.duration)}
@@ -288,7 +288,7 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
             </h3>
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span className="truncate mr-2">{work.categories || work.author}</span>
-              <span className="text-accent-gold/50 shrink-0">🔥 {(work.score || work.heat || 0).toLocaleString()}</span>
+              <span className="text-accent-gold/50 shrink-0">🔥 {(work.score || 0).toLocaleString()}</span>
             </div>
           </motion.a>
         ))}

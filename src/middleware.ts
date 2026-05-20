@@ -57,10 +57,11 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Admin 路径需 session 校验（Edge Runtime 兼容实现）
-  if (pathname.startsWith('/admin')) {
+  // ⚠️ 排除 /admin/login 路径（登录页无需认证）
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     const isAdmin = await verifyAdminEdge(request)
     if (!isAdmin) {
-      return NextResponse.redirect(new URL('/login', request.url), 302)
+      return NextResponse.redirect(new URL('/admin/login', request.url), 302)
     }
     return NextResponse.next()
   }

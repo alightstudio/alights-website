@@ -23,13 +23,16 @@ async function verifyAdminEdge(req: NextRequest): Promise<boolean> {
   if (!cookieSession) return false
 
   try {
-    const [sigHex, payloadHex] = cookieSession.split('.')
-    if (!sigHex || !payloadHex) return false
+    // token 格式: base64url(payload).base64url(hmac)  与 admin-auth.ts 一致
+    const dot = cookieSession.lastIndexOf('.')
+    if (dot < 1) return false
+    const payloadB64 = cookieSession.substring(0, dot)
+    const sigB64 = cookieSession.substring(dot + 1)
 
-    const payload = JSON.parse(Buffer.from(payloadHex, 'base64url').toString())
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString())
     if (!payload || !payload.exp || Date.now() > payload.exp) return false
 
-    // 验证 HMAC 签名（使用 Web Crypto API，与 admin-auth.ts 保持一致）
+    // 验证 HMAC 签名（base64url 编码，与 admin-auth.ts createSessionToken 一致）
     const encoder = new TextEncoder()
     const keyData = encoder.encode(ADMIN_SECRET)
     const key = await crypto.subtle.importKey(
@@ -37,15 +40,14 @@ async function verifyAdminEdge(req: NextRequest): Promise<boolean> {
       { name: 'HMAC', hash: 'SHA-256' },
       false, ['sign']
     )
-    const sigBytes = Buffer.from(sigHex, 'hex')
-    const expectedSig = await crypto.subtle.sign('HMAC', key, encoder.encode(payloadHex))
-    const expectedSigHex = Buffer.from(expectedSig).toString('hex')
+    const expectedSig = await crypto.subtle.sign('HMAC', key, encoder.encode(payloadB64))
+    const expectedSigB64 = Buffer.from(expectedSig).toString('base64url')
 
     // 恒定时间比较（防止 timing attack）
-    if (sigBytes.length !== expectedSigHex.length) return false
+    if (sigB64.length !== expectedSigB64.length) return false
     let diff = 0
-    for (let i = 0; i < sigBytes.length; i++) {
-      diff |= sigBytes[i] ^ expectedSigHex.charCodeAt(i)
+    for (let i = 0; i < sigB64.length; i++) {
+      diff |= sigB64.charCodeAt(i) ^ expectedSigB64.charCodeAt(i)
     }
     return diff === 0
   } catch {

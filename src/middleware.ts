@@ -9,7 +9,7 @@ const redirects: Record<string, string> = {
   '/lab/propagation': '/experiments/bacterium/index.html',
 }
 
-const ADMIN_SECRET = process.env.ADMIN_SESSION_SECRET || ''
+const ADMIN_SECRET = process.env.ADMIN_JWT_SECRET || ''
 const SESSION_EXPIRE = 7 * 24 * 60 * 60 * 1000 // 7天
 
 /**

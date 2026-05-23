@@ -40,7 +40,6 @@ export default function SpiritPage() {
   const [isPortrait, setIsPortrait] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [splineKey, setSplineKey] = useState(0)
-  const [splineReady, setSplineReady] = useState(false)
 
   // 客户端挂载后设置
   useEffect(() => {
@@ -52,16 +51,11 @@ export default function SpiritPage() {
   }, [])
 
   const onSplineLoad = useCallback((splineApp: any) => {
-    // 延迟 setState，避免 React 18 并发渲染下的 error #482
-    requestAnimationFrame(() => {
-      setSplineReady(true)
-    })
     try { splineApp.setBackgroundColor('transparent') } catch {}
     ;(window as any).__splineApp = splineApp
   }, [])
 
   const handleRetry = useCallback(() => {
-    setSplineReady(false)
     setSplineKey(k => k + 1)
   }, [])
 
@@ -98,9 +92,9 @@ export default function SpiritPage() {
   return (
     <div className="fixed inset-0 bg-dark-950 overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center">
-        <SplineErrorBoundary fallback={fallback} onError={() => { setSplineReady(false) }}>
+        <SplineErrorBoundary fallback={fallback}>
           <div className={`w-full touch-none max-h-full ${isPortrait ? 'h-[55dvh]' : 'h-full'}`}>
-            {!splineReady && <LoadingSkeleton isPortrait={isPortrait} />}
+            <LoadingSkeleton isPortrait={isPortrait} />
             {mounted && (
               <Spline
                 key={splineKey}

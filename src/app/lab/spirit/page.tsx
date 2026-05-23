@@ -1,10 +1,9 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState, Component } from 'react'
-import Spline from '@splinetool/react-spline/next'
+import { useCallback, useEffect, useRef, useState, Component } from 'react'
 import Link from 'next/link'
 
-// ══ 错误边界：捕获 Spline 渲染时的 React 异常 ══
+// ══ 错误边界 ══
 class SplineErrorBoundary extends Component<{
   fallback: React.ReactNode
   onError?: () => void
@@ -14,8 +13,8 @@ class SplineErrorBoundary extends Component<{
   static getDerivedStateFromError() {
     return { hasError: true }
   }
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[Spirit] SplineErrorBoundary caught:', error.message, errorInfo)
+  componentDidCatch(error: Error) {
+    console.error('[Spirit] SplineErrorBoundary caught:', error.message)
     this.props.onError?.()
   }
   render() {
@@ -39,9 +38,10 @@ function LoadingSkeleton({ isPortrait }: { isPortrait: boolean }) {
 export default function SpiritPage() {
   const [isPortrait, setIsPortrait] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [splineKey, setSplineKey] = useState(0)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const appRef = useRef<any>(null)
 
-  // 客户端挂载后设置
+  // 客户端挂载
   useEffect(() => {
     setMounted(true)
     const check = () => setIsPortrait(window.innerHeight > window.innerWidth * 1.2)
@@ -50,24 +50,51 @@ export default function SpiritPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  const onSplineLoad = useCallback((splineApp: any) => {
-    try { splineApp.setBackgroundColor('transparent') } catch {}
-    ;(window as any).__splineApp = splineApp
-  }, [])
-
-  const handleRetry = useCallback(() => {
-    setSplineKey(k => k + 1)
-  }, [])
-
-  // 组件卸载时释放 Spline Application 防止 WebGL 资源泄漏
+  // 用原生 Runtime API 加载 Spline，彻底绕过 React 组件渲染
   useEffect(() => {
+    if (!mounted || !canvasRef.current) return
+
+    let cancelled = false
+
+    const loadSpline = async () => {
+      const { Application } = await import('@splinetool/runtime')
+      if (cancelled) return
+
+      const app = new Application(canvasRef.current!)
+      appRef.current = app
+      ;(window as any).__splineApp = app
+
+      // 先 fetch 为 ArrayBuffer 再传入 start()
+      const res = await fetch('/scenes/spirit-scene.splinecode')
+      const buffer = await res.arrayBuffer()
+      if (cancelled) return
+
+      await app.start(buffer)
+    }
+
+    loadSpline().catch((err) => {
+      console.error('[Spirit] Spline runtime load failed:', err)
+    })
+
     return () => {
-      const app = (window as any).__splineApp
-      if (app) {
-        try { app.dispose() } catch {}
+      cancelled = true
+      if (appRef.current) {
+        try { appRef.current.dispose() } catch {}
+        appRef.current = null
         delete (window as any).__splineApp
       }
     }
+  }, [mounted])
+
+  const handleRetry = useCallback(() => {
+    // 销毁旧实例
+    if (appRef.current) {
+      try { appRef.current.dispose() } catch {}
+      appRef.current = null
+    }
+    // 重新触发 useEffect
+    setMounted(false)
+    setTimeout(() => setMounted(true), 0)
   }, [])
 
   const fallback = (
@@ -93,16 +120,9 @@ export default function SpiritPage() {
     <div className="fixed inset-0 bg-dark-950 overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center">
         <SplineErrorBoundary fallback={fallback}>
-          <div className={`w-full touch-none max-h-full ${isPortrait ? 'h-[55dvh]' : 'h-full'}`}>
+          <div className={`w-full touch-none max-h-full ${isPortrait ? 'h-[55dvh]' : 'h-full'} relative`}>
             <LoadingSkeleton isPortrait={isPortrait} />
-            {mounted && (
-              <Spline
-                key={splineKey}
-                scene="/scenes/spirit-scene.splinecode"
-                className="w-full h-full"
-                onLoad={onSplineLoad}
-              />
-            )}
+            {mounted && <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />}
           </div>
         </SplineErrorBoundary>
         {/* 水印遮罩 */}

@@ -70,18 +70,9 @@ const experiences = [
     name: '光音',
     eng: 'Light Tone',
     desc: '弹奏 · 指尖钢琴',
-    color: '#A78BFA',
+    color: '#F472B6',
     href: '/lab/piano',
     bg: 'from-dark-900 via-violet-950/20 to-dark-900',
-  },
-  {
-    id: 'bloom',
-    name: '光影',
-    eng: 'Light & Shadow',
-    desc: '点击 · 光影变幻',
-    color: '#E8C97A',
-    href: '/experiments/bloom/index.html',
-    bg: 'from-dark-900 via-yellow-950/20 to-dark-900',
   },
 ]
 

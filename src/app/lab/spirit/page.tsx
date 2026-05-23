@@ -52,7 +52,10 @@ export default function SpiritPage() {
   }, [])
 
   const onSplineLoad = useCallback((splineApp: any) => {
-    setSplineReady(true)
+    // 延迟 setState，避免 React 18 并发渲染下的 error #482
+    requestAnimationFrame(() => {
+      setSplineReady(true)
+    })
     try { splineApp.setBackgroundColor('transparent') } catch {}
     ;(window as any).__splineApp = splineApp
   }, [])

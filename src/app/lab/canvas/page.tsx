@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import Link from 'next/link'
 import CanvasLeaderboard from '@/components/CanvasLeaderboard'
 import CanvasMarketplace from '@/components/CanvasMarketplace'
 
@@ -507,6 +508,7 @@ export default function CanvasPage() {
       {/* 顶部信息栏 */}
       <div className="px-6 md:px-12 mb-3 flex items-center justify-between flex-wrap gap-2">
         <div>
+          <Link href="/lab" className="text-xs text-gray-600 hover:text-accent-gold/60 transition-colors inline-block mb-1">← 返回实验室</Link>
           <h1 className="font-display text-2xl text-white">像素画布</h1>
           <p className="text-xs text-gray-500 mt-1">
             {canvasInfo ? canvasInfo.width + '\u00D7' + canvasInfo.height : '--'} {'\u00B7'}

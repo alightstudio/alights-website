@@ -74,6 +74,15 @@ const experiences = [
     href: '/lab/piano',
     bg: 'from-dark-900 via-violet-950/20 to-dark-900',
   },
+  {
+    id: 'bloom',
+    name: '光影',
+    eng: 'Light & Shadow',
+    desc: '点击 · 光影变幻',
+    color: '#E8C97A',
+    href: '/experiments/bloom/index.html',
+    bg: 'from-dark-900 via-yellow-950/20 to-dark-900',
+  },
 ]
 
 export default function LabPage() {
@@ -89,7 +98,7 @@ export default function LabPage() {
         </p>
         <div className="mt-6 w-12 h-px bg-accent-gold/30 mx-auto" />
         <p className="mt-6 max-w-xl mx-auto text-sm text-gray-600 leading-relaxed">
-          光在这里停留，交互动这里是创作的延伸。
+          光在这里停留，交互是创作的延伸。
           点击进入任意实验，探索光影与声音的边界。
         </p>
       </header>

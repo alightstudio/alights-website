@@ -222,9 +222,12 @@ export default function CanvasGallery() {
               共 {canvases.length} 个已完成画布
             </p>
           </div>
-          <Link href="/canvas" className="text-sm text-accent-gold/60 hover:text-accent-gold transition">
-            &larr; 返回画板
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/lab" className="text-sm text-gray-600 hover:text-accent-gold/60 transition">← 返回实验室</Link>
+            <Link href="/lab/canvas" className="text-sm text-accent-gold/60 hover:text-accent-gold transition">
+              &larr; 返回画板
+            </Link>
+          </div>
         </div>
 
         {canvases.length === 0 && (

@@ -108,7 +108,7 @@ export default function CanvasLeaderboard() {
                   {activeCanvas.name || '未命名画布'}
                   <span className="text-xs text-gray-600 ml-3">{activeCanvas.width}×{activeCanvas.height}</span>
                 </span>
-                <Link href="/canvas" className="text-xs text-accent-gold/70 hover:text-accent-gold">前往画板 →</Link>
+                <Link href="/lab/canvas" className="text-xs text-accent-gold/70 hover:text-accent-gold">前往画板 →</Link>
               </div>
               <div className="flex justify-between text-xs text-gray-600 mb-1.5">
                 <span>填充进度</span>

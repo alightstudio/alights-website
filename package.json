@@ -36,6 +36,7 @@
     "@types/react-dom": "^18.0.0",
     "@types/sanitize-html": "^2.16.1",
     "autoprefixer": "^10.0.0",
+    "patch-package": "^8.0.1",
     "playwright": "^1.59.1",
     "postcss": "^8.0.0",
     "prisma": "^5.0.0",

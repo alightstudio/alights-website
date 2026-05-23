@@ -50,8 +50,23 @@ export default function PostPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [liked, setLiked] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
 
   useEffect(() => {
+    // 检查登录状态
+    const localUid = localStorage.getItem('userId')
+    const cookieMatch = document.cookie.match(/userId=([^;]+)/)
+    const cookieUid = cookieMatch ? cookieMatch[1] : null
+    
+    if (!localUid && !cookieUid) {
+      // 未登录 → 重定向到登录页
+      window.location.href = `/login?redirect=${encodeURIComponent(`/community/post/${params.id}`)}`
+      return
+    }
+    
+    setCheckingAuth(false)
+    
+    // 已登录 → 加载帖子数据
     fetch(`/api/forum/posts/${params.id}`)
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
@@ -91,6 +106,14 @@ export default function PostPage({ params }: { params: { id: string } }) {
             <pre className="text-sm text-red-300 whitespace-pre-wrap">{error}</pre>
           </div>
         </div>
+      </main>
+    )
+  }
+
+  if (checkingAuth) {
+    return (
+      <main className="min-h-screen bg-dark-900 pt-28 pb-20 px-6">
+        <div className="max-w-4xl mx-auto text-center py-20 text-gray-500">验证登录状态...</div>
       </main>
     )
   }

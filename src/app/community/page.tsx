@@ -202,8 +202,14 @@ export default function CommunityPage() {
     }
   }
 
-  // Load post detail - now navigates to separate page
+  // Load post detail - check login first
   const openPost = (id: string) => {
+    if (!userId) {
+      // 未登录 → 跳转登录页，带上 redirect 参数
+      window.location.href = `/login?redirect=${encodeURIComponent(`/community/post/${id}`)}`
+      return
+    }
+    // 已登录 → 正常跳转详情页
     window.location.href = `/community/post/${id}`
   }
 

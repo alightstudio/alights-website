@@ -39,8 +39,10 @@ function LoginForm() {
       localStorage.setItem('userId', data.user.id)
       localStorage.setItem('userName', data.user.name)
       localStorage.setItem('userPhone', data.user.phone)
-      // 跳转到个人中心
-      router.push('/profile')
+      
+      // 支持 redirect 参数，登录成功后跳回原页面
+      const redirect = searchParams.get('redirect') || '/profile'
+      router.push(redirect)
     } catch (err: any) {
       setError(err.message)
     } finally {

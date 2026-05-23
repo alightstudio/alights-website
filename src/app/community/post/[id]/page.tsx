@@ -57,15 +57,15 @@ export default function PostPage({ params }: { params: { id: string } }) {
     const localUid = localStorage.getItem('userId')
     const cookieMatch = document.cookie.match(/userId=([^;]+)/)
     const cookieUid = cookieMatch ? cookieMatch[1] : null
-    
+
     if (!localUid && !cookieUid) {
       // 未登录 → 重定向到登录页
       window.location.href = `/login?redirect=${encodeURIComponent(`/community/post/${params.id}`)}`
       return
     }
-    
+
     setCheckingAuth(false)
-    
+
     // 已登录 → 加载帖子数据
     fetch(`/api/forum/posts/${params.id}`)
       .then(res => {
@@ -89,6 +89,14 @@ export default function PostPage({ params }: { params: { id: string } }) {
   }, [params.id])
 
   async function handleLike() {
+    // ⚠️ 检查登录状态
+    const localUid = localStorage.getItem('userId')
+    const cookieMatch = document.cookie.match(/userId=([^;]+)/)
+    if (!localUid && !cookieMatch) {
+      alert('请先登录')
+      return
+    }
+    
     const res = await fetch(`/api/forum/posts/${params.id}/like`, { method: 'POST' })
     if (res.ok) {
       const data = await res.json()
@@ -290,17 +298,26 @@ export default function PostPage({ params }: { params: { id: string } }) {
             <form
               onSubmit={async (e) => {
                 e.preventDefault()
+                
+                // ⚠️ 检查登录状态
+                const localUid = localStorage.getItem('userId')
+                const cookieMatch = document.cookie.match(/userId=([^;]+)/)
+                if (!localUid && !cookieMatch) {
+                  alert('请先登录')
+                  return
+                }
+                
                 const form = e.currentTarget
                 const textarea = form.querySelector('textarea')!
                 const content = textarea.value.trim()
                 if (!content) return
-
+  
                 const res = await fetch(`/api/forum/posts/${params.id}/comments`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ content }),
                 })
-
+  
                 if (res.ok) {
                   window.location.reload()
                 } else {
@@ -375,7 +392,7 @@ export default function PostPage({ params }: { params: { id: string } }) {
                           <button
                             className="text-xs text-gray-600 hover:text-red-400 transition-colors"
                             onClick={async () => {
-                              if (!confirm('确定删除此评论？')) return
+                              if (!confirm('确定删除此评论?')) return
                               const res = await fetch(`/api/forum/posts/${params.id}/comments/${comment.id}`, {
                                 method: 'DELETE',
                                 headers: { 'Content-Type': 'application/json' },

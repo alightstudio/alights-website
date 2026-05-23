@@ -41,7 +41,10 @@ function LoginForm() {
       localStorage.setItem('userPhone', data.user.phone)
       
       // 支持 redirect 参数，登录成功后跳回原页面
-      const redirect = searchParams.get('redirect') || '/profile'
+      // ⚠️ 安全校验：防止开放重定向漏洞
+      const redirectParam = searchParams.get('redirect') || '/profile'
+      const isValidRedirect = redirectParam.startsWith('/') && !redirectParam.startsWith('//')
+      const redirect = isValidRedirect ? redirectParam : '/profile'
       router.push(redirect)
     } catch (err: any) {
       setError(err.message)

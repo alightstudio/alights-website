@@ -59,6 +59,7 @@ export default function CommunityPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const [checkingSession, setCheckingSession] = useState(true)  // 新增：防止竞态条件
   const [sortKey, setSortKey] = useState<SortKey>('latest')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -91,12 +92,14 @@ export default function CommunityPage() {
   // Load user session
   useEffect(() => {
     const localUid = localStorage.getItem('userId')
-    if (localUid) setUserId(localUid)
-    else {
+    if (localUid) {
+      setUserId(localUid)
+    } else {
       const cookies = document.cookie.split(';')
       const uid = cookies.find(c => c.trim().startsWith('userId='))
       setUserId(uid ? uid.split('=')[1] : null)
     }
+    setCheckingSession(false)  // ← 检查完成
   }, [])
 
   // Load categories
@@ -204,6 +207,7 @@ export default function CommunityPage() {
 
   // Load post detail - check login first
   const openPost = (id: string) => {
+    if (checkingSession) return  // ← 防止在检查期间点击
     if (!userId) {
       // 未登录 → 跳转登录页，带上 redirect 参数
       window.location.href = `/login?redirect=${encodeURIComponent(`/community/post/${id}`)}`

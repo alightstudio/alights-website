@@ -23,6 +23,21 @@ const nextConfig = {
 
     return config
   },
+  async rewrites() {
+    return [
+      // 把 Spline WASM 请求代理到本地文件（修复 Vercel 生产环境 WASM 加载失败）
+      {
+        source: '/wasm/:package/:version/:file*',
+        destination: '/wasm/:file*',
+      },
+      // 代理 unpkg.com 的 Spline WASM 请求到本地
+      {
+        source: '/unpkg-proxy/:path*',
+        destination: 'https://unpkg.com/:path*',
+      },
+    ]
+  },
+
   async redirects() {
     return [
       // 画布重定向

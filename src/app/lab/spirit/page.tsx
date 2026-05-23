@@ -52,24 +52,30 @@ export default function SpiritPage() {
 
   // 用原生 Runtime API 加载 Spline，彻底绕过 React 组件渲染
   useEffect(() => {
+    console.log('[Spirit] useEffect triggered, mounted:', mounted)
     if (!mounted || !canvasRef.current) return
 
     let cancelled = false
 
     const loadSpline = async () => {
+      console.log('[Spirit] Loading @splinetool/runtime...')
       const { Application } = await import('@splinetool/runtime')
       if (cancelled) return
+      console.log('[Spirit] Runtime loaded, creating Application...')
 
       const app = new Application(canvasRef.current!)
       appRef.current = app
       ;(window as any).__splineApp = app
 
       // 先 fetch 为 ArrayBuffer 再传入 start()
+      console.log('[Spirit] Fetching scene file...')
       const res = await fetch('/scenes/spirit-scene.splinecode')
       const buffer = await res.arrayBuffer()
       if (cancelled) return
 
+      console.log('[Spirit] Starting Spline app...')
       await app.start(buffer)
+      console.log('[Spirit] Spline app started successfully')
     }
 
     loadSpline().catch((err) => {

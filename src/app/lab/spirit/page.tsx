@@ -7,22 +7,24 @@ import Link from 'next/link'
 // ══ 错误边界：捕获 Spline 渲染时的 React 异常 ══
 class SplineErrorBoundary extends Component<{
   fallback: React.ReactNode
-  onError?: () => void
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
   children?: React.ReactNode
 }> {
-  state: { hasError: boolean } = { hasError: false }
-  static getDerivedStateFromError() {
-    return { hasError: true }
+  state: { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null } = { hasError: false, error: null, errorInfo: null }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
   }
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('[Spirit] SplineErrorBoundary caught:', error.message, errorInfo)
-    this.props.onError?.()
+    this.setState({ error, errorInfo })
+    this.props.onError?.(error, errorInfo)
+    // 将错误信息暴露到 window，方便调试
+    ;(window as any).__splineLastError = { message: error.message, stack: error.stack, componentStack: errorInfo.componentStack }
   }
   render() {
     if (this.state.hasError) return this.props.fallback
     return this.props.children
   }
-}
 
 // ══ Loading 骨架 ══
 function LoadingSkeleton({ isPortrait }: { isPortrait: boolean }) {
@@ -75,13 +77,18 @@ export default function SpiritPage() {
 
   const fallback = (
     <div className={`w-full touch-none max-h-full ${isPortrait ? 'h-[55dvh]' : 'h-full'} flex items-center justify-center`}>
-      <div className="text-center">
+      <div className="text-center max-w-md px-4">
         <div className="w-8 h-8 mx-auto mb-3 rounded-full bg-violet-500/5 flex items-center justify-center">
           <svg className="w-4 h-4 text-violet-400/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
         <p className="text-sm text-gray-400/80 mb-3">场景加载失败</p>
+        {typeof window !== 'undefined' && (window as any).__splineLastError && (
+          <pre className="text-[10px] text-red-400/60 text-left whitespace-pre-wrap mb-3 max-h-32 overflow-auto">
+            {(window as any).__splineLastError.message}
+          </pre>
+        )}
         <button
           onClick={handleRetry}
           className="px-5 py-1.5 text-xs text-gray-500 border border-white/10 rounded-full hover:border-violet-400/40 hover:text-white transition-colors"

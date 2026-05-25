@@ -154,6 +154,12 @@
           var loading = document.getElementById('section-loading');
           if (loading) loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">设备兼容性提示<br><span style="font-size:11px;color:#444">此设备可能不支持 3D 渲染</span></p>';
         }
+        // Fallback: 如果 5 秒内 _onLoaded 未被调用，自动触发（解决移动端 loadPromise 卡住问题）
+        setTimeout(function() {
+          if (!app) return;
+          try { if (app._onLoaded) app._onLoaded(); } catch(e) { console.warn('[光触] _onLoaded fallback error:', e); }
+          try { if (app.model && app.model.setSection) app.model.setSection(1); } catch(e) { console.warn('[光触] setSection fallback error:', e); }
+        }, 5000);
         // 播放背景音乐（需要用户手势）
         var audio = document.getElementById('soundtrack');
         if (audio) audio.play().catch(function(){});

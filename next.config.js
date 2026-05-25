@@ -119,7 +119,7 @@ const nextConfig = {
               "font-src 'self' https://fonts.gstatic.com https://alights.cn",
               "img-src 'self' data: blob: https://images.unsplash.com https://cdn.inew.land https://open.snmc.io https://*.vercel-blob.com https://*.public.blob.vercel-staging.com https://*.public.blob.vercel-storage.com https://*.xpccdn.com https://*.xinpianchang.com https://prod.spline.design https://*.spline.design https://hm.baidu.com",
               "media-src 'self' https://*.vercel-blob.com https://*.public.blob.vercel-staging.com https://*.public.blob.vercel-storage.com blob: https://gleitz.github.io",
-              "connect-src 'self' https://www.googletagmanager.com https://api.openweathermap.org https://ipgeolocation.abstractapi.com https://api.cloudflare.com https://prod.spline.design https://*.spline.design https://unpkg.com https://gleitz.github.io https://hm.baidu.com",
+              "connect-src 'self' https://www.googletagmanager.com https://api.openweathermap.org https://ipgeolocation.abstractapi.com https://api.cloudflare.com https://prod.spline.design https://*.spline.design https://unpkg.com https://*.unpkg.com https://gleitz.github.io https://hm.baidu.com https://cdn.jsdelivr.net",
               "frame-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",

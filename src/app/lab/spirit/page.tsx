@@ -84,14 +84,35 @@ export default function SpiritPage() {
   const [loadState, setLoadState] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMsg, setErrorMsg] = useState('')
   const [retryKey, setRetryKey] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     setMounted(true)
     const check = () => setIsPortrait(window.innerHeight > window.innerWidth * 1.2)
+    const mobileCheck = () => {
+      const ua = navigator.userAgent
+      setIsMobile(/Android|iPhone|iPad|iPod/i.test ua) || window.innerWidth < 768)
+    }
     check()
+    mobileCheck()
     window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
+    window.addEventListener('resize', mobileCheck)
+    return () => {
+      window.removeEventListener('resize', check)
+      window.removeEventListener('resize', mobileCheck)
+    }
   }, [])
+
+  // 加载超时保护（移动端可能更慢）
+  useEffect(() => {
+    if (loadState !== 'loading' || !mounted) return
+    const timeout = isMobile ? 20000 : 30000
+    const timer = setTimeout(() => {
+      setLoadState('error')
+      setErrorMsg(isMobile ? '移动端加载超时，3D 场景可能需要更好的设备支持' : '加载超时，请重试')
+    }, timeout)
+    return () => clearTimeout(timer)
+  }, [loadState, mounted, isMobile])
 
   const handleRetry = useCallback(() => {
     setLoadState('loading')
@@ -117,9 +138,9 @@ export default function SpiritPage() {
             <div className="absolute top-0 right-0 w-8 h-full z-40 bg-gradient-to-l from-dark-950 to-transparent pointer-events-none" />
           </>
         )}
-        {/* 始终挂载 canvas（隐藏）以确保 import 能执行 */}
+        {/* 始终挂载 canvas（透明）以确保 import 能执行 */}
         {loadState === 'loading' && (
-          <div className="hidden">
+          <div className="absolute inset-0 opacity-0 pointer-events-none z-0">
             <SplineCanvas
               key={retryKey}
               onLoad={() => setLoadState('success')}

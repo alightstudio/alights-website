@@ -1,31 +1,7 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState, Component } from 'react'
-import Spline from '@splinetool/react-spline/next'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
-
-// ══ 错误边界：捕获 Spline 渲染时的 React 异常 ══
-class SplineErrorBoundary extends Component<{
-  fallback: React.ReactNode
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
-  children?: React.ReactNode
-}> {
-  state: { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null } = { hasError: false, error: null, errorInfo: null }
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error }
-  }
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[Spirit] SplineErrorBoundary caught:', error.message, errorInfo)
-    this.setState({ error, errorInfo })
-    this.props.onError?.(error, errorInfo)
-    // 将错误信息暴露到 window，方便调试
-    ;(window as any).__splineLastError = { message: error.message, stack: error.stack, componentStack: errorInfo.componentStack }
-  }
-  render() {
-    if (this.state.hasError) return this.props.fallback
-    return this.props.children
-  }
-}
 
 // ══ Loading 骨架 ══
 function LoadingSkeleton({ isPortrait }: { isPortrait: boolean }) {
@@ -39,26 +15,39 @@ function LoadingSkeleton({ isPortrait }: { isPortrait: boolean }) {
   )
 }
 
+// ══ 错误提示 ══
+function ErrorFallback({ msg, onRetry }: { msg: string; onRetry: () => void }) {
+  return (
+    <div className={`w-full touch-none max-h-full flex items-center justify-center`}>
+      <div className="text-center max-w-md px-4">
+        <div className="w-8 h-8 mx-auto mb-3 rounded-full bg-violet-500/5 flex items-center justify-center">
+          <svg className="w-4 h-4 text-violet-400/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <p className="text-sm text-gray-400/80 mb-2">场景加载失败</p>
+        {msg && (
+          <p className="text-[10px] text-gray-600 mb-3 max-w-xs mx-auto">{msg}</p>
+        )}
+        <button
+          onClick={onRetry}
+          className="px-5 py-1.5 text-xs text-gray-500 border border-white/10 rounded-full hover:border-violet-400/40 hover:text-white transition-colors"
+        >
+          重试
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function SpiritPage() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isPortrait, setIsPortrait] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [splineKey, setSplineKey] = useState(0)
-  const [splineReady, setSplineReady] = useState(false)
-  const [underlyingError, setUnderlyingError] = useState<string | null>(null)
+  const [loadState, setLoadState] = useState<'loading' | 'success' | 'error'>('loading')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
 
-  // 捕获 Spline 底层的 unhandled rejection 错误
-  useEffect(() => {
-    const handler = (event: PromiseRejectionEvent) => {
-      const msg = event.reason?.message || String(event.reason)
-      setUnderlyingError(msg)
-      ;(window as any).__splineUnderlyingError = event.reason
-      console.error('[Spirit] Unhandled rejection:', event.reason)
-    }
-    window.addEventListener('unhandledrejection', handler)
-    return () => window.removeEventListener('unhandledrejection', handler)
-  }, [])
-
-  // 客户端挂载后设置
   useEffect(() => {
     setMounted(true)
     const check = () => setIsPortrait(window.innerHeight > window.innerWidth * 1.2)
@@ -67,82 +56,69 @@ export default function SpiritPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  const onSplineLoad = useCallback((splineApp: any) => {
-    setSplineReady(true)
-    try { splineApp.setBackgroundColor('transparent') } catch {}
-    ;(window as any).__splineApp = splineApp
-  }, [])
-
-  const handleRetry = useCallback(() => {
-    setSplineReady(false)
-    setSplineKey(k => k + 1)
-  }, [])
-
-  // 组件卸载时释放 Spline Application 防止 WebGL 资源泄漏
+  // 加载 Spline 场景
   useEffect(() => {
-    return () => {
-      const app = (window as any).__splineApp
-      if (app) {
-        try { app.dispose() } catch {}
-        delete (window as any).__splineApp
+    if (!mounted || !canvasRef.current) return
+
+    let disposed = false
+    let app: any = null
+
+    async function loadScene() {
+      setLoadState('loading')
+      setErrorMsg('')
+      try {
+        const { Application } = await import('@splinetool/runtime')
+        app = new Application(canvasRef.current!, { renderOnDemand: true })
+        await app.load('/scenes/spirit-scene.splinecode')
+        if (disposed) {
+          try { app.dispose() } catch {}
+          return
+        }
+        app.setBackgroundColor('transparent')
+        ;(window as any).__splineApp = app
+        setLoadState('success')
+      } catch (err: any) {
+        if (disposed) return
+        const msg = err?.message || String(err)
+        setErrorMsg(msg.substring(0, 150))
+        setLoadState('error')
+        console.error('[Spirit] Load error:', err)
       }
     }
-  }, [])
 
-  const fallback = (
-    <div className={`w-full touch-none max-h-full ${isPortrait ? 'h-[55dvh]' : 'h-full'} flex items-center justify-center`}>
-      <div className="text-center max-w-md px-4">
-        <div className="w-8 h-8 mx-auto mb-3 rounded-full bg-violet-500/5 flex items-center justify-center">
-          <svg className="w-4 h-4 text-violet-400/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <p className="text-sm text-gray-400/80 mb-3">场景加载失败</p>
-        {underlyingError && (
-          <pre className="text-[9px] text-red-400/50 text-left whitespace-pre-wrap mb-3 max-h-40 overflow-auto bg-dark-900/50 p-2 rounded">
-            Underlying: {String(underlyingError).substring(0, 300)}
-          </pre>
-        )}
-        {(window as any).__splineLastError && (
-          <pre className="text-[9px] text-red-400/50 text-left whitespace-pre-wrap mb-3 max-h-40 overflow-auto bg-dark-900/50 p-2 rounded">
-            React#482: {((window as any).__splineLastError.message || '').substring(0, 200)}
-          </pre>
-        )}
-        <button
-          onClick={handleRetry}
-          className="px-5 py-1.5 text-xs text-gray-500 border border-white/10 rounded-full hover:border-violet-400/40 hover:text-white transition-colors"
-        >
-          重试
-        </button>
-      </div>
-    </div>
-  )
+    loadScene()
+
+    return () => {
+      disposed = true
+      if (app) {
+        try { app.dispose() } catch {}
+      }
+    }
+  }, [mounted, retryKey])
+
+  const handleRetry = useCallback(() => {
+    setRetryKey(k => k + 1)
+  }, [])
 
   return (
     <div className="fixed inset-0 bg-dark-950 overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center">
-        <SplineErrorBoundary fallback={fallback} onError={() => { setSplineReady(false) }}>
-          <div className={`w-full touch-none max-h-full ${isPortrait ? 'h-[55dvh]' : 'h-full'}`}>
-            {!splineReady && <LoadingSkeleton isPortrait={isPortrait} />}
-            {mounted && (
-              <Spline
-                key={splineKey}
-                scene="/scenes/spirit-scene.splinecode"
-                className="w-full h-full"
-                onLoad={onSplineLoad}
-              />
-            )}
-          </div>
-        </SplineErrorBoundary>
-        {/* 水印遮罩 */}
-        <div className="absolute bottom-0 right-0 w-36 h-12 z-40 bg-dark-950" />
-        <div className="absolute bottom-0 left-0 right-0 h-8 z-40 bg-gradient-to-b from-transparent to-dark-950 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-8 h-full z-40 bg-gradient-to-l from-dark-950 to-transparent pointer-events-none" />
+        {loadState === 'loading' && <LoadingSkeleton isPortrait={isPortrait} />}
+        {loadState === 'error' && <ErrorFallback msg={errorMsg} onRetry={handleRetry} />}
+        {loadState === 'success' && (
+          <>
+            <canvas ref={canvasRef} className="w-full h-full touch-none" />
+            {/* 水印遮罩 */}
+            <div className="absolute bottom-0 right-0 w-36 h-12 z-40 bg-dark-950" />
+            <div className="absolute bottom-0 left-0 right-0 h-8 z-40 bg-gradient-to-b from-transparent to-dark-950 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-8 h-full z-40 bg-gradient-to-l from-dark-950 to-transparent pointer-events-none" />
+          </>
+        )}
       </div>
 
       <Link
         href="/lab"
-        className="fixed top-4 left-4 z-50 group flex items-center gap-1.5 px-3 py-1.5 bg-dark-900/70 backdrop-blur-sm border border-white/5 rounded-full hover:border-violet-400/30 transition-all duration-300"
+        className="fixed top-4 left-4 z-50 group flex items-center gap-1.5 px-3 py-1.5 bg-dark-900/70 backdrop-blur-sm border border-white/5 rounded-full hover:border-violet-400/30 hover:text-white transition-all duration-300"
       >
         <svg className="w-3.5 h-3.5 text-gray-500 group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />

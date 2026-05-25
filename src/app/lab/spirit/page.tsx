@@ -25,6 +25,7 @@ class SplineErrorBoundary extends Component<{
     if (this.state.hasError) return this.props.fallback
     return this.props.children
   }
+}
 
 // ══ Loading 骨架 ══
 function LoadingSkeleton({ isPortrait }: { isPortrait: boolean }) {

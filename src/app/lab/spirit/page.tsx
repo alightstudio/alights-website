@@ -44,6 +44,19 @@ export default function SpiritPage() {
   const [mounted, setMounted] = useState(false)
   const [splineKey, setSplineKey] = useState(0)
   const [splineReady, setSplineReady] = useState(false)
+  const [underlyingError, setUnderlyingError] = useState<string | null>(null)
+
+  // 捕获 Spline 底层的 unhandled rejection 错误
+  useEffect(() => {
+    const handler = (event: PromiseRejectionEvent) => {
+      const msg = event.reason?.message || String(event.reason)
+      setUnderlyingError(msg)
+      ;(window as any).__splineUnderlyingError = event.reason
+      console.error('[Spirit] Unhandled rejection:', event.reason)
+    }
+    window.addEventListener('unhandledrejection', handler)
+    return () => window.removeEventListener('unhandledrejection', handler)
+  }, [])
 
   // 客户端挂载后设置
   useEffect(() => {
@@ -85,9 +98,14 @@ export default function SpiritPage() {
           </svg>
         </div>
         <p className="text-sm text-gray-400/80 mb-3">场景加载失败</p>
-        {typeof window !== 'undefined' && (window as any).__splineLastError && (
-          <pre className="text-[10px] text-red-400/60 text-left whitespace-pre-wrap mb-3 max-h-32 overflow-auto">
-            {(window as any).__splineLastError.message}
+        {underlyingError && (
+          <pre className="text-[9px] text-red-400/50 text-left whitespace-pre-wrap mb-3 max-h-40 overflow-auto bg-dark-900/50 p-2 rounded">
+            Underlying: {String(underlyingError).substring(0, 300)}
+          </pre>
+        )}
+        {(window as any).__splineLastError && (
+          <pre className="text-[9px] text-red-400/50 text-left whitespace-pre-wrap mb-3 max-h-40 overflow-auto bg-dark-900/50 p-2 rounded">
+            React#482: {((window as any).__splineLastError.message || '').substring(0, 200)}
           </pre>
         )}
         <button

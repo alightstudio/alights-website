@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
+import Script from 'next/script'
 
 // ══ Loading 骨架 ══
 function LoadingSkeleton({ isPortrait }: { isPortrait: boolean }) {
@@ -67,7 +68,22 @@ export default function SpiritPage() {
       setLoadState('loading')
       setErrorMsg('')
       try {
-        const { Application } = await import('@splinetool/runtime')
+        // 等待 CDN 脚本加载完成（最多 15 秒）
+        const SplineRuntime = await new Promise<any>((resolve, reject) => {
+          const start = Date.now()
+          const check = () => {
+            if ((window as any).SplineRuntime) {
+              resolve((window as any).SplineRuntime)
+            } else if (Date.now() - start > 15000) {
+              reject(new Error('Spline Runtime CDN 加载超时'))
+            } else {
+              setTimeout(check, 200)
+            }
+          }
+          check()
+        })
+        
+        const { Application } = SplineRuntime
         app = new Application(canvasRef.current!, { renderOnDemand: true })
         await app.load('/scenes/spirit-scene.splinecode')
         if (disposed) {
@@ -102,6 +118,19 @@ export default function SpiritPage() {
 
   return (
     <div className="fixed inset-0 bg-dark-950 overflow-hidden">
+      {/* 通过 CDN 加载 Spline Runtime，绕过 Next.js chunk splitting 导致的 404 问题 */}
+      <Script
+        src="https://unpkg.com/@splinetool/runtime@1.12.92/runtime.js"
+        strategy="lazyOnload"
+        onLoad={() => {
+          console.log('[Spirit] Spline Runtime CDN loaded')
+        }}
+        onError={(e) => {
+          console.error('[Spirit] Spline Runtime CDN load error:', e)
+          setErrorMsg('CDN 加载失败')
+          setLoadState('error')
+        }}
+      />
       <div className="absolute inset-0 flex items-center justify-center">
         {loadState === 'loading' && <LoadingSkeleton isPortrait={isPortrait} />}
         {loadState === 'error' && <ErrorFallback msg={errorMsg} onRetry={handleRetry} />}

@@ -91,7 +91,7 @@ export default function SpiritPage() {
     const check = () => setIsPortrait(window.innerHeight > window.innerWidth * 1.2)
     const mobileCheck = () => {
       const ua = navigator.userAgent
-      setIsMobile(/Android|iPhone|iPad|iPod/i.test ua) || window.innerWidth < 768)
+      setIsMobile(/Android|iPhone|iPad|iPod/i.test(ua) || window.innerWidth < 768)
     }
     check()
     mobileCheck()

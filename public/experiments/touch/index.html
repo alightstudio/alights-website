@@ -154,12 +154,30 @@
           var loading = document.getElementById('section-loading');
           if (loading) loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">设备兼容性提示<br><span style="font-size:11px;color:#444">此设备可能不支持 3D 渲染</span></p>';
         }
-        // Fallback: 如果 5 秒内 _onLoaded 未被调用，自动触发（解决移动端 loadPromise 卡住问题）
-        setTimeout(function() {
-          if (!app) return;
-          try { if (app._onLoaded) app._onLoaded(); } catch(e) { console.warn('[光触] _onLoaded fallback error:', e); }
-          try { if (app.model && app.model.setSection) app.model.setSection(1); } catch(e) { console.warn('[光触] setSection fallback error:', e); }
-        }, 5000);
+        // Fallback: 移动端 loadPromise 可能卡住，自动完成初始化
+        // App 实例挂在 window.RobotXP，API: app.scene.onLoaded() + app.scene.model.setSection(1)
+        // 注意：onLoaded() 内部调用 registerMaterials 需要纹理资源就绪，太早调用会报错
+        (function tryFallback(attempt) {
+          if (attempt > 20) return; // 最多等 10 秒
+          setTimeout(function() {
+            var r = window.RobotXP;
+            if (!r || !r.scene) { tryFallback(attempt + 1); return; }
+            var model = r.scene.model;
+            if (!model) { tryFallback(attempt + 1); return; }
+            // 已正常初始化则跳过
+            if (model._section === 1 && document.getElementById('section-loading').style.display === 'none') return;
+            console.log('[光触] fallback attempt ' + attempt + ': section=' + model._section);
+            try {
+              r.scene.onLoaded();
+              model.setSection(1);
+              console.log('[光触] fallback 成功: onLoaded + setSection(1)');
+            } catch(e) {
+              // 材质资源还没就绪，继续等待
+              console.warn('[光触] fallback attempt ' + attempt + ' 失败:', e.message || e);
+              tryFallback(attempt + 1);
+            }
+          }, 500);
+        })(0);
         // 播放背景音乐（需要用户手势）
         var audio = document.getElementById('soundtrack');
         if (audio) audio.play().catch(function(){});

@@ -106,14 +106,14 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
-          // 安全审计修复：移除 'unsafe-eval'（可被 XSS 利用执行任意代码）；
+          // ⚠️ 'unsafe-eval' 必须保留：Spline 3D 场景的 WASM 模块需要动态编译
           // 'unsafe-inline' 暂时保留以兼容 React hydration，后续可通过 nonce 方案消除；
           // frame-src 中的 'unsafe-inline' 已移除（原无意义）
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'nonce-{}' blob: https://www.googletagmanager.com https://hm.baidu.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'nonce-{}' blob: https://www.googletagmanager.com https://hm.baidu.com",
               "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com https://alights.cn",

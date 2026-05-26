@@ -165,6 +165,7 @@
           if (!r || !r.scene) { setTimeout(checkFallback, 500); return; }
           var model = r.scene.model;
           if (!model) { setTimeout(checkFallback, 500); return; }
+          var scene = r.scene;  // ★ 修复：之前漏了这行，导致 scene 是 undefined
           var loading = document.getElementById('section-loading');
           // 如果已经正常显示则跳过（mods._loaded=true 说明场景已激活）
           if (model._section === 1 && loading && loading.style.display === 'none' && scene.mods && scene.mods._loaded) return;
@@ -182,16 +183,18 @@
               try { scene.matlib.compileAll(); } catch(e2) { console.warn('[光触] compileAll 失败(忽略):', e2.message); }
               scene.mods._loaded = true;
               scene.mods.updateLifecycle();
-              console.log('[光触] 手动激活模块成功');
+              console.log('[光触] 手动激活模块成功 - _loaded=' + scene.mods._loaded);
+            } else {
+              console.log('[光触] mods 已加载或不存在, _loaded=' + (scene.mods ? scene.mods._loaded : 'no mods'));
             }
           } catch(e) {
-            console.warn('[光触] 激活模块失败:', e.message || e);
+            console.warn('[光触] 激活模块失败:', e.message || e, e.stack || '');
             setTimeout(checkFallback, 1000); return;
           }
           // 再次确保 section=1（updateLifecycle 可能重置了 section）
           if (model._section !== 1) {
             model.setSection(1);
-            console.log('[光触] 二次 setSection(1)');
+            console.log('[光触] 二次 setSection(1), now _section=' + model._section);
           }
           // 步骤4: 确保 canvas 可见
           var cvs = document.getElementById('gl-canvas');

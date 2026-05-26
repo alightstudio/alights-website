@@ -247,21 +247,71 @@ if (window.location.search.includes('debug=1')) {
     }
     // 尝试获取 console.error 输出
     var appErr = window.__appError || 'none';
+    // 深入检查渲染器/场景内部状态
+    var rend = r.renderer || {};
+    var camInfo = '❌';
+    if (rend.camera) {
+      var c = rend.camera;
+      var p = c.position || {};
+      camInfo = 'pos:(' + (p.x||0).toFixed(1) + ',' + (p.y||0).toFixed(1) + ',' + (p.z||0).toFixed(1) + ')';
+    }
+    var meshCount = 0;
+    var meshNames = [];
+    try {
+      // 尝试从 renderer 或 scene 获取 mesh 信息
+      var glctx = rend.gl || rend.context || rend._gl;
+      if (rend.sceneGraph) {
+        // 遍历场景图
+        function countMeshes(node) {
+          if (!node) return;
+          if (node.mesh || node.draw) { meshCount++; meshNames.push(node.name || node.id || '?'); }
+          var children = node.children || node._children || [];
+          for (var i = 0; i < children.length; i++) countMeshes(children[i]);
+        }
+        countMeshes(rend.sceneGraph);
+      } else if (scene.root) {
+        function countRoot(n) {
+          if (!n) return;
+          if (n.meshes) { meshCount += n.meshes.length; }
+          var ch = n.children || [];
+          for (var j = 0; j < ch.length; j++) countRoot(ch[j]);
+        }
+        countRoot(scene.root);
+      }
+    } catch(e3) { meshCount = 'err:' + e3.message; }
+    
+    // 检查 model 内部
+    var modelSections = '❌';
+    if (model.sections) { modelSections = Object.keys(model.sections).join(','); }
+    else if (model._sections) { modelSections = Object.keys(model._sections).join(','); }
+    
+    // 检查 mods 下的模块
+    var modList = '';
+    if (scene.mods && scene.mods.actives) {
+      var acts = scene.mods.actives;
+      if (Array.isArray(acts)) modList = acts.join(',');
+      else if (typeof acts === 'object') modList = Object.keys(acts).join(',');
+    }
+    
     var info = [
       '=== 光触调试 ===',
-      'App: ' + (window.RobotXP ? '✅ created' : '❌ null'),
-      'scene: ' + (r.scene ? '✅' : '❌'),
-      'model: ' + (scene.model ? '✅' : '❌'),
+      'App: ✅ | scene: ✅ | model: ✅',
       '_section: ' + (model._section !== undefined ? model._section : '❓'),
-      'mods: ' + (scene.mods ? '✅' : '❌'),
       'mods._loaded: ' + (scene.mods ? scene.mods._loaded : '❓'),
-      'matlib: ' + (scene.matlib ? '✅' : '❌'),
+      'matlib: ' + (scene.matlib ? '✅ (' + Object.keys(scene.matlib).length + ' keys)' : '❌'),
+      '',
+      '--- Renderer ---',
+      'canvas: ' + ((rend.canvas) ? (rend.canvas.width + 'x' + rend.canvas.height) : '❌'),
+      'camera: ' + camInfo,
+      'meshes: ' + meshCount,
+      'mesh names: ' + (meshNames.length ? meshNames.slice(0,5).join(',') : '(none)'),
+      '',
+      '--- Model ---',
+      'sections: ' + modelSections,
+      'mod actives: ' + (modList || '(none)'),
       '',
       '--- WebGL ---',
-      'renderer canvas: ' + ((r.renderer && r.renderer.canvas) ? (r.renderer.canvas.width + 'x' + r.renderer.canvas.height) : '❌'),
       'gl errors: ' + (glErrors.length ? glErrors.join(', ') : 'none'),
-      '',
-      '--- Errors ---',
       'App init error: ' + appErr,
     ];
     alert(info.join('\n'));

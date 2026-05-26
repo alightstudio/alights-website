@@ -149,7 +149,7 @@
         canvas.classList.add('active');
         // 启动 app
         var app;
-        try { app = new App(); } catch(e) {
+        try { app = new App(); window.RobotXP = app; } catch(e) {
           console.error('App init failed:', e);
           window.__appError = e.message || String(e);
           var loading = document.getElementById('section-loading');
@@ -249,7 +249,7 @@ if (window.location.search.includes('debug=1')) {
     var appErr = window.__appError || 'none';
     var info = [
       '=== 光触调试 ===',
-      'RobotXP: ' + (window.RobotXP ? '✅' : '❌'),
+      'App: ' + (window.RobotXP ? '✅ created' : '❌ null'),
       'scene: ' + (r.scene ? '✅' : '❌'),
       'model: ' + (scene.model ? '✅' : '❌'),
       '_section: ' + (model._section !== undefined ? model._section : '❓'),
@@ -258,12 +258,11 @@ if (window.location.search.includes('debug=1')) {
       'matlib: ' + (scene.matlib ? '✅' : '❌'),
       '',
       '--- WebGL ---',
-      'canvas: ' + (canvas.width || '?') + 'x' + (canvas.height || '?'),
+      'renderer canvas: ' + ((r.renderer && r.renderer.canvas) ? (r.renderer.canvas.width + 'x' + r.renderer.canvas.height) : '❌'),
       'gl errors: ' + (glErrors.length ? glErrors.join(', ') : 'none'),
       '',
       '--- Errors ---',
       'App init error: ' + appErr,
-      'main.js loaded: ' + (document.querySelector('script[src*="main"]') ? '✅ tag exists' : '❌ no script tag'),
     ];
     alert(info.join('\n'));
   };

@@ -294,43 +294,42 @@ if (window.location.search.includes('debug=1')) {
     }
     
     // === 深入检查 bulb mod (index 1) 的 AWD 场景 ===
+    // mods[1] 是 light module（包装器），真正的 AWD 场景在 mod1.bulb
     var bulbInfo = [];
     var mod1 = null;
     try {
       if (scene.mods && scene.mods.mods && scene.mods.mods[1]) {
         mod1 = scene.mods.mods[1];
-        // mod1 是 awd-scene 子类实例
         bulbInfo.push('mod1 type: ' + (mod1.constructor ? mod1.constructor.name : '?'));
-        bulbInfo.push('mod1._state: ' + (mod1._state !== undefined ? mod1._state : '❓'));
-        // 1=init, 2=parsing, 3=loaded
-        if (mod1.meshes) { bulbInfo.push('mod1.meshes: ' + mod1.meshes.length); }
-        else { bulbInfo.push('mod1.meshes: undefined'); }
-        if (mod1.node) {
-          bulbInfo.push('mod1.node: ✅');
-          var ch = mod1.node.children || [];
-          bulbInfo.push('mod1.node.children: ' + ch.length);
-          if (ch.length > 0) {
-            for (var ci = 0; ci < Math.min(ch.length, 5); ci++) {
-              bulbInfo.push('  child['+ci+']: ' + (ch[ci].name || ch[ci].id || ch[ci].type || '?'));
+        // 检查 mod1.bulb（这才是 awd-scene 子类）
+        var awdScene = mod1.bulb;
+        if (awdScene) {
+          bulbInfo.push('bulb (AWD): ✅');
+          bulbInfo.push('bulb._state: ' + (awdScene._state !== undefined ? awdScene._state : '❓'));
+          // 1=init 2=parsing 3=loaded
+          if (awdScene.meshes) { bulbInfo.push('bulb.meshes: ' + awdScene.meshes.length); }
+          else { bulbInfo.push('bulb.meshes: undefined'); }
+          if (awdScene.node) {
+            var bch = awdScene.node.children || [];
+            bulbInfo.push('bulb.node.children: ' + bch.length);
+            for (var bi = 0; bi < Math.min(bch.length, 5); bi++) {
+              bulbInfo.push('  ['+bi+'] ' + (bch[bi].name || bch[bi].type || '?'));
             }
           }
-        } else { bulbInfo.push('mod1.node: ❌'); }
-        if (mod1.texs) { bulbInfo.push('mod1.texs: ✅'); }
-        if (mod1.mats) { bulbInfo.push('mod1.mats: ✅ (' + Object.keys(mod1.mats.materials || {}).length + ')'); }
-        if (mod1.loader) { bulbInfo.push('mod1.loader: ✅'); }
-        if (mod1._loadPromise) {
-          bulbInfo.push('loadPromise state: pending...');
-          // 检查 promise 状态
-          mod1._loadPromise.then(function() { bulbInfo.push('loadPromise: RESOLVED ✅'); }, function(e) { bulbInfo.push('loadPromise: REJECTED ❌ ' + e); });
+          if (awdScene.texs) { bulbInfo.push('bulb.texs: ✅'); }
+          if (awdScene.mats) { bulbInfo.push('bulb.mats: ✅ (' + Object.keys(awdScene.mats.materials || {}).length + ')'); }
+          if (awdScene.loader) { bulbInfo.push('bulb.loader: ✅'); }
+          if (awdScene._loadables) { bulbInfo.push('bulb._loadables: ' + awdScene._loadables.length); }
+        } else {
+          bulbInfo.push('bulb (AWD): ❌ undefined!');
+          // 列出 mod1 的所有属性
+          var keys = Object.keys(mod1).filter(function(k) { return k.charAt(0) !== '_'; });
+          bulbInfo.push('mod1 keys: ' + keys.slice(0,10).join(','));
         }
-        if (mod1._loadables) { bulbInfo.push('_loadables: ' + mod1._loadables.length); }
       } else {
         bulbInfo.push('mods.mods[1]: ❌ not found');
-        if (scene.mods && scene.mods.mods) {
-          bulbInfo.push('mods.mods length: ' + scene.mods.mods.length);
-        }
       }
-    } catch(e4) { bulbInfo.push('mod1 err: ' + e4.message); }
+    } catch(e4) { bulbInfo.push('err: ' + e4.message); }
     
     // 也检查所有 mods 的 _state
     var allModStates = '';
@@ -354,8 +353,7 @@ if (window.location.search.includes('debug=1')) {
       'meshes: ' + meshCount,
       '',
       '--- Mods State ---',
-      'all _state: [' + allModStates.trim() + ']',
-      '(1=init 2=parsing 3=loaded)',
+      'mod1 keys: ' + (mod1 ? Object.keys(mod1).filter(function(k){return k.charAt(0)!=='_';}).slice(0,8).join(',') : '?'),
       '',
       '--- Bulb Mod [1] ---',
     ].concat(bulbInfo).concat([

@@ -293,27 +293,77 @@ if (window.location.search.includes('debug=1')) {
       else if (typeof acts === 'object') modList = Object.keys(acts).join(',');
     }
     
+    // === 深入检查 bulb mod (index 1) 的 AWD 场景 ===
+    var bulbInfo = [];
+    var mod1 = null;
+    try {
+      if (scene.mods && scene.mods.mods && scene.mods.mods[1]) {
+        mod1 = scene.mods.mods[1];
+        // mod1 是 awd-scene 子类实例
+        bulbInfo.push('mod1 type: ' + (mod1.constructor ? mod1.constructor.name : '?'));
+        bulbInfo.push('mod1._state: ' + (mod1._state !== undefined ? mod1._state : '❓'));
+        // 1=init, 2=parsing, 3=loaded
+        if (mod1.meshes) { bulbInfo.push('mod1.meshes: ' + mod1.meshes.length); }
+        else { bulbInfo.push('mod1.meshes: undefined'); }
+        if (mod1.node) {
+          bulbInfo.push('mod1.node: ✅');
+          var ch = mod1.node.children || [];
+          bulbInfo.push('mod1.node.children: ' + ch.length);
+          if (ch.length > 0) {
+            for (var ci = 0; ci < Math.min(ch.length, 5); ci++) {
+              bulbInfo.push('  child['+ci+']: ' + (ch[ci].name || ch[ci].id || ch[ci].type || '?'));
+            }
+          }
+        } else { bulbInfo.push('mod1.node: ❌'); }
+        if (mod1.texs) { bulbInfo.push('mod1.texs: ✅'); }
+        if (mod1.mats) { bulbInfo.push('mod1.mats: ✅ (' + Object.keys(mod1.mats.materials || {}).length + ')'); }
+        if (mod1.loader) { bulbInfo.push('mod1.loader: ✅'); }
+        if (mod1._loadPromise) {
+          bulbInfo.push('loadPromise state: pending...');
+          // 检查 promise 状态
+          mod1._loadPromise.then(function() { bulbInfo.push('loadPromise: RESOLVED ✅'); }, function(e) { bulbInfo.push('loadPromise: REJECTED ❌ ' + e); });
+        }
+        if (mod1._loadables) { bulbInfo.push('_loadables: ' + mod1._loadables.length); }
+      } else {
+        bulbInfo.push('mods.mods[1]: ❌ not found');
+        if (scene.mods && scene.mods.mods) {
+          bulbInfo.push('mods.mods length: ' + scene.mods.mods.length);
+        }
+      }
+    } catch(e4) { bulbInfo.push('mod1 err: ' + e4.message); }
+    
+    // 也检查所有 mods 的 _state
+    var allModStates = '';
+    if (scene.mods && scene.mods.mods) {
+      for (var mi = 0; mi < scene.mods.mods.length; mi++) {
+        var m = scene.mods.mods[mi];
+        allModStates += (m._state !== undefined ? m._state : '?') + ' ';
+      }
+    }
+
     var info = [
       '=== 光触调试 ===',
       'App: ✅ | scene: ✅ | model: ✅',
       '_section: ' + (model._section !== undefined ? model._section : '❓'),
       'mods._loaded: ' + (scene.mods ? scene.mods._loaded : '❓'),
-      'matlib: ' + (scene.matlib ? '✅ (' + Object.keys(scene.matlib).length + ' keys)' : '❌'),
+      'matlib: ' + (scene.matlib ? '✅ (' + Object.keys(scene.matlib.materials || {}).length + ' mats)' : '❌'),
       '',
       '--- Renderer ---',
       'canvas: ' + ((rend.canvas) ? (rend.canvas.width + 'x' + rend.canvas.height) : '❌'),
       'camera: ' + camInfo,
       'meshes: ' + meshCount,
-      'mesh names: ' + (meshNames.length ? meshNames.slice(0,5).join(',') : '(none)'),
       '',
-      '--- Model ---',
-      'sections: ' + modelSections,
-      'mod actives: ' + (modList || '(none)'),
+      '--- Mods State ---',
+      'all _state: [' + allModStates.trim() + ']',
+      '(1=init 2=parsing 3=loaded)',
+      '',
+      '--- Bulb Mod [1] ---',
+    ].concat(bulbInfo).concat([
       '',
       '--- WebGL ---',
       'gl errors: ' + (glErrors.length ? glErrors.join(', ') : 'none'),
       'App init error: ' + appErr,
-    ];
+    ]);
     alert(info.join('\n'));
   };
   document.body.appendChild(debugBtn);

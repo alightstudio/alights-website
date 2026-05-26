@@ -166,23 +166,25 @@
           var model = r.scene.model;
           if (!model) { setTimeout(checkFallback, 500); return; }
           var loading = document.getElementById('section-loading');
-          // 如果已经正常显示则跳过
-          if (model._section === 1 && loading && loading.style.display === 'none') return;
-          console.log('[光触] fallback: section=' + model._section + ', loading=' + (loading ? loading.style.display : 'null'));
+          // 如果已经正常显示则跳过（mods._loaded=true 说明场景已激活）
+          if (model._section === 1 && loading && loading.style.display === 'none' && scene.mods && scene.mods._loaded) return;
+          console.log('[光触] fallback: section=' + model._section + ', mods._loaded=' + (scene.mods ? scene.mods._loaded : 'no mods'));
           // 步骤1: 隐藏 loading 遮罩
           if (loading) loading.style.display = 'none';
-          // 步骤2: 切换到 section 1（显示灯泡模型）
+          // 步骤2: 切换到 section 1
+          try { if (model._section !== 1) { model.setSection(1); console.log('[光触] setSection(1)'); } }
+          catch(e) { console.warn('[光触] setSection 失败:', e.message || e); }
+          // 步骤3: 激活场景渲染（关键！scene.loaded() = compileAll + _loaded=true + updateLifecycle）
           try {
-            if (model._section !== 1) {
-              model.setSection(1);
-              console.log('[光触] fallback: setSection(1) 成功');
+            if (scene.mods && !scene.mods._loaded) {
+              scene.loaded();
+              console.log('[光触] scene.loaded() 成功 - 模块已激活');
             }
           } catch(e) {
-            console.warn('[光触] setSection 失败:', e.message || e);
-            // setSection 也失败就继续等
+            console.warn('[光触] scene.loaded() 失败:', e.message || e);
             setTimeout(checkFallback, 1000); return;
           }
-          // 步骤3: 确保 canvas 可见
+          // 步骤4: 确保 canvas 可见
           var cvs = document.getElementById('gl-canvas');
           if (cvs) { cvs.style.opacity = '1'; cvs.style.visibility = 'visible'; }
           console.log('[光触] fallback 完成');
@@ -224,18 +226,10 @@
               '--- Scene 深度诊断 ---',
               'scene.renderer: ' + (scene.renderer ? '✅' : '❌'),
               'scene.camera: ' + (scene.camera ? '✅' : '❌'),
-              scene.camera ? ('cam pos: ' + JSON.stringify(scene.camera.position)) : '',
-              'scene.root: ' + (scene.root ? '✅' : '❌'),
-              scene.root ? ('root children: ' + (scene.root.children ? scene.root.children.length : '?')) : '',
-              '',
-              '--- Model 深度诊断 ---',
-              'model.sections: ' + (model._sections ? Object.keys(model._sections).join(',') : '❓'),
-              'model.currentSection: ' + (model._currentSection !== undefined ? model._currentSection : '❓'),
-              'model.activeObjs: ' + (model._activeObjects ? model._activeObjects.length : '❓'),
-              '',
-              '--- 材质/纹理 ---',
-              'matlib: ' + (model.matlib ? '✅' : '❌'),
-              model.matlib ? ('materials count: ' + (model.matlib.materials ? model.matlib.materials.length : '?')) : '',
+              'scene.mods: ' + (scene.mods ? '✅' : '❌'),
+              scene.mods ? ('mods._loaded: ' + scene.mods._loaded) : '',
+              scene.mods ? ('mods.actives: ' + (scene.mods.actives ? scene.mods.actives.length : '?')) : '',
+              'scene.matlib: ' + (scene.matlib ? '✅' : '❌'),
             ];
             dbg.innerHTML = info.map(function(l) { return '<div>' + l + '</div>'; }).join('');
           }, 3000);

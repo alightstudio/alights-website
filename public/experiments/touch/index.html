@@ -155,29 +155,36 @@
           if (loading) loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">设备兼容性提示<br><span style="font-size:11px;color:#444">此设备可能不支持 3D 渲染</span></p>';
         }
         // Fallback: 移动端 loadPromise 可能卡住，自动完成初始化
-        // App 实例挂在 window.RobotXP，API: app.scene.onLoaded() + app.scene.model.setSection(1)
-        // 注意：onLoaded() 内部调用 registerMaterials 需要纹理资源就绪，太早调用会报错
-        (function tryFallback(attempt) {
-          if (attempt > 20) return; // 最多等 10 秒
-          setTimeout(function() {
-            var r = window.RobotXP;
-            if (!r || !r.scene) { tryFallback(attempt + 1); return; }
-            var model = r.scene.model;
-            if (!model) { tryFallback(attempt + 1); return; }
-            // 已正常初始化则跳过
-            if (model._section === 1 && document.getElementById('section-loading').style.display === 'none') return;
-            console.log('[光触] fallback attempt ' + attempt + ': section=' + model._section);
-            try {
-              r.scene.onLoaded();
+        // App 实例挂在 window.RobotXP
+        // 策略：不调用 onLoaded()（含 matlib 注册逻辑容易失败），
+        //       只做最小操作：隐藏 loading + 切换 section + 确保 canvas 可见
+        setTimeout(function checkFallback() {
+          var r = window.RobotXP;
+          if (!r || !r.scene) { setTimeout(checkFallback, 500); return; }
+          var model = r.scene.model;
+          if (!model) { setTimeout(checkFallback, 500); return; }
+          var loading = document.getElementById('section-loading');
+          // 如果已经正常显示则跳过
+          if (model._section === 1 && loading && loading.style.display === 'none') return;
+          console.log('[光触] fallback: section=' + model._section + ', loading=' + (loading ? loading.style.display : 'null'));
+          // 步骤1: 隐藏 loading 遮罩
+          if (loading) loading.style.display = 'none';
+          // 步骤2: 切换到 section 1（显示灯泡模型）
+          try {
+            if (model._section !== 1) {
               model.setSection(1);
-              console.log('[光触] fallback 成功: onLoaded + setSection(1)');
-            } catch(e) {
-              // 材质资源还没就绪，继续等待
-              console.warn('[光触] fallback attempt ' + attempt + ' 失败:', e.message || e);
-              tryFallback(attempt + 1);
+              console.log('[光触] fallback: setSection(1) 成功');
             }
-          }, 500);
-        })(0);
+          } catch(e) {
+            console.warn('[光触] setSection 失败:', e.message || e);
+            // setSection 也失败就继续等
+            setTimeout(checkFallback, 1000); return;
+          }
+          // 步骤3: 确保 canvas 可见
+          var cvs = document.getElementById('gl-canvas');
+          if (cvs) { cvs.style.opacity = '1'; cvs.style.visibility = 'visible'; }
+          console.log('[光触] fallback 完成');
+        }, 3000);
         // 播放背景音乐（需要用户手势）
         var audio = document.getElementById('soundtrack');
         if (audio) audio.play().catch(function(){});

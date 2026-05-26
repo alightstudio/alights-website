@@ -71,8 +71,6 @@
   </section>
 
   <canvas id='gl-canvas'></canvas>
-  <!-- 移动端调试浮层：显示 App 状态 -->
-  <div id="debug-overlay" style="display:none; position:fixed; top:50px; left:10px; right:10px; bottom:10px; z-index:99999; background:rgba(0,0,0,0.85); color:#0f0; font:11px/1.4 monospace; padding:8px; overflow:auto; -webkit-overflow-scrolling:touch; border:1px solid #333;"></div>
   <audio id='soundtrack' loop>
     <source src="assets/sounds/soundtrack.mp3" type="audio/mp3">
   </audio>
@@ -105,7 +103,7 @@
       var SafeAC = function() {
         try { return new OrigAC(); }
         catch(e) {
-          console.warn('[光触] AudioContext 不可用，已跳过音频');
+          
           var noop = function() { return this; };
           var gain = { connect: noop, disconnect: noop, gain: { value: 0, setValueAtTime: noop } };
           return {
@@ -158,7 +156,6 @@
         }
         // Fallback: 移动端 loadPromise 可能卡住，自动完成初始化
         // App 实例挂在 window.RobotXP
-        // 策略：不调用 onLoaded()（含 matlib 注册逻辑容易失败），
         //       只做最小操作：隐藏 loading + 切换 section + 确保 canvas 可见
         setTimeout(function checkFallback() {
           var r = window.RobotXP;
@@ -169,83 +166,41 @@
           var loading = document.getElementById('section-loading');
           // 如果已经正常显示则跳过（mods._loaded=true 说明场景已激活）
           if (model._section === 1 && loading && loading.style.display === 'none' && scene.mods && scene.mods._loaded) return;
-          console.log('[光触] fallback: section=' + model._section + ', mods._loaded=' + (scene.mods ? scene.mods._loaded : 'no mods'));
+          
           // 步骤1: 隐藏 loading 遮罩
           if (loading) loading.style.display = 'none';
           // 步骤2: 切换到 section 1
-          try { if (model._section !== 1) { model.setSection(1); console.log('[光触] setSection(1)'); } }
-          catch(e) { console.warn('[光触] setSection 失败:', e.message || e); }
+          try { if (model._section !== 1) { model.setSection(1);  } }
+          catch(e) {  }
           // 步骤3: 激活场景渲染
           // scene.loaded() 内部会调 matlib.compileAll() 可能报错
           // 所以拆开做：直接设 _loaded=true + updateLifecycle()
           try {
             if (scene.mods && !scene.mods._loaded) {
-              try { scene.matlib.compileAll(); } catch(e2) { console.warn('[光触] compileAll 失败(忽略):', e2.message); }
+              try { scene.matlib.compileAll(); } catch(e2) {  }
               scene.mods._loaded = true;
               scene.mods.updateLifecycle();
-              console.log('[光触] 手动激活模块成功 - _loaded=' + scene.mods._loaded);
+              
             } else {
-              console.log('[光触] mods 已加载或不存在, _loaded=' + (scene.mods ? scene.mods._loaded : 'no mods'));
+              
             }
           } catch(e) {
-            console.warn('[光触] 激活模块失败:', e.message || e, e.stack || '');
+            
             setTimeout(checkFallback, 1000); return;
           }
           // 再次确保 section=1（updateLifecycle 可能重置了 section）
           if (model._section !== 1) {
             model.setSection(1);
-            console.log('[光触] 二次 setSection(1), now _section=' + model._section);
+            
           }
           // 步骤4: 确保 canvas 可见
           var cvs = document.getElementById('gl-canvas');
           if (cvs) { cvs.style.opacity = '1'; cvs.style.visibility = 'visible'; }
-          console.log('[光触] fallback 完成');
+          
         }, 3000);
         // 播放背景音乐（需要用户手势）
         var audio = document.getElementById('soundtrack');
         if (audio) audio.play().catch(function(){});
-        // 移动端调试：3秒后在页面上显示状态
-        if (isMobile) {
-          setTimeout(function() {
-            var dbg = document.getElementById('debug-overlay');
-            if (!dbg) return;
-            dbg.style.display = 'block';
-            var r = window.RobotXP || {};
-            var scene = r.scene || {};
-            var model = scene.model || {};
-            var canvas = document.getElementById('gl-canvas') || {};
-            var gl = canvas.getContext && canvas.getContext('webgl');
-            var info = [
-              '=== 光触调试信息 ===',
-              '时间: ' + new Date().toLocaleTimeString(),
-              '',
-              '--- App 状态 ---',
-              'RobotXP: ' + (window.RobotXP ? '✅ 存在' : '❌ 不存在'),
-              'scene: ' + (r.scene ? '✅ 存在' : '❌ 不存在'),
-              'model: ' + (scene.model ? '✅ 存在' : '❌ 不存在'),
-              '_section: ' + (model._section !== undefined ? model._section : '❓ 未知'),
-              '',
-              '--- Canvas 状态 ---',
-              '尺寸: ' + (canvas.width || '?') + 'x' + (canvas.height || '?'),
-              'style.display: ' + (canvas.style ? canvas.style.display : '?'),
-              'style.opacity: ' + (canvas.style ? canvas.style.opacity : '?'),
-              'style.visibility: ' + (canvas.style ? canvas.style.visibility : '?'),
-              '',
-              '--- WebGL 状态 ---',
-              'gl: ' + (gl ? '✅ 存在' : '❌ 不存在'),
-              gl ? 'drawingBuffer: ' + gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight : '',
-              '',
-              '--- Scene 深度诊断 ---',
-              'scene.renderer: ' + (scene.renderer ? '✅' : '❌'),
-              'scene.camera: ' + (scene.camera ? '✅' : '❌'),
-              'scene.mods: ' + (scene.mods ? '✅' : '❌'),
-              scene.mods ? ('mods._loaded: ' + scene.mods._loaded) : '',
-              scene.mods ? ('mods.actives: ' + (scene.mods.actives ? scene.mods.actives.length : '?')) : '',
-              'scene.matlib: ' + (scene.matlib ? '✅' : '❌'),
-            ];
-            dbg.innerHTML = info.map(function(l) { return '<div>' + l + '</div>'; }).join('');
-          }, 3000);
-        }
       }
 
       // 判断是否移动端

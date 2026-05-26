@@ -71,6 +71,8 @@
   </section>
 
   <canvas id='gl-canvas'></canvas>
+  <!-- 移动端调试浮层：显示 App 状态 -->
+  <div id="debug-overlay" style="display:none; position:fixed; top:50px; left:10px; right:10px; bottom:10px; z-index:99999; background:rgba(0,0,0,0.85); color:#0f0; font:11px/1.4 monospace; padding:8px; overflow:auto; -webkit-overflow-scrolling:touch; border:1px solid #333;"></div>
   <audio id='soundtrack' loop>
     <source src="assets/sounds/soundtrack.mp3" type="audio/mp3">
   </audio>
@@ -188,6 +190,40 @@
         // 播放背景音乐（需要用户手势）
         var audio = document.getElementById('soundtrack');
         if (audio) audio.play().catch(function(){});
+        // 移动端调试：3秒后在页面上显示状态
+        if (isMobile) {
+          setTimeout(function() {
+            var dbg = document.getElementById('debug-overlay');
+            if (!dbg) return;
+            dbg.style.display = 'block';
+            var r = window.RobotXP || {};
+            var scene = r.scene || {};
+            var model = scene.model || {};
+            var canvas = document.getElementById('gl-canvas') || {};
+            var gl = canvas.getContext && canvas.getContext('webgl');
+            var info = [
+              '=== 光触调试信息 ===',
+              '时间: ' + new Date().toLocaleTimeString(),
+              '',
+              '--- App 状态 ---',
+              'RobotXP: ' + (window.RobotXP ? '✅ 存在' : '❌ 不存在'),
+              'scene: ' + (r.scene ? '✅ 存在' : '❌ 不存在'),
+              'model: ' + (scene.model ? '✅ 存在' : '❌ 不存在'),
+              '_section: ' + (model._section !== undefined ? model._section : '❓ 未知'),
+              '',
+              '--- Canvas 状态 ---',
+              '尺寸: ' + (canvas.width || '?') + 'x' + (canvas.height || '?'),
+              'style.display: ' + (canvas.style ? canvas.style.display : '?'),
+              'style.opacity: ' + (canvas.style ? canvas.style.opacity : '?'),
+              'style.visibility: ' + (canvas.style ? canvas.style.visibility : '?'),
+              '',
+              '--- WebGL 状态 ---',
+              'gl: ' + (gl ? '✅ 存在' : '❌ 不存在'),
+              gl ? 'drawingBuffer: ' + gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight : '',
+            ];
+            dbg.innerHTML = info.map(function(l) { return '<div>' + l + '</div>'; }).join('');
+          }, 3000);
+        }
       }
 
       // 判断是否移动端

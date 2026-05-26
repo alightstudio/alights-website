@@ -220,6 +220,22 @@
               '--- WebGL 状态 ---',
               'gl: ' + (gl ? '✅ 存在' : '❌ 不存在'),
               gl ? 'drawingBuffer: ' + gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight : '',
+              '',
+              '--- Scene 深度诊断 ---',
+              'scene.renderer: ' + (scene.renderer ? '✅' : '❌'),
+              'scene.camera: ' + (scene.camera ? '✅' : '❌'),
+              scene.camera ? ('cam pos: ' + JSON.stringify(scene.camera.position)) : '',
+              'scene.root: ' + (scene.root ? '✅' : '❌'),
+              scene.root ? ('root children: ' + (scene.root.children ? scene.root.children.length : '?')) : '',
+              '',
+              '--- Model 深度诊断 ---',
+              'model.sections: ' + (model._sections ? Object.keys(model._sections).join(',') : '❓'),
+              'model.currentSection: ' + (model._currentSection !== undefined ? model._currentSection : '❓'),
+              'model.activeObjs: ' + (model._activeObjects ? model._activeObjects.length : '❓'),
+              '',
+              '--- 材质/纹理 ---',
+              'matlib: ' + (model.matlib ? '✅' : '❌'),
+              model.matlib ? ('materials count: ' + (model.matlib.materials ? model.matlib.materials.length : '?')) : '',
             ];
             dbg.innerHTML = info.map(function(l) { return '<div>' + l + '</div>'; }).join('');
           }, 3000);

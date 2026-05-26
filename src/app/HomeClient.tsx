@@ -205,6 +205,80 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
         </div>
       </section>
 
+      {/* Featured Works */}
+      <section id="works" className="py-32 px-6 md:px-12 lg:px-24 relative">
+        <NoiseBg />
+        <div className="max-w-7xl mx-auto relative">
+          <div className="text-center mb-20">
+            <p className="text-xs text-accent-gold/60 tracking-[0.3em] uppercase mb-4">Portfolio</p>
+            <h2 className="font-display text-4xl md:text-5xl font-light mb-2">代表作品</h2>
+            <p className="text-sm text-gray-500 tracking-wider mb-6">SELECTED WORKS · 精选项目</p>
+            <div className="w-24 h-px bg-accent-gold/40 mx-auto" />
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {works.length > 0 ? works.map((work: any) => (
+              <Link key={work.id} href="/works" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
+                <Image src={proxyImageUrl(work.coverUrl || '')} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
+                <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <p className="text-[10px] text-accent-gold/70 tracking-[0.2em] mb-1">{work.titleEn || ''}</p>
+                  <h3 className="text-lg font-light mb-2 tracking-wide">{work.title}</h3>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>{work.category}</span><span className="text-gray-700">·</span><span className="text-gray-600">{work.categoryEn || ''}</span>
+                  </div>
+                </div>
+              </Link>
+            )) : DEFAULT_WORKS_PLACEHOLDER.map((work, i) => (
+              <Link key={i} href="/works" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
+                <Image src={proxyImageUrl(work.image)} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
+                <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <p className="text-[10px] text-accent-gold/70 tracking-[0.2em] mb-1">{work.titleEn}</p>
+                  <h3 className="text-lg font-light mb-2 tracking-wide">{work.title}</h3>
+                  <div className="flex items-center gap-2 text-xs text-gray-500"><span>{work.category}</span><span className="text-gray-700">·</span><span className="text-gray-600">{work.categoryEn}</span></div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-16">
+            <Link href="/works" className="inline-block text-accent-gold text-sm tracking-wide hover:text-accent-silver transition-colors">
+              查看全部作品 · View All Works →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Partners / Brands */}
+      <section className="py-32 px-6 md:px-12 lg:px-24 bg-dark-800/50 relative overflow-hidden">
+        <NoiseBg />
+        <div className="max-w-[1400px] mx-auto relative">
+          <div className="text-center mb-20">
+            <p className="text-xs text-accent-gold/60 tracking-[0.3em] uppercase mb-4">Trusted By</p>
+            <h2 className="font-display text-3xl md:text-4xl font-light mb-2">合作品牌</h2>
+            <p className="text-xs text-gray-600 tracking-wider">PARTNER BRANDS · 值得信赖</p>
+          </div>
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-6 md:gap-8">
+            {brands.map((brand: any) => {
+              const imgSrc = hasBrandSlug(brand) ? `/brands/${brand.slug}.svg` : (brand.logo || '')
+              if (!imgSrc) return <div key={brand.name} className="text-gray-600 text-xs text-center py-4">{brand.name}</div>
+              return (
+                <div key={brand.name} className="group flex items-center justify-center aspect-[3/2] px-2" title={brand.name}>
+                  <Image src={imgSrc} alt={brand.name} width={100} height={50}
+                    className="w-full h-auto max-h-8 object-contain transition-all duration-500"
+                    style={{ opacity: bd.opacity ?? 0.75, filter: bd.grayscale !== false ? 'grayscale(100%)' : 'none' }}
+                    onMouseEnter={e => { const el = e.currentTarget as HTMLImageElement; el.style.opacity = String(bd.opacityHover ?? 0.8); if (bd.grayscaleHover !== false) el.style.filter = 'grayscale(0%)' }}
+                    onMouseLeave={e => { const el = e.currentTarget as HTMLImageElement; el.style.opacity = String(bd.opacity ?? 0.75); if (bd.grayscale !== false) el.style.filter = 'grayscale(100%)' }}
+                  />
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-20 h-px bg-gradient-to-r from-transparent via-dark-500 to-transparent" />
+        </div>
+      </section>
+
       {/* Creative Inspiration — Top 9 Hot Videos */}
       <section className="py-32 px-6 md:px-12 lg:px-24 relative">
         <NoiseBg />
@@ -251,80 +325,6 @@ export default function HomeClient({ initialConfig, initialWorks }: HomeClientPr
           <div className="text-center mt-16">
             <Link href="/gallery" className="inline-block text-accent-gold text-sm tracking-wide hover:text-accent-silver transition-colors">
               查看全部灵感 · View All Inspiration →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Partners / Brands */}
-      <section className="py-32 px-6 md:px-12 lg:px-24 bg-dark-800/50 relative overflow-hidden">
-        <NoiseBg />
-        <div className="max-w-[1400px] mx-auto relative">
-          <div className="text-center mb-20">
-            <p className="text-xs text-accent-gold/60 tracking-[0.3em] uppercase mb-4">Trusted By</p>
-            <h2 className="font-display text-3xl md:text-4xl font-light mb-2">合作品牌</h2>
-            <p className="text-xs text-gray-600 tracking-wider">PARTNER BRANDS · 值得信赖</p>
-          </div>
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-6 md:gap-8">
-            {brands.map((brand: any) => {
-              const imgSrc = hasBrandSlug(brand) ? `/brands/${brand.slug}.svg` : (brand.logo || '')
-              if (!imgSrc) return <div key={brand.name} className="text-gray-600 text-xs text-center py-4">{brand.name}</div>
-              return (
-                <div key={brand.name} className="group flex items-center justify-center aspect-[3/2] px-2" title={brand.name}>
-                  <Image src={imgSrc} alt={brand.name} width={100} height={50}
-                    className="w-full h-auto max-h-8 object-contain transition-all duration-500"
-                    style={{ opacity: bd.opacity ?? 0.75, filter: bd.grayscale !== false ? 'grayscale(100%)' : 'none' }}
-                    onMouseEnter={e => { const el = e.currentTarget as HTMLImageElement; el.style.opacity = String(bd.opacityHover ?? 0.8); if (bd.grayscaleHover !== false) el.style.filter = 'grayscale(0%)' }}
-                    onMouseLeave={e => { const el = e.currentTarget as HTMLImageElement; el.style.opacity = String(bd.opacity ?? 0.75); if (bd.grayscale !== false) el.style.filter = 'grayscale(100%)' }}
-                  />
-                </div>
-              )
-            })}
-          </div>
-          <div className="mt-20 h-px bg-gradient-to-r from-transparent via-dark-500 to-transparent" />
-        </div>
-      </section>
-
-      {/* Featured Works */}
-      <section id="works" className="py-32 px-6 md:px-12 lg:px-24 relative">
-        <NoiseBg />
-        <div className="max-w-7xl mx-auto relative">
-          <div className="text-center mb-20">
-            <p className="text-xs text-accent-gold/60 tracking-[0.3em] uppercase mb-4">Portfolio</p>
-            <h2 className="font-display text-4xl md:text-5xl font-light mb-2">代表作品</h2>
-            <p className="text-sm text-gray-500 tracking-wider mb-6">SELECTED WORKS · 精选项目</p>
-            <div className="w-24 h-px bg-accent-gold/40 mx-auto" />
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {works.length > 0 ? works.map((work: any) => (
-              <Link key={work.id} href="/works" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
-                <Image src={proxyImageUrl(work.coverUrl || '')} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
-                <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
-                <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <p className="text-[10px] text-accent-gold/70 tracking-[0.2em] mb-1">{work.titleEn || ''}</p>
-                  <h3 className="text-lg font-light mb-2 tracking-wide">{work.title}</h3>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <span>{work.category}</span><span className="text-gray-700">·</span><span className="text-gray-600">{work.categoryEn || ''}</span>
-                  </div>
-                </div>
-              </Link>
-            )) : DEFAULT_WORKS_PLACEHOLDER.map((work, i) => (
-              <Link key={i} href="/works" className="group relative aspect-[4/3] bg-dark-800 overflow-hidden cursor-pointer block">
-                <Image src={proxyImageUrl(work.image)} alt={work.title} fill className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
-                <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
-                <div className="absolute inset-0 border border-accent-gold/0 group-hover:border-accent-gold/20 transition-colors duration-500" />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <p className="text-[10px] text-accent-gold/70 tracking-[0.2em] mb-1">{work.titleEn}</p>
-                  <h3 className="text-lg font-light mb-2 tracking-wide">{work.title}</h3>
-                  <div className="flex items-center gap-2 text-xs text-gray-500"><span>{work.category}</span><span className="text-gray-700">·</span><span className="text-gray-600">{work.categoryEn}</span></div>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="text-center mt-16">
-            <Link href="/works" className="inline-block text-accent-gold text-sm tracking-wide hover:text-accent-silver transition-colors">
-              查看全部作品 · View All Works →
             </Link>
           </div>
         </div>

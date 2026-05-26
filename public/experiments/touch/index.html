@@ -151,6 +151,7 @@
         var app;
         try { app = new App(); } catch(e) {
           console.error('App init failed:', e);
+          window.__appError = e.message || String(e);
           var loading = document.getElementById('section-loading');
           if (loading) loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">设备兼容性提示<br><span style="font-size:11px;color:#444">此设备可能不支持 3D 渲染</span></p>';
         }
@@ -236,15 +237,33 @@ if (window.location.search.includes('debug=1')) {
     var r = window.RobotXP || {};
     var scene = r.scene || {};
     var model = scene.model || {};
+    var canvas = document.getElementById('gl-canvas') || {};
+    var glErrors = [];
+    if (canvas.getContext) {
+      try { var gl = canvas.getContext('webgl'); if (!gl) glErrors.push('WebGL context null'); }
+      catch(e) { glErrors.push(e.message); }
+    } else {
+      glErrors.push('canvas no getContext');
+    }
+    // 尝试获取 console.error 输出
+    var appErr = window.__appError || 'none';
     var info = [
       '=== 光触调试 ===',
       'RobotXP: ' + (window.RobotXP ? '✅' : '❌'),
       'scene: ' + (r.scene ? '✅' : '❌'),
       'model: ' + (scene.model ? '✅' : '❌'),
-      'model._section: ' + (model._section !== undefined ? model._section : '❓'),
+      '_section: ' + (model._section !== undefined ? model._section : '❓'),
       'mods: ' + (scene.mods ? '✅' : '❌'),
       'mods._loaded: ' + (scene.mods ? scene.mods._loaded : '❓'),
       'matlib: ' + (scene.matlib ? '✅' : '❌'),
+      '',
+      '--- WebGL ---',
+      'canvas: ' + (canvas.width || '?') + 'x' + (canvas.height || '?'),
+      'gl errors: ' + (glErrors.length ? glErrors.join(', ') : 'none'),
+      '',
+      '--- Errors ---',
+      'App init error: ' + appErr,
+      'main.js loaded: ' + (document.querySelector('script[src*="main"]') ? '✅ tag exists' : '❌ no script tag'),
     ];
     alert(info.join('\n'));
   };

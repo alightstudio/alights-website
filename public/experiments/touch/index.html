@@ -226,5 +226,30 @@
       }
     })();
   </script>
+<script>
+// 调试按钮（?debug=1 时显示）
+if (window.location.search.includes('debug=1')) {
+  var debugBtn = document.createElement('div');
+  debugBtn.innerHTML = '🐞 调试';
+  debugBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;background:rgba(0,0,0,0.8);color:#0f0;padding:6px 10px;border-radius:4px;font:12px monospace;cursor:pointer;user-select:none;';
+  debugBtn.onclick = function() {
+    var r = window.RobotXP || {};
+    var scene = r.scene || {};
+    var model = scene.model || {};
+    var info = [
+      '=== 光触调试 ===',
+      'RobotXP: ' + (window.RobotXP ? '✅' : '❌'),
+      'scene: ' + (r.scene ? '✅' : '❌'),
+      'model: ' + (scene.model ? '✅' : '❌'),
+      'model._section: ' + (model._section !== undefined ? model._section : '❓'),
+      'mods: ' + (scene.mods ? '✅' : '❌'),
+      'mods._loaded: ' + (scene.mods ? scene.mods._loaded : '❓'),
+      'matlib: ' + (scene.matlib ? '✅' : '❌'),
+    ];
+    alert(info.join('\n'));
+  };
+  document.body.appendChild(debugBtn);
+}
+</script>
 </body>
 </html>

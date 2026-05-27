@@ -2,13 +2,13 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, minimal-ui, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>光触 | Light Touch</title>
   <base href="/experiments/touch/">
   <link rel="stylesheet" href="index.css">
   <style>
-    html, body { background: #1a1a2e; margin: 0; padding: 0; width: 100%; height: 100%; touch-action: none; overflow: hidden; }
-    #gl-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+    html, body { background: #1a1a2e; margin: 0; padding: 0; width: 100%; height: 100%; }
+    #gl-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; }
     .lab-back {
         position: fixed; top: 16px; left: 16px; z-index: 9999;
         padding: 6px 12px; font-size: 12px; color: rgba(255,255,255,0.4);
@@ -18,6 +18,8 @@
     }
     .lab-back:hover { color: rgba(255,255,255,0.8); }
     #section-loading { display: block; }
+    #start-overlay { display: none; position: fixed; inset: 0; z-index: 10000; background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+    .touch-active #start-overlay { display: none !important; }
   </style>
 </head>
 <body>
@@ -51,17 +53,6 @@
       </g>
     </svg>
 
-    <!-- 移动端版本 (main.js BrowserDetect.isDesktop 检测需要) -->
-    <svg id="bigyear-mobile" class="bigyear" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 320" style="display:none">
-      <g>
-        <path class="svg-line-animations" d="M20,15 Q10,15 10,30 L10,50 Q10,65 30,65 L120,65 Q140,65 140,80 L140,150 Q140,175 110,175 L30,175 Q10,175 10,195 L10,285 Q10,305 30,305 L140,305 Q160,305 160,285" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="svg-line-animations" d="M220,30 Q220,15 235,15 L325,15 Q340,15 340,30 L340,285 Q340,305 325,305 L235,305 Q220,305 220,285 Z" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="svg-line-animations" d="M400,15 Q390,15 390,30 L390,50 Q390,65 410,65 L500,65 Q520,65 520,80 L520,150 Q520,175 490,175 L410,175 Q390,175 390,195 L390,285 Q390,305 410,305 L520,305 Q540,305 540,285" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="svg-line-animations" d="M580,285 Q580,305 600,305 L690,305 Q710,305 710,285 L710,175 Q710,160 690,160 L620,160 Q600,160 600,175 L600,215 Q600,230 620,230 L680,230 Q700,230 700,245 L700,245" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="svg-line-animations" d="M680,30 Q680,15 660,15 L600,15 Q580,15 580,30 L580,175" stroke="white" fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-      </g>
-    </svg>
-
     <ul class="socials hidden">
       <li class="facebook" style="visibility:hidden"></li>
       <li class="twitter" style="visibility:hidden"></li>
@@ -82,7 +73,7 @@
   </div>
 
   <a class="logo hidden" href="/">
-    <img src="/logo.svg" alt="Alights" style="height:18px;width:auto;filter:brightness(0) invert(1);">
+    <img src="/logo.png" alt="Alights" style="height:18px;width:auto;filter:brightness(0) invert(1);">
   </a>
 
   <div class="navigation hidden">
@@ -92,43 +83,6 @@
     </div>
   </div>
 
-  <script>
-    // ═══ 移动端 AudioContext 安全垫 ═══
-    // 部分移动端浏览器（某些 Android WebView、旧 iOS）
-    // 在无用户手势时 new AudioContext() 会抛 NotAllowedError
-    // 导致整个 App init 崩溃。此处用安全包装避免崩溃。
-    (function() {
-      var OrigAC = window.AudioContext || window.webkitAudioContext;
-      if (!OrigAC) return;
-      var SafeAC = function() {
-        try { return new OrigAC(); }
-        catch(e) {
-          
-          var noop = function() { return this; };
-          var gain = { connect: noop, disconnect: noop, gain: { value: 0, setValueAtTime: noop } };
-          return {
-            createGain: function() { return Object.create(gain); },
-            createBufferSource: function() {
-              return { buffer: null, connect: noop, disconnect: noop, start: noop, stop: noop, loop: false, addEventListener: noop, removeEventListener: noop };
-            },
-            createConvolver: function() { return { connect: noop, disconnect: noop, buffer: null } },
-            createMediaElementSource: function() { return { connect: noop, disconnect: noop } },
-            destination: {},
-            sampleRate: 44100,
-            decodeAudioData: function(buf, cb) { if (cb) setTimeout(function() { cb(null); }, 0); return { then: function(cb) { setTimeout(cb, 0); return this; } }; },
-            state: 'running',
-            suspend: function() { return Promise.resolve(); },
-            resume: function() { return Promise.resolve(); },
-            close: function() { return Promise.resolve(); },
-            currentTime: 0
-          };
-        }
-      };
-      SafeAC.prototype = OrigAC.prototype;
-      window.AudioContext = SafeAC;
-      if (window.webkitAudioContext) window.webkitAudioContext = SafeAC;
-    })();
-  </script>
   <script src="cannon.min.js"></script>
   <script src="main.js"></script>
   <script>
@@ -136,323 +90,46 @@
     document.addEventListener('touchmove', function(e) {e.preventDefault();}, {passive:false});
 
     (function() {
-      var canvas = document.getElementById('gl-canvas');
-      var isLoading = true;
+      var isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+      var app;
 
       function bootApp() {
-        if (!isLoading) return;
-        isLoading = false;
-        // 移除 start-overlay
+        try { app = new App(); } catch(e) {
+          console.error('App init failed:', e);
+          document.getElementById('section-loading').innerHTML = 
+            '<p style="color:#666;text-align:center;padding:40% 20px;font-size:14px">设备兼容性提示<br><span style="font-size:11px;color:#444">您的设备可能不支持 3D 渲染，请在电脑端访问以获得最佳体验</span></p>';
+        }
+        // 移除 overlay
         var overlay = document.getElementById('start-overlay');
         if (overlay) overlay.remove();
-        // 预设关闭 CSS transition，让 canvas 立刻可见
-        canvas.classList.add('active');
-        // 启动 app
-        var app;
-        try { app = new App(); window.RobotXP = app; } catch(e) {
-          console.error('App init failed:', e);
-          window.__appError = e.message || String(e);
-          var loading = document.getElementById('section-loading');
-          if (loading) loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">设备兼容性提示<br><span style="font-size:11px;color:#444">此设备可能不支持 3D 渲染</span></p>';
-        }
-        // Fallback: 移动端 when.js Promise 可能卡住，导致 loadPromise 永不 resolve
-        // 根因：when.all() 在移动端不 resolve → App._onLoaded 不触发
-        //       → scene.loaded() 不执行 → matlib 不编译 → mods 不激活 → 导航不显示
-        // 策略：等待实际资源加载完成（XHR 已完成但 Promise 链断了），
-        //       然后手动执行 _onLoaded 的全部逻辑
-        var fallbackDone = false;
-        
-        function doFallbackInit() {
-          if (fallbackDone) return;
-          fallbackDone = true;
-          
-          var r = window.RobotXP;
-          if (!r || !r.scene) { fallbackDone = false; setTimeout(doFallbackInit, 500); return; }
-          var scene = r.scene;
-          var model = scene.model;
-          
-          console.log('[FALLBACK] Starting fallback initialization...');
-          
-          // === 步骤1: 强制完成 AWD 加载 ===
-          // 遍历所有 mods，找到 AWD 场景对象并强制完成
-          var mod1 = scene.mods && scene.mods.mods && scene.mods.mods[1];
-          var bulb = mod1 && mod1.bulb;
-          if (bulb && bulb._state === 2) {
-            // _state=2 意味着 AWD 已解析（meshes 已创建），但 when.js Promise 未 resolve
-            bulb._state = 3;  // 强制设为 loaded
-            console.log('[FALLBACK] Forced bulb._state = 3 (was 2/parsing)');
-          } else if (bulb && bulb._state === 1) {
-            // _state=1 意味着 AWD 从未加载，尝试触发
-            try {
-              var loadables = bulb.getLoadables();
-              if (loadables && loadables.length > 0) {
-                console.log('[FALLBACK] Triggering bulb load, waiting for', loadables.length, 'resources...');
-                // 注意：这里不 return，继续执行后续步骤
-                // AWD 加载会在后台进行，完成后 meshes 会自动出现
-              }
-            } catch(e) { console.warn('[FALLBACK] getLoadables error:', e); }
-          }
-          
-          // 同样检查 photo 模块 (section 2) 的 polaroid
-          var mod2 = scene.mods && scene.mods.mods && scene.mods.mods[2];
-          if (mod2 && mod2.polaroid && mod2.polaroid._state === 2) {
-            mod2.polaroid._state = 3;
-            console.log('[FALLBACK] Forced polaroid._state = 3');
-          }
-          
-          // === 步骤2: 执行 scene.loaded() 的完整逻辑 ===
-          // 这是 App._onLoaded 中 this.scene.loaded() 的等价操作
-          // 必须在 AWD 解析完成后执行，这样材质才有正确的纹理引用
-          try {
-            // 2a. 注册材质到 matlib（原始代码在 _onLoaded 中做 registerMaterials）
-            //     实际上材质已在各 mod 的 setupMaterials 中注册，只需 compile
-            scene.matlib.compileAll();
-            console.log('[FALLBACK] matlib.compileAll() done');
-          } catch(e) { console.warn('[FALLBACK] compileAll error:', e); }
-          
-          // 2b. 激活 mods
-          scene.mods._loaded = true;
-          scene.mods.updateLifecycle();
-          console.log('[FALLBACK] mods activated');
-          
-          // === 步骤3: 执行 App._onLoaded 的 UI 逻辑 ===
-          // 原始代码: 3秒后 dispatch show_logo + show_nav
-          if (model._section !== 1) model.setSection(1);
-          
-          // 显示导航栏（原代码通过 UI dispatch show_nav 实现）
-          var navEl = document.querySelector('.navigation');
-          if (navEl) navEl.classList.remove('hidden');
-          var logoEl = document.querySelector('.logo');
-          if (logoEl) logoEl.classList.remove('hidden');
-          var cursorEl = document.querySelector('.mouse-cursor');
-          if (cursorEl) cursorEl.classList.remove('disabled');
-          console.log('[FALLBACK] UI elements shown');
-          
-          // === 步骤4: 隐藏 loading ===
-          var loading = document.getElementById('section-loading');
-          if (loading) loading.style.display = 'none';
-          
-          // === 步骤5: 延迟再次 compileAll ===
-          // 某些纹理可能在首次 compile 时还未上传到 GPU
-          // 延迟 2 秒后再次编译，确保所有纹理都已就绪
-          setTimeout(function() {
-            try {
-              scene.matlib.compileAll();
-              console.log('[FALLBACK] Delayed matlib.compileAll() done');
-            } catch(e) { console.warn('[FALLBACK] Delayed compileAll error:', e); }
-          }, 2000);
-          
-          // === 步骤6: 确保 canvas 可见 ===
-          var cvs = document.getElementById('gl-canvas');
-          if (cvs) { cvs.style.opacity = '1'; cvs.style.visibility = 'visible'; }
-          
-          console.log('[FALLBACK] Initialization complete');
-        }
-        
-        // 方案A: 等待 scene.loadPromise（如果 when.js 最终 resolve）
-        // 方案B: 5秒超时后强制 fallback
-        if (r && r.scene && r.scene.loadPromise) {
-          r.scene.loadPromise.then(function() {
-            console.log('[FALLBACK] loadPromise resolved normally');
-            // 正常路径 - App._onLoaded 会被调用，但可能不显示导航
-            // 确保 UI 显示
-            setTimeout(function() {
-              var navEl = document.querySelector('.navigation');
-              if (navEl && navEl.classList.contains('hidden')) {
-                navEl.classList.remove('hidden');
-              }
-              var logoEl = document.querySelector('.logo');
-              if (logoEl && logoEl.classList.contains('hidden')) {
-                logoEl.classList.remove('hidden');
-              }
-            }, 4000);
-          }, function(err) {
-            console.warn('[FALLBACK] loadPromise rejected:', err);
-            doFallbackInit();
-          });
-        }
-        // 5秒超时强制 fallback（如果 loadPromise 卡住）
-        setTimeout(function() {
-          if (!fallbackDone) {
-            console.log('[FALLBACK] Timeout - forcing fallback init');
-            doFallbackInit();
-          }
-        }, 5000);
-        // 播放背景音乐（需要用户手势）
-        var audio = document.getElementById('soundtrack');
-        if (audio) audio.play().catch(function(){});
+        document.documentElement.classList.add('touch-active');
       }
 
-      // 判断是否移动端
-      var isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+      // 移动端：添加点击启动覆盖层
       if (isMobile) {
-        // 添加点击启动覆盖层
         var overlay = document.createElement('div');
         overlay.id = 'start-overlay';
-        overlay.innerHTML = '<div style="position:fixed;inset:0;z-index:10000;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer">'
-          + '<div style="margin-bottom:20px;width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center">'
-          + '<svg width="28" height="28" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"><path d="M8 5v14l11-7z"/></svg>'
-          + '</div>'
-          + '<p style="margin:0;color:rgba(255,255,255,0.4);font-size:16px;letter-spacing:0.1em">点击开始</p>'
-          + '<p style="margin:8px 0 0;color:rgba(255,255,255,0.15);font-size:11px;letter-spacing:0.05em">Tap to interact</p>'
-          + '</div>';
-        document.body.appendChild(overlay);
-        // 点击 / 触摸后启动
+        overlay.innerHTML = '<div style="margin-bottom:20px;width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center">' +
+          '<svg width="28" height="28" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"><path d="M8 5v14l11-7z"/></svg>' +
+          '</div>'
+          + '<p style="margin:0;color:rgba(255,255,255,0.4);font-size:16px;letter-spacing:0.1em">点击开始</p>';
         overlay.addEventListener('click', bootApp);
         overlay.addEventListener('touchstart', function(e) { e.preventDefault(); bootApp(); }, {passive: false});
+        document.body.appendChild(overlay);
       } else {
         // 桌面端直接启动
         bootApp();
       }
+
+      // 5秒超时检测：如果 loading 还在显示，提示用户
+      setTimeout(function() {
+        var loading = document.getElementById('section-loading');
+        if (loading && loading.style.display !== 'none') {
+          console.warn('[光触] 页面加载超过 5 秒，可能是 when.js Promise 在移动端不兼容');
+          loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">页面加载较慢<br><span style="font-size:11px;color:#444">请尝试刷新页面或检查网络连接</span></p>';
+        }
+      }, 5000);
     })();
   </script>
-<script>
-// 调试按钮（?debug=1 时显示）
-if (window.location.search.includes('debug=1')) {
-  var debugBtn = document.createElement('div');
-  debugBtn.innerHTML = '🐞 调试';
-  debugBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;background:rgba(0,0,0,0.8);color:#0f0;padding:6px 10px;border-radius:4px;font:12px monospace;cursor:pointer;user-select:none;';
-  debugBtn.onclick = function() {
-    var r = window.RobotXP || {};
-    var scene = r.scene || {};
-    var model = scene.model || {};
-    var canvas = document.getElementById('gl-canvas') || {};
-    var glErrors = [];
-    if (canvas.getContext) {
-      try { var gl = canvas.getContext('webgl'); if (!gl) glErrors.push('WebGL context null'); }
-      catch(e) { glErrors.push(e.message); }
-    } else {
-      glErrors.push('canvas no getContext');
-    }
-    // 尝试获取 console.error 输出
-    var appErr = window.__appError || 'none';
-    // 深入检查渲染器/场景内部状态
-    var rend = r.renderer || {};
-    var camInfo = '❌';
-    if (rend.camera) {
-      var c = rend.camera;
-      var p = c.position || {};
-      camInfo = 'pos:(' + (p.x||0).toFixed(1) + ',' + (p.y||0).toFixed(1) + ',' + (p.z||0).toFixed(1) + ')';
-    }
-    var meshCount = 0;
-    var meshNames = [];
-    try {
-      // 尝试从 renderer 或 scene 获取 mesh 信息
-      var glctx = rend.gl || rend.context || rend._gl;
-      if (rend.sceneGraph) {
-        // 遍历场景图
-        function countMeshes(node) {
-          if (!node) return;
-          if (node.mesh || node.draw) { meshCount++; meshNames.push(node.name || node.id || '?'); }
-          var children = node.children || node._children || [];
-          for (var i = 0; i < children.length; i++) countMeshes(children[i]);
-        }
-        countMeshes(rend.sceneGraph);
-      } else if (scene.root) {
-        function countRoot(n) {
-          if (!n) return;
-          if (n.meshes) { meshCount += n.meshes.length; }
-          var ch = n.children || [];
-          for (var j = 0; j < ch.length; j++) countRoot(ch[j]);
-        }
-        countRoot(scene.root);
-      }
-    } catch(e3) { meshCount = 'err:' + e3.message; }
-    
-    // 检查 model 内部
-    var modelSections = '❌';
-    if (model.sections) { modelSections = Object.keys(model.sections).join(','); }
-    else if (model._sections) { modelSections = Object.keys(model._sections).join(','); }
-    
-    // 检查 mods 下的模块
-    var modList = '';
-    if (scene.mods && scene.mods.actives) {
-      var acts = scene.mods.actives;
-      if (Array.isArray(acts)) modList = acts.join(',');
-      else if (typeof acts === 'object') modList = Object.keys(acts).join(',');
-    }
-    
-    // === 深入检查 bulb mod (index 1) ===
-    // 架构: mods[1] = light module(包装器) → .bulb = AWDScene(真正的3D场景)
-    var bulbInfo = [];
-    var mod1 = null;
-    try {
-      if (scene.mods && scene.mods.mods && scene.mods.mods[1]) {
-        mod1 = scene.mods.mods[1];
-        bulbInfo.push('mod1 type: ' + (mod1.constructor ? mod1.constructor.name : '?'));
-        var awdScene = mod1.bulb;
-        if (awdScene) {
-          bulbInfo.push('bulb: ✅');
-          bulbInfo.push('bulb._state: ' + (awdScene._state !== undefined ? awdScene._state + (awdScene._state===1?'(init)':awdScene._state===2?'(parsing)':awdScene._state===3?'(loaded)':'?') : '❓'));
-          bulbInfo.push('bulb.meshes: ' + (Array.isArray(awdScene.meshes) ? awdScene.meshes.length : (awdScene.meshes ? 'not array' : 'undefined')));
-          bulbInfo.push('bulb.node.ch: ' + ((awdScene.node&&awdScene.node.children) ? awdScene.node.children.length : 0));
-          bulbInfo.push('bulb.loader: ' + (awdScene.loader ? '✅' : '❌'));
-          bulbInfo.push('bulb._loadables: ' + (Array.isArray(awdScene._loadables) ? awdScene._loadables.length : (awdScene._loadables ? '?' : 'undefined')));
-          // 检查 loadPromise
-          if (awdScene._loadPromise) { bulbInfo.push('bulb.loadPromise: ✅ exists'); }
-          else { bulbInfo.push('bulb.loadPromise: ❌ none (getLoadables never called?)'); }
-          // 尝试获取 AWD URL
-          try { var awdUrl = awdScene.getAwdUrl ? awdScene.getAwdUrl() : '?'; bulbInfo.push('awdUrl: ' + awdUrl); } catch(x) {}
-        } else {
-          bulbInfo.push('bulb: ❌ undefined!');
-          var keys = Object.keys(mod1).filter(function(k){return k.charAt(0)!=='_';});
-          bulbInfo.push('mod1 keys: ' + keys.slice(0,10).join(','));
-        }
-        // 也检查 rope（绳子）和 shadow（阴影）
-        bulbInfo.push('rope: ' + (mod1.rope ? '✅' : '❌'));
-        bulbInfo.push('shadow: ' + (mod1.shadow ? '✅' : '❌'));
-        bulbInfo.push('physic: ' + (mod1.physic ? '✅' : '❌'));
-      } else { bulbInfo.push('mods[1]: ❌ not found'); }
-    } catch(e4) { bulbInfo.push('err: ' + e4.message); }
-
-    // === 检查 scene.loadPromise 状态 ===
-    var loadInfo = '';
-    try {
-      if (scene.loadPromise) {
-        loadInfo = 'scene.loadPromise: ✅ exists';
-        // 检查是否已 resolve（通过检查 _loaded 反推）
-        loadInfo += scene.mods._loaded ? ' (resolved)' : ' (pending/rejected?)';
-      } else { loadInfo = 'scene.loadPromise: ❌'; }
-    } catch(e5) { loadInfo = 'load err:' + e5.message; }
-    
-    // 也检查所有 mods 的 _state
-    var allModStates = '';
-    if (scene.mods && scene.mods.mods) {
-      for (var mi = 0; mi < scene.mods.mods.length; mi++) {
-        var m = scene.mods.mods[mi];
-        allModStates += (m._state !== undefined ? m._state : '?') + ' ';
-      }
-    }
-
-    var info = [
-      '=== 光触调试 ===',
-      'App: ✅ | scene: ✅ | model: ✅',
-      '_section: ' + (model._section !== undefined ? model._section : '❓'),
-      'mods._loaded: ' + (scene.mods ? scene.mods._loaded : '❓'),
-      'matlib: ' + (scene.matlib ? '✅ (' + Object.keys(scene.matlib.materials || {}).length + ' mats)' : '❌'),
-      '',
-      '--- Renderer ---',
-      'canvas: ' + ((rend.canvas) ? (rend.canvas.width + 'x' + rend.canvas.height) : '❌'),
-      'camera: ' + camInfo,
-      'meshes: ' + meshCount,
-      '',
-      '--- Mods State ---',
-      'mod1 keys: ' + (mod1 ? Object.keys(mod1).filter(function(k){return k.charAt(0)!=='_';}).slice(0,8).join(',') : '?'),
-      '',
-      '--- Load Status ---',
-      loadInfo,
-      '',
-      '--- Bulb [1] ---',
-    ].concat(bulbInfo).concat([
-      '',
-      '--- WebGL ---',
-      'gl errors: ' + (glErrors.length ? glErrors.join(', ') : 'none'),
-      'App init error: ' + appErr,
-    ]);
-    alert(info.join('\n'));
-  };
-  document.body.appendChild(debugBtn);
-}
-</script>
 </body>
 </html>

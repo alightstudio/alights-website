@@ -155,97 +155,129 @@
           var loading = document.getElementById('section-loading');
           if (loading) loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">设备兼容性提示<br><span style="font-size:11px;color:#444">此设备可能不支持 3D 渲染</span></p>';
         }
-        // Fallback: 移动端 loadPromise 可能卡住，自动完成初始化
-        // App 实例挂在 window.RobotXP
-        //       只做最小操作：隐藏 loading + 切换 section + 确保 canvas 可见
-        setTimeout(function checkFallback() {
-          var r = window.RobotXP;
-          if (!r || !r.scene) { setTimeout(checkFallback, 500); return; }
-          var model = r.scene.model;
-          if (!model) { setTimeout(checkFallback, 500); return; }
-          var scene = r.scene;  // ★ 修复：之前漏了这行，导致 scene 是 undefined
-          var loading = document.getElementById('section-loading');
-          // 如果已经正常显示则跳过（mods._loaded=true 说明场景已激活）
-          if (model._section === 1 && loading && loading.style.display === 'none' && scene.mods && scene.mods._loaded) return;
+        // Fallback: 移动端 when.js Promise 可能卡住，导致 loadPromise 永不 resolve
+        // 根因：when.all() 在移动端不 resolve → App._onLoaded 不触发
+        //       → scene.loaded() 不执行 → matlib 不编译 → mods 不激活 → 导航不显示
+        // 策略：等待实际资源加载完成（XHR 已完成但 Promise 链断了），
+        //       然后手动执行 _onLoaded 的全部逻辑
+        var fallbackDone = false;
+        
+        function doFallbackInit() {
+          if (fallbackDone) return;
+          fallbackDone = true;
           
-          // 步骤1: 隐藏 loading 遮罩
-          if (loading) loading.style.display = 'none';
-          // 步骤2: 切换到 section 1
-          try { if (model._section !== 1) { model.setSection(1);  } }
-          catch(e) {  }
-          // 步骤3: 激活场景渲染 + 确保 AWD 模型已加载
+          var r = window.RobotXP;
+          if (!r || !r.scene) { fallbackDone = false; setTimeout(doFallbackInit, 500); return; }
+          var scene = r.scene;
+          var model = scene.model;
+          
+          console.log('[FALLBACK] Starting fallback initialization...');
+          
+          // === 步骤1: 强制完成 AWD 加载 ===
+          // 遍历所有 mods，找到 AWD 场景对象并强制完成
+          var mod1 = scene.mods && scene.mods.mods && scene.mods.mods[1];
+          var bulb = mod1 && mod1.bulb;
+          if (bulb && bulb._state === 2) {
+            // _state=2 意味着 AWD 已解析（meshes 已创建），但 when.js Promise 未 resolve
+            bulb._state = 3;  // 强制设为 loaded
+            console.log('[FALLBACK] Forced bulb._state = 3 (was 2/parsing)');
+          } else if (bulb && bulb._state === 1) {
+            // _state=1 意味着 AWD 从未加载，尝试触发
+            try {
+              var loadables = bulb.getLoadables();
+              if (loadables && loadables.length > 0) {
+                console.log('[FALLBACK] Triggering bulb load, waiting for', loadables.length, 'resources...');
+                // 注意：这里不 return，继续执行后续步骤
+                // AWD 加载会在后台进行，完成后 meshes 会自动出现
+              }
+            } catch(e) { console.warn('[FALLBACK] getLoadables error:', e); }
+          }
+          
+          // 同样检查 photo 模块 (section 2) 的 polaroid
+          var mod2 = scene.mods && scene.mods.mods && scene.mods.mods[2];
+          if (mod2 && mod2.polaroid && mod2.polaroid._state === 2) {
+            mod2.polaroid._state = 3;
+            console.log('[FALLBACK] Forced polaroid._state = 3');
+          }
+          
+          // === 步骤2: 执行 scene.loaded() 的完整逻辑 ===
+          // 这是 App._onLoaded 中 this.scene.loaded() 的等价操作
+          // 必须在 AWD 解析完成后执行，这样材质才有正确的纹理引用
           try {
-            if (scene.mods && !scene.mods._loaded) {
-              // 3a. 检查 bulb AWD 状态
-              var mod1_check = scene.mods.mods && scene.mods.mods[1];
-              var bulb_check = mod1_check && mod1_check.bulb;
-              
-              // Case 1: _state === 1 (init) - getLoadables 从未被调用
-              if (bulb_check && bulb_check._state === 1) {
-                console.log('[FALLBACK] bulb _state=1, trying getLoadables...');
-                try {
-                  var loadables = bulb_check.getLoadables();
-                  if (loadables && loadables.length > 0) {
-                    console.log('[FALLBACK] got', loadables.length, 'loadables, waiting...');
-                    Promise.all(loadables).then(function() {
-                      console.log('[FALLBACK] AWD loaded!');
-                      scene.matlib.compileAll();
-                      scene.mods._loaded = true;
-                      scene.mods.updateLifecycle();
-                      if (model._section !== 1) model.setSection(1);
-                    }).catch(function(err) {
-                      console.warn('[FALLBACK] AWD load failed:', err);
-                      scene.matlib.compileAll();
-                      scene.mods._loaded = true;
-                      scene.mods.updateLifecycle();
-                    });
-                    if (loading) loading.style.display = 'none';
-                    if (model._section !== 1) model.setSection(1);
-                    return;
-                  }
-                } catch(getErr) {
-                  console.warn('[FALLBACK] getLoadables error:', getErr);
-                }
-              }
-              
-              // Case 2: _state === 2 (parsing) - AWD已解析但Promise未resolve
-              // 这是移动端常见问题：when.js Promise在移动端可能卡住
-              if (bulb_check && bulb_check._state === 2) {
-                console.log('[FALLBACK] bulb _state=2 (parsing), meshes ready but Promise stuck');
-                // 强制完成：手动调用 _onLoad 逻辑
-                try {
-                  bulb_check._state = 3;  // 强制设为 loaded
-                  if (typeof bulb_check._onLoad === 'function') {
-                    bulb_check._onLoad();  // 触发原始回调（如果有）
-                  }
-                  console.log('[FALLBACK] forced bulb._state = 3');
-                } catch(forceErr) {
-                  console.warn('[FALLBACK] force load error:', forceErr);
-                }
-              }
-              
-              // 3b. 正常激活流程
-              try { scene.matlib.compileAll(); } catch(e2) { console.warn('[FALLBACK] compileAll error:', e2); }
-              scene.mods._loaded = true;
-              scene.mods.updateLifecycle();
-              
-            } else {
-              
-            }
-          } catch(e) {
-            
-            setTimeout(checkFallback, 1000); return;
-          }
-          // 再次确保 section=1（updateLifecycle 可能重置了 section）
-          if (model._section !== 1) {
-            model.setSection(1);
-            
-          }
-          // 步骤4: 确保 canvas 可见
+            // 2a. 注册材质到 matlib（原始代码在 _onLoaded 中做 registerMaterials）
+            //     实际上材质已在各 mod 的 setupMaterials 中注册，只需 compile
+            scene.matlib.compileAll();
+            console.log('[FALLBACK] matlib.compileAll() done');
+          } catch(e) { console.warn('[FALLBACK] compileAll error:', e); }
+          
+          // 2b. 激活 mods
+          scene.mods._loaded = true;
+          scene.mods.updateLifecycle();
+          console.log('[FALLBACK] mods activated');
+          
+          // === 步骤3: 执行 App._onLoaded 的 UI 逻辑 ===
+          // 原始代码: 3秒后 dispatch show_logo + show_nav
+          if (model._section !== 1) model.setSection(1);
+          
+          // 显示导航栏（原代码通过 UI dispatch show_nav 实现）
+          var navEl = document.querySelector('.navigation');
+          if (navEl) navEl.classList.remove('hidden');
+          var logoEl = document.querySelector('.logo');
+          if (logoEl) logoEl.classList.remove('hidden');
+          var cursorEl = document.querySelector('.mouse-cursor');
+          if (cursorEl) cursorEl.classList.remove('disabled');
+          console.log('[FALLBACK] UI elements shown');
+          
+          // === 步骤4: 隐藏 loading ===
+          var loading = document.getElementById('section-loading');
+          if (loading) loading.style.display = 'none';
+          
+          // === 步骤5: 延迟再次 compileAll ===
+          // 某些纹理可能在首次 compile 时还未上传到 GPU
+          // 延迟 2 秒后再次编译，确保所有纹理都已就绪
+          setTimeout(function() {
+            try {
+              scene.matlib.compileAll();
+              console.log('[FALLBACK] Delayed matlib.compileAll() done');
+            } catch(e) { console.warn('[FALLBACK] Delayed compileAll error:', e); }
+          }, 2000);
+          
+          // === 步骤6: 确保 canvas 可见 ===
           var cvs = document.getElementById('gl-canvas');
           if (cvs) { cvs.style.opacity = '1'; cvs.style.visibility = 'visible'; }
           
-        }, 3000);
+          console.log('[FALLBACK] Initialization complete');
+        }
+        
+        // 方案A: 等待 scene.loadPromise（如果 when.js 最终 resolve）
+        // 方案B: 5秒超时后强制 fallback
+        if (r && r.scene && r.scene.loadPromise) {
+          r.scene.loadPromise.then(function() {
+            console.log('[FALLBACK] loadPromise resolved normally');
+            // 正常路径 - App._onLoaded 会被调用，但可能不显示导航
+            // 确保 UI 显示
+            setTimeout(function() {
+              var navEl = document.querySelector('.navigation');
+              if (navEl && navEl.classList.contains('hidden')) {
+                navEl.classList.remove('hidden');
+              }
+              var logoEl = document.querySelector('.logo');
+              if (logoEl && logoEl.classList.contains('hidden')) {
+                logoEl.classList.remove('hidden');
+              }
+            }, 4000);
+          }, function(err) {
+            console.warn('[FALLBACK] loadPromise rejected:', err);
+            doFallbackInit();
+          });
+        }
+        // 5秒超时强制 fallback（如果 loadPromise 卡住）
+        setTimeout(function() {
+          if (!fallbackDone) {
+            console.log('[FALLBACK] Timeout - forcing fallback init');
+            doFallbackInit();
+          }
+        }, 5000);
         // 播放背景音乐（需要用户手势）
         var audio = document.getElementById('soundtrack');
         if (audio) audio.play().catch(function(){});

@@ -173,12 +173,45 @@
           // 步骤2: 切换到 section 1
           try { if (model._section !== 1) { model.setSection(1);  } }
           catch(e) {  }
-          // 步骤3: 激活场景渲染
-          // scene.loaded() 内部会调 matlib.compileAll() 可能报错
-          // 所以拆开做：直接设 _loaded=true + updateLifecycle()
+          // 步骤3: 激活场景渲染 + 确保 AWD 模型已加载
           try {
             if (scene.mods && !scene.mods._loaded) {
-              try { scene.matlib.compileAll(); } catch(e2) {  }
+              // 3a. 检查 bulb AWD 状态，如果未加载则尝试触发
+              var mod1_check = scene.mods.mods && scene.mods.mods[1];
+              var bulb_check = mod1_check && mod1_check.bulb;
+              if (bulb_check && bulb_check._state === 1) {
+                // bulb 还在 init 状态！getLoadables() 从未被调用或加载失败
+                // 尝试手动触发加载
+                console.log('[FALLBACK] bulb _state=1, trying getLoadables...');
+                try {
+                  var loadables = bulb_check.getLoadables();
+                  if (loadables && loadables.length > 0) {
+                    console.log('[FALLBACK] got', loadables.length, 'loadables, waiting...');
+                    // 等待 AWD 加载完成后再激活
+                    Promise.all(loadables).then(function() {
+                      console.log('[FALLBACK] AWD loaded! activating scene...');
+                      scene.matlib.compileAll();
+                      scene.mods._loaded = true;
+                      scene.mods.updateLifecycle();
+                      if (model._section !== 1) model.setSection(1);
+                    }).catch(function(err) {
+                      console.warn('[FALLBACK] AWD load failed:', err);
+                      // 即使失败也激活，至少显示绳子和阴影
+                      scene.matlib.compileAll();
+                      scene.mods._loaded = true;
+                      scene.mods.updateLifecycle();
+                    });
+                    // 不立即设 _loaded，等 Promise
+                    if (loading) loading.style.display = 'none';
+                    if (model._section !== 1) model.setSection(1);
+                    return; // 提前返回，等 Promise
+                  }
+                } catch(getErr) {
+                  console.warn('[FALLBACK] getLoadables error:', getErr);
+                }
+              }
+              // 3b. 正常激活流程
+              try { scene.matlib.compileAll(); } catch(e2) { console.warn('[FALLBACK] compileAll error:', e2); }
               scene.mods._loaded = true;
               scene.mods.updateLifecycle();
               
@@ -293,43 +326,48 @@ if (window.location.search.includes('debug=1')) {
       else if (typeof acts === 'object') modList = Object.keys(acts).join(',');
     }
     
-    // === 深入检查 bulb mod (index 1) 的 AWD 场景 ===
-    // mods[1] 是 light module（包装器），真正的 AWD 场景在 mod1.bulb
+    // === 深入检查 bulb mod (index 1) ===
+    // 架构: mods[1] = light module(包装器) → .bulb = AWDScene(真正的3D场景)
     var bulbInfo = [];
     var mod1 = null;
     try {
       if (scene.mods && scene.mods.mods && scene.mods.mods[1]) {
         mod1 = scene.mods.mods[1];
         bulbInfo.push('mod1 type: ' + (mod1.constructor ? mod1.constructor.name : '?'));
-        // 检查 mod1.bulb（这才是 awd-scene 子类）
         var awdScene = mod1.bulb;
         if (awdScene) {
-          bulbInfo.push('bulb (AWD): ✅');
-          bulbInfo.push('bulb._state: ' + (awdScene._state !== undefined ? awdScene._state : '❓'));
-          // 1=init 2=parsing 3=loaded
-          if (awdScene.meshes) { bulbInfo.push('bulb.meshes: ' + awdScene.meshes.length); }
-          else { bulbInfo.push('bulb.meshes: undefined'); }
-          if (awdScene.node) {
-            var bch = awdScene.node.children || [];
-            bulbInfo.push('bulb.node.children: ' + bch.length);
-            for (var bi = 0; bi < Math.min(bch.length, 5); bi++) {
-              bulbInfo.push('  ['+bi+'] ' + (bch[bi].name || bch[bi].type || '?'));
-            }
-          }
-          if (awdScene.texs) { bulbInfo.push('bulb.texs: ✅'); }
-          if (awdScene.mats) { bulbInfo.push('bulb.mats: ✅ (' + Object.keys(awdScene.mats.materials || {}).length + ')'); }
-          if (awdScene.loader) { bulbInfo.push('bulb.loader: ✅'); }
-          if (awdScene._loadables) { bulbInfo.push('bulb._loadables: ' + awdScene._loadables.length); }
+          bulbInfo.push('bulb: ✅');
+          bulbInfo.push('bulb._state: ' + (awdScene._state !== undefined ? awdScene._state + (awdScene._state===1?'(init)':awdScene._state===2?'(parsing)':awdScene._state===3?'(loaded)':'?') : '❓'));
+          bulbInfo.push('bulb.meshes: ' + (Array.isArray(awdScene.meshes) ? awdScene.meshes.length : (awdScene.meshes ? 'not array' : 'undefined')));
+          bulbInfo.push('bulb.node.ch: ' + ((awdScene.node&&awdScene.node.children) ? awdScene.node.children.length : 0));
+          bulbInfo.push('bulb.loader: ' + (awdScene.loader ? '✅' : '❌'));
+          bulbInfo.push('bulb._loadables: ' + (Array.isArray(awdScene._loadables) ? awdScene._loadables.length : (awdScene._loadables ? '?' : 'undefined')));
+          // 检查 loadPromise
+          if (awdScene._loadPromise) { bulbInfo.push('bulb.loadPromise: ✅ exists'); }
+          else { bulbInfo.push('bulb.loadPromise: ❌ none (getLoadables never called?)'); }
+          // 尝试获取 AWD URL
+          try { var awdUrl = awdScene.getAwdUrl ? awdScene.getAwdUrl() : '?'; bulbInfo.push('awdUrl: ' + awdUrl); } catch(x) {}
         } else {
-          bulbInfo.push('bulb (AWD): ❌ undefined!');
-          // 列出 mod1 的所有属性
-          var keys = Object.keys(mod1).filter(function(k) { return k.charAt(0) !== '_'; });
+          bulbInfo.push('bulb: ❌ undefined!');
+          var keys = Object.keys(mod1).filter(function(k){return k.charAt(0)!=='_';});
           bulbInfo.push('mod1 keys: ' + keys.slice(0,10).join(','));
         }
-      } else {
-        bulbInfo.push('mods.mods[1]: ❌ not found');
-      }
+        // 也检查 rope（绳子）和 shadow（阴影）
+        bulbInfo.push('rope: ' + (mod1.rope ? '✅' : '❌'));
+        bulbInfo.push('shadow: ' + (mod1.shadow ? '✅' : '❌'));
+        bulbInfo.push('physic: ' + (mod1.physic ? '✅' : '❌'));
+      } else { bulbInfo.push('mods[1]: ❌ not found'); }
     } catch(e4) { bulbInfo.push('err: ' + e4.message); }
+
+    // === 检查 scene.loadPromise 状态 ===
+    var loadInfo = '';
+    try {
+      if (scene.loadPromise) {
+        loadInfo = 'scene.loadPromise: ✅ exists';
+        // 检查是否已 resolve（通过检查 _loaded 反推）
+        loadInfo += scene.mods._loaded ? ' (resolved)' : ' (pending/rejected?)';
+      } else { loadInfo = 'scene.loadPromise: ❌'; }
+    } catch(e5) { loadInfo = 'load err:' + e5.message; }
     
     // 也检查所有 mods 的 _state
     var allModStates = '';
@@ -355,7 +393,10 @@ if (window.location.search.includes('debug=1')) {
       '--- Mods State ---',
       'mod1 keys: ' + (mod1 ? Object.keys(mod1).filter(function(k){return k.charAt(0)!=='_';}).slice(0,8).join(',') : '?'),
       '',
-      '--- Bulb Mod [1] ---',
+      '--- Load Status ---',
+      loadInfo,
+      '',
+      '--- Bulb [1] ---',
     ].concat(bulbInfo).concat([
       '',
       '--- WebGL ---',

@@ -176,40 +176,54 @@
           // 步骤3: 激活场景渲染 + 确保 AWD 模型已加载
           try {
             if (scene.mods && !scene.mods._loaded) {
-              // 3a. 检查 bulb AWD 状态，如果未加载则尝试触发
+              // 3a. 检查 bulb AWD 状态
               var mod1_check = scene.mods.mods && scene.mods.mods[1];
               var bulb_check = mod1_check && mod1_check.bulb;
+              
+              // Case 1: _state === 1 (init) - getLoadables 从未被调用
               if (bulb_check && bulb_check._state === 1) {
-                // bulb 还在 init 状态！getLoadables() 从未被调用或加载失败
-                // 尝试手动触发加载
                 console.log('[FALLBACK] bulb _state=1, trying getLoadables...');
                 try {
                   var loadables = bulb_check.getLoadables();
                   if (loadables && loadables.length > 0) {
                     console.log('[FALLBACK] got', loadables.length, 'loadables, waiting...');
-                    // 等待 AWD 加载完成后再激活
                     Promise.all(loadables).then(function() {
-                      console.log('[FALLBACK] AWD loaded! activating scene...');
+                      console.log('[FALLBACK] AWD loaded!');
                       scene.matlib.compileAll();
                       scene.mods._loaded = true;
                       scene.mods.updateLifecycle();
                       if (model._section !== 1) model.setSection(1);
                     }).catch(function(err) {
                       console.warn('[FALLBACK] AWD load failed:', err);
-                      // 即使失败也激活，至少显示绳子和阴影
                       scene.matlib.compileAll();
                       scene.mods._loaded = true;
                       scene.mods.updateLifecycle();
                     });
-                    // 不立即设 _loaded，等 Promise
                     if (loading) loading.style.display = 'none';
                     if (model._section !== 1) model.setSection(1);
-                    return; // 提前返回，等 Promise
+                    return;
                   }
                 } catch(getErr) {
                   console.warn('[FALLBACK] getLoadables error:', getErr);
                 }
               }
+              
+              // Case 2: _state === 2 (parsing) - AWD已解析但Promise未resolve
+              // 这是移动端常见问题：when.js Promise在移动端可能卡住
+              if (bulb_check && bulb_check._state === 2) {
+                console.log('[FALLBACK] bulb _state=2 (parsing), meshes ready but Promise stuck');
+                // 强制完成：手动调用 _onLoad 逻辑
+                try {
+                  bulb_check._state = 3;  // 强制设为 loaded
+                  if (typeof bulb_check._onLoad === 'function') {
+                    bulb_check._onLoad();  // 触发原始回调（如果有）
+                  }
+                  console.log('[FALLBACK] forced bulb._state = 3');
+                } catch(forceErr) {
+                  console.warn('[FALLBACK] force load error:', forceErr);
+                }
+              }
+              
               // 3b. 正常激活流程
               try { scene.matlib.compileAll(); } catch(e2) { console.warn('[FALLBACK] compileAll error:', e2); }
               scene.mods._loaded = true;

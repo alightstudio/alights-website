@@ -189,7 +189,8 @@
           if (cursorEl) cursorEl.classList.remove('disabled');
           
           // 隐藏 loading
-          if (loading) loading.style.display = 'none';
+          var loadingEl = document.getElementById('section-loading');
+          if (loadingEl) loadingEl.style.display = 'none';
           
           console.log('[光触] 修复完成');
         } else {

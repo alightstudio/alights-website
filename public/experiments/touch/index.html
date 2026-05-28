@@ -18,8 +18,6 @@
     }
     .lab-back:hover { color: rgba(255,255,255,0.8); }
     #section-loading { display: block; }
-    #start-overlay { display: none; position: fixed; inset: 0; z-index: 10000; background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-    .touch-active #start-overlay { display: none !important; }
   </style>
 </head>
 <body>
@@ -87,145 +85,14 @@
   <script src="main.js"></script>
   <script>
     // prevent scroll on mobile / touchpad
-    document.addEventListener('touchmove', function(e) {e.preventDefault();}, {passive:false});
+    document.addEventListener('touchmove', function(e) {e.preventDefault();}, false);
 
-    (function() {
-      var isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-      var app;
-
-      function bootApp() {
-        try { 
-          app = new App();
-          window.RobotXP = app; // 暴露给控制台调试
-        } catch(e) {
-          console.error('App init failed:', e);
-          document.getElementById('section-loading').innerHTML = 
-            '<p style="color:#666;text-align:center;padding:40% 20px;font-size:14px">设备兼容性提示<br><span style="font-size:11px;color:#444">您的设备可能不支持 3D 渲染，请在电脑端访问以获得最佳体验</span></p>';
-        }
-        // 移除 overlay
-        var overlay = document.getElementById('start-overlay');
-        if (overlay) overlay.remove();
-        document.documentElement.classList.add('touch-active');
-        
-        // 移动端 fallback：检测 when.js 是否卡住
-        if (isMobile) {
-          setTimeout(checkAndFixLoading, 4000);
-        }
-      }
-      
-      // 检测并修复移动端加载问题
-      function checkAndFixLoading() {
-        var r = window.RobotXP;
-        if (!r || !r.scene) return;
-        
-        var scene = r.scene;
-        var loading = document.getElementById('section-loading');
-        
-        // 检查 mods 是否已激活
-        if (scene.mods && scene.mods._loaded === true) {
-          console.log('[光触] 正常加载完成');
-          return;
-        }
-        
-        console.warn('[光触] 检测到 when.js Promise 未 resolve，尝试修复...');
-        
-        // 获取 bulb AWD 场景
-        var mod1 = scene.mods && scene.mods.mods && scene.mods.mods[1];
-        var bulb = mod1 && mod1.bulb;
-        
-        if (!bulb) {
-          console.error('[光触] 找不到 bulb 模块');
-          return;
-        }
-        
-        // 检查 AWD 加载状态
-        var state = bulb._state;
-        console.log('[光触] bulb._state:', state, '(1=init, 2=parsing, 3=loaded)');
-        console.log('[光触] bulb.meshes:', bulb.meshes ? bulb.meshes.length : 0);
-        
-        // 如果 meshes 已创建但 _state 卡在 2，强制完成
-        if (state === 2 && bulb.meshes && bulb.meshes.length > 0) {
-          console.log('[光触] AWD 已解析，强制完成加载流程');
-          bulb._state = 3; // 强制设为 loaded
-        }
-        
-        // 等待所有资源（包括 IBL）加载完成后再编译材质
-        waitForResourcesAndCompile(scene, 0);
-      }
-      
-      // 等待资源加载完成后再编译材质
-      function waitForResourcesAndCompile(scene, attempts) {
-        if (attempts > 20) { // 最多等待 10 秒
-          console.error('[光触] 资源加载超时');
-          return;
-        }
-        
-        // 检查环境贴图是否加载
-        var env = scene.env;
-        var iblReady = env && env.ibl && env.ibl.envTex;
-        
-        // 检查 AWD 场景
-        var mod1 = scene.mods && scene.mods.mods && scene.mods.mods[1];
-        var bulb = mod1 && mod1.bulb;
-        var awdReady = bulb && bulb._state === 3 && bulb.meshes && bulb.meshes.length > 0;
-        
-        console.log('[光触] 资源状态:', 'IBL=' + !!iblReady, 'AWD=' + !!awdReady, 'attempt=' + attempts);
-        
-        if (iblReady && awdReady) {
-          // 所有资源就绪，执行 scene.loaded()
-          console.log('[光触] 所有资源就绪，执行 scene.loaded()');
-          try {
-            scene.loaded();
-          } catch(e) {
-            console.warn('[光触] scene.loaded() error:', e);
-          }
-          
-          // 显示导航和 logo
-          var navEl = document.querySelector('.navigation');
-          if (navEl) navEl.classList.remove('hidden');
-          var logoEl = document.querySelector('.logo');
-          if (logoEl) logoEl.classList.remove('hidden');
-          var cursorEl = document.querySelector('.mouse-cursor');
-          if (cursorEl) cursorEl.classList.remove('disabled');
-          
-          // 隐藏 loading
-          var loadingEl = document.getElementById('section-loading');
-          if (loadingEl) loadingEl.style.display = 'none';
-          
-          console.log('[光触] 修复完成');
-        } else {
-          // 资源还未就绪，500ms 后重试
-          setTimeout(function() {
-            waitForResourcesAndCompile(scene, attempts + 1);
-          }, 500);
-        }
-      }
-
-      // 移动端：添加点击启动覆盖层
-      if (isMobile) {
-        var overlay = document.createElement('div');
-        overlay.id = 'start-overlay';
-        overlay.innerHTML = '<div style="margin-bottom:20px;width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center">' +
-          '<svg width="28" height="28" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"><path d="M8 5v14l11-7z"/></svg>' +
-          '</div>'
-          + '<p style="margin:0;color:rgba(255,255,255,0.4);font-size:16px;letter-spacing:0.1em">点击开始</p>';
-        overlay.addEventListener('click', bootApp);
-        overlay.addEventListener('touchstart', function(e) { e.preventDefault(); bootApp(); }, {passive: false});
-        document.body.appendChild(overlay);
-      } else {
-        // 桌面端直接启动
-        bootApp();
-      }
-
-      // 10秒超时检测：如果 loading 还在显示，提示用户
-      setTimeout(function() {
-        var loading = document.getElementById('section-loading');
-        if (loading && loading.style.display !== 'none') {
-          console.warn('[光触] 页面加载超过 10 秒');
-          loading.innerHTML = '<p style="color:#666;text-align:center;padding:35% 20px;font-size:14px;line-height:1.8">页面加载较慢<br><span style="font-size:11px;color:#444">请尝试刷新页面或检查网络连接</span></p>';
-        }
-      }, 10000);
-    })();
+    var app;
+    try { app = new App() } catch(e) {
+      console.error('App init failed:', e);
+      document.getElementById('section-loading').innerHTML = 
+        '<p style="color:#666;text-align:center;padding:40% 20px;font-size:14px">设备兼容性提示<br><span style="font-size:11px;color:#444">您的设备可能不支持 3D 渲染，请在电脑端访问以获得最佳体验</span></p>';
+    }
   </script>
 </body>
 </html>

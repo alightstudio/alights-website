@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { trackWorkClick } from '@/lib/points'
 import { proxyImageUrl } from '@/lib/proxy-image'
+import stash177Raw from '@/data/stash177.json'
 import stash176Raw from '@/data/stash176.json'
 import stash175Raw from '@/data/stash175.json'
 import stash174Raw from '@/data/stash174.json'
@@ -88,6 +89,7 @@ function transform(w: any): StashWork {
 function sortByHeat(a: StashWork, b: StashWork) { return (b.score || b.heat || 0) - (a.score || a.heat || 0) }
 function sortByViews(a: StashWork, b: StashWork) { return (b.views || 0) - (a.views || 0) }
 
+const stash177Data: StashWork[] = stash177Raw.map(transform).sort(sortByHeat)
 const stash176Data: StashWork[] = stash176Raw.map(transform).sort(sortByHeat)
 const stash175Data: StashWork[] = stash175Raw.map(transform).sort(sortByHeat)
 const stash174Data: StashWork[] = stash174Raw.map(transform).sort(sortByHeat)
@@ -137,6 +139,7 @@ const stash131Data: StashWork[] = stash131Raw.map(transform).sort(sortByHeat)
 const stash130Data: StashWork[] = stash130Raw.map(transform).sort(sortByHeat)
 
 const allStashes = [
+  { id: '177', label: 'Stash 177', data: stash177Data },
   { id: '176', label: 'Stash 176', data: stash176Data },
   { id: '175', label: 'Stash 175', data: stash175Data },
   { id: '174', label: 'Stash 174', data: stash174Data },

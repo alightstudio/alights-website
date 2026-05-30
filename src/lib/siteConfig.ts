@@ -174,7 +174,27 @@ export async function getSiteConfig(refresh = false): Promise<SiteConfigData> {
       return data
     } catch (e) {
       console.error('getSiteConfig error:', e)
-      return cachedConfig || ({} as SiteConfigData)
+      // 返回完整默认值，防止组件崩溃
+      return cachedConfig || {
+        company: { name: '西安栖光文化传播有限公司', nameEn: "Xi'an Alights Culture Communication Co., Ltd.", shortName: '栖光', shortNameEn: 'ALIGHTS', slogan: '光栖之处·自有答案', sloganEn: "Where Alights There Essence", description: '专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。', descriptionEn: "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production." },
+        contact: { phone: '15091855505', email: '184436962@qq.com', address: '陕西省西安市', wechat: '15091855505' },
+        seo: { title: '栖光 | ALIGHTS - 光栖之处·自有答案', description: '西安栖光文化传播有限公司，专注于高端视效制作领域。TVC广告、产品动画、发布会、影视剧。', keywords: '栖光,视效,TVC广告' },
+        hero: { title: '栖光', titleEn: 'ALIGHTS', subtitle: '光栖之处·自有答案', subtitleEn: "Where Alights There Essence", tags: ['AIGC','TVC广告','产品动画','产品发布会','影视剧'] },
+        featuredWorks: [],
+        services: [],
+        brands: [],
+        brandDisplay: { opacity: 0.75, opacityHover: 1, grayscale: true, grayscaleHover: true },
+        navigation: { logo: '栖光', items: [] },
+        footer: { logo: '栖光', tagline: '光栖之处·自有答案', columns: [], copyright: `© 2024-2026 西安栖光文化传播有限公司. All rights reserved.`, bottomText: 'alights.cn' },
+        theme: { primaryColor: '#c9a962', bgColor: '#0a0a0a', textColor: '#ffffff', fontFamily: 'inter', fontDisplay: 'inter', fontHero: 'playfair', borderRadius: '0', customCSS: '' },
+        announcement: { enabled: false, text: '', type: 'info', dismissible: true, link: null },
+        pages: { home: { label: '首页', path: '/', visible: true }, works: { label: '作品集', path: '/works', visible: true }, gallery: { label: '创意灵感', path: '/gallery', visible: true }, canvas: { label: '像素画布', path: '/canvas', visible: true }, community: { label: '社区', path: '/community', visible: true }, about: { label: '关于我们', path: '/about', visible: true }, contact: { label: '联系合作', path: '/contact', visible: true }, login: { label: '登录', path: '/login', visible: true }, register: { label: '注册', path: '/register', visible: true }, profile: { label: '个人中心', path: '/profile', visible: true }, dashboard: { label: '创作中心', path: '/dashboard', visible: true } },
+        codeInjection: { headHTML: '', footerHTML: '', bodyStartHTML: '' },
+        socialLinks: { wechat: '', weibo: '', xiaohongshu: '', bilibili: '', douyin: '', github: '' },
+        particle: null,
+        spotlight: null,
+        aboutTeamVideo: ''
+      }
     }
   })()
   const result = await pendingPromise

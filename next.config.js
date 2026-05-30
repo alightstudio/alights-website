@@ -108,12 +108,13 @@ const nextConfig = {
           },
           // ⚠️ 'unsafe-eval' 必须保留：Spline 3D 场景的 WASM 模块需要动态编译
           // 'unsafe-inline' 暂时保留以兼容 React hydration，后续可通过 nonce 方案消除；
+          // 'nonce-{}' 已移除（无效配置，非动态值）
           // frame-src 中的 'unsafe-inline' 已移除（原无意义）
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'nonce-{}' blob: https://www.googletagmanager.com https://hm.baidu.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://hm.baidu.com",
               "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com https://alights.cn",

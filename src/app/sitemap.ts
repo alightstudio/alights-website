@@ -56,30 +56,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // 动态：作品详情页
-  const works = await prisma.work.findMany({
-    where: { /* 只查已发布/审核通过的作品 */ },
-    select: { id: true, updatedAt: true },
-  })
+  // 动态：作品详情页（数据库不可达时跳过）
+  let workPages: MetadataRoute.Sitemap = []
+  try {
+    const works = await prisma.work.findMany({
+      where: { /* 只查已发布/审核通过的作品 */ },
+      select: { id: true, updatedAt: true },
+    })
+    workPages = works.map((work) => ({
+      url: `${baseUrl}/works/${work.id}`,
+      lastModified: work.updatedAt,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    }))
+  } catch (e) {
+    console.warn('sitemap: database unreachable, skipping work pages')
+  }
 
-  const workPages: MetadataRoute.Sitemap = works.map((work) => ({
-    url: `${baseUrl}/works/${work.id}`,
-    lastModified: work.updatedAt,
-    changeFrequency: 'monthly' as const,
-    priority: 0.6,
-  }))
-
-  // 动态：社区文章页
-  const posts = await prisma.forumPost.findMany({
-    select: { id: true, updatedAt: true },
-  })
-
-  const postPages: MetadataRoute.Sitemap = posts.map((post) => ({
-    url: `${baseUrl}/community/post/${post.id}`,
-    lastModified: post.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.5,
-  }))
+  // 动态：社区文章页（数据库不可达时跳过）
+  let postPages: MetadataRoute.Sitemap = []
+  try {
+    const posts = await prisma.forumPost.findMany({
+      select: { id: true, updatedAt: true },
+    })
+    postPages = posts.map((post) => ({
+      url: `${baseUrl}/community/post/${post.id}`,
+      lastModified: post.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
+    }))
+  } catch (e) {
+    console.warn('sitemap: database unreachable, skipping post pages')
+  }
 
   return [...staticPages, ...workPages, ...postPages]
 }

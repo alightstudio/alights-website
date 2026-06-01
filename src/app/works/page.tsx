@@ -159,7 +159,7 @@ export default function WorksPage() {
                 {work.title}
               </h3>
               <div className="flex items-center justify-between text-xs text-gray-500">
-                <span className="truncate mr-2">{work.categories || work.author}</span>
+                <span className="truncate mr-2">{work.author}</span>
                 <span className="text-accent-gold/50 shrink-0">🔥 {(work.score || 0).toLocaleString()}</span>
               </div>
             </motion.a>

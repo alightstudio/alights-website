@@ -9,7 +9,7 @@
     "count_like": 110,
     "count_collect": 174,
     "count_score": 21002,
-    "categories": "广告片/服装/时尚,广告片/TVC广告",
+    "categories": "TVC广告",
     "author": "辰東隋Billy",
     "author_role": "导演/创意",
     "publish_time": 1779815359
@@ -24,7 +24,7 @@
     "count_like": 127,
     "count_collect": 298,
     "count_score": 28324,
-    "categories": "广告片/美妆/护肤,广告片/TVC广告",
+    "categories": "TVC广告",
     "author": "辰東隋Billy",
     "author_role": "导演/创意",
     "publish_time": 1765459222
@@ -39,7 +39,7 @@
     "count_like": 3,
     "count_collect": 4,
     "count_score": 6049,
-    "categories": "广告片/TVC广告,广告片/珠宝配饰",
+    "categories": "TVC广告",
     "author": "辰東隋Billy",
     "author_role": "导演",
     "publish_time": 1778746921
@@ -54,7 +54,7 @@
     "count_like": 46,
     "count_collect": 53,
     "count_score": 1407,
-    "categories": "广告片/汽车,广告片/TVC广告",
+    "categories": "TVC广告",
     "author": "沉浸制作",
     "author_role": "出品人/制作",
     "publish_time": 1766942039
@@ -69,7 +69,7 @@
     "count_like": 19,
     "count_collect": 29,
     "count_score": 2672,
-    "categories": "广告片/服装/时尚,广告片/产品广告",
+    "categories": "TVC广告",
     "author": "辰東隋Billy",
     "author_role": "导演/创意",
     "publish_time": 1749791153
@@ -84,7 +84,7 @@
     "count_like": 12,
     "count_collect": 21,
     "count_score": 1756,
-    "categories": "音乐/声音/MV",
+    "categories": "影视剧",
     "author": "辰東隋Billy",
     "author_role": "创意/导演",
     "publish_time": 1691310458
@@ -99,7 +99,7 @@
     "count_like": 8,
     "count_collect": 11,
     "count_score": 188,
-    "categories": "竖屏广告/服装/时尚",
+    "categories": "TVC广告",
     "author": "辰東隋Billy",
     "author_role": "导演",
     "publish_time": 1749989064
@@ -114,7 +114,7 @@
     "count_like": 3,
     "count_collect": 5,
     "count_score": 205,
-    "categories": "广告片/汽车,广告片/病毒广告",
+    "categories": "TVC广告",
     "author": "苑健",
     "author_role": "导演/策划/创意总监",
     "publish_time": 1750819105
@@ -129,7 +129,7 @@
     "count_like": 2,
     "count_collect": 3,
     "count_score": 106,
-    "categories": "AIGC/创意,竖屏广告/汽车",
+    "categories": "产品动画",
     "author": "辰東隋Billy",
     "author_role": "创意/导演",
     "publish_time": 1743257888
@@ -144,7 +144,7 @@
     "count_like": 4,
     "count_collect": 4,
     "count_score": 211,
-    "categories": "广告片/美妆/护肤,舞蹈/视觉表达",
+    "categories": "TVC广告",
     "author": "苑健",
     "author_role": "导演",
     "publish_time": 1763526779
@@ -159,7 +159,7 @@
     "count_like": 1,
     "count_collect": 2,
     "count_score": 167,
-    "categories": "广告片/手机/数码,广告片/TVC广告",
+    "categories": "TVC广告",
     "author": "易声碧",
     "author_role": "监制",
     "publish_time": 1779943352
@@ -174,7 +174,7 @@
     "count_like": 3,
     "count_collect": 0,
     "count_score": 90,
-    "categories": "广告片/汽车",
+    "categories": "TVC广告",
     "author": "易声碧",
     "author_role": "监制",
     "publish_time": 1769659802
@@ -189,7 +189,7 @@
     "count_like": 2,
     "count_collect": 0,
     "count_score": 53,
-    "categories": "广告片/汽车",
+    "categories": "TVC广告",
     "author": "易声碧",
     "author_role": "监制",
     "publish_time": 1769659752
@@ -204,7 +204,7 @@
     "count_like": 2,
     "count_collect": 0,
     "count_score": 41,
-    "categories": "广告片/产品广告",
+    "categories": "TVC广告",
     "author": "易声碧",
     "author_role": "监制",
     "publish_time": 1769659667

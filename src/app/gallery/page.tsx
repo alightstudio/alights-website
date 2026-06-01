@@ -57,6 +57,8 @@ import stash123Raw from '@/data/stash123.json'
 import stash122Raw from '@/data/stash122.json'
 import stash121Raw from '@/data/stash121.json'
 import stash120Raw from '@/data/stash120.json'
+import stash129Raw from '@/data/stash129.json'
+import stash128Raw from '@/data/stash128.json'
 import stash127Raw from '@/data/stash127.json'
 import stash126Raw from '@/data/stash126.json'
 import stash125Raw from '@/data/stash125.json'
@@ -145,6 +147,8 @@ const stash133Data: StashWork[] = stash133Raw.map(transform).sort(sortByHeat)
 const stash132Data: StashWork[] = stash132Raw.map(transform).sort(sortByHeat)
 const stash131Data: StashWork[] = stash131Raw.map(transform).sort(sortByHeat)
 const stash130Data: StashWork[] = stash130Raw.map(transform).sort(sortByHeat)
+const stash129Data: StashWork[] = stash129Raw.map(transform).sort(sortByHeat)
+const stash128Data: StashWork[] = stash128Raw.map(transform).sort(sortByHeat)
 const stash127Data: StashWork[] = stash127Raw.map(transform).sort(sortByHeat)
 const stash126Data: StashWork[] = stash126Raw.map(transform).sort(sortByHeat)
 const stash125Data: StashWork[] = stash125Raw.map(transform).sort(sortByHeat)
@@ -203,6 +207,8 @@ const allStashes = [
   { id: '132', label: 'Stash 132', data: stash132Data },
   { id: '131', label: 'Stash 131', data: stash131Data },
   { id: '130', label: 'Stash 130', data: stash130Data },
+  { id: '129', label: 'Stash 129', data: stash129Data },
+  { id: '128', label: 'Stash 128', data: stash128Data },
   { id: '127', label: 'Stash 127', data: stash127Data },
   { id: '126', label: 'Stash 126', data: stash126Data },
   { id: '125', label: 'Stash 125', data: stash125Data },

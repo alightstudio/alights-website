@@ -344,7 +344,7 @@ export default function GalleryPage() {
       router.replace('/login')
     }
   }, [router])
-  const [activeTab, setActiveTab] = useState('176')
+  const [activeTab, setActiveTab] = useState('177')
   const [searchTerm, setSearchTerm] = useState('')
 
   const allWorksFlat = useMemo(() => allStashes.flatMap(st => st.data), [])

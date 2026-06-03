@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSanitize from 'rehype-sanitize'
+import rehypeHighlight from 'rehype-highlight'
 
 interface Category {
   id: string
@@ -73,8 +74,8 @@ export default function CommunityPage() {
   // Comment form (removed - now handled on detail page)
 
   // Markdown + Image + Tags
-  const [previewMode, setPreviewMode] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
   const [newTags, setNewTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [tagSuggestions, setTagSuggestions] = useState<{ id: string; name: string; _count: { posts: number } }[]>([])
@@ -132,15 +133,12 @@ export default function CommunityPage() {
   useEffect(() => { loadPosts() }, [activeCategory, sortKey])
 
   // Image upload handler
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const doUpload = async (file: File) => {
     setUploading(true)
     const formData = new FormData()
     formData.append('file', file)
     const res = await fetch('/api/upload', { method: 'POST', body: formData })
     setUploading(false)
-    // Reset file input so re-selecting same file triggers onChange
     if (fileInputRef.current) fileInputRef.current.value = ''
     if (res.ok) {
       const { url } = await res.json()
@@ -148,6 +146,38 @@ export default function CommunityPage() {
     } else {
       const err = await res.json()
       alert(err.error || '上传失败')
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await doUpload(file)
+  }
+
+  // 拖拽上传
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragOver(true) }
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setDragOver(false) }
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { alert('仅支持图片文件'); return }
+    await doUpload(file)
+  }
+
+  // 粘贴上传
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        e.preventDefault()
+        const file = items[i].getAsFile()
+        if (file) await doUpload(file)
+        return
+      }
     }
   }
 
@@ -607,54 +637,48 @@ export default function CommunityPage() {
                   />
                 </div>
 
-                {/* Markdown Editor */}
+                {/* Markdown Editor — 左右分栏 */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs text-gray-400">内容（支持 Markdown）</label>
-                    <button
-                      onClick={() => setPreviewMode(!previewMode)}
-                      className={`text-xs px-2 py-1 border transition-colors ${
-                        previewMode
-                          ? 'border-accent-gold text-accent-gold'
-                          : 'border-gray-700 text-gray-500 hover:border-gray-500'
-                      }`}
-                    >
-                      {previewMode ? '编辑' : '预览'}
-                    </button>
-                  </div>
-
-                  {previewMode ? (
-                    <div className="w-full min-h-[200px] bg-dark-900 border border-gray-700 text-gray-300 text-sm p-4 overflow-auto prose prose-invert prose-sm max-w-none">
-                      {newContent.trim() ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
-                          {newContent}
-                        </ReactMarkdown>
-                      ) : (
-                        <p className="text-gray-600 italic">暂无内容</p>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      {/* Toolbar */}
-                      <div className="flex items-center gap-0.5 mb-0.5 bg-dark-900 border border-gray-700 border-b-0 px-2 py-1.5">
-                        <button onClick={() => handleToolbar('bold')} className="px-2 py-0.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors" title="粗体"><strong>B</strong></button>
-                        <button onClick={() => handleToolbar('italic')} className="px-2 py-0.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors" title="斜体"><em>I</em></button>
+                  <label className="text-xs text-gray-400 mb-2 block">内容（Markdown · 支持拖拽/粘贴图片）</label>
+                  <div className="grid grid-cols-2 gap-3" style={{ minHeight: '320px' }}>
+                    {/* 左侧：编辑器 */}
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-0.5 mb-0 bg-dark-900 border border-gray-700 border-b-0 px-2 py-1.5">
+                        <button onClick={() => handleToolbar('bold')} className="px-2 py-0.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors" title="粗体 (Ctrl+B)"><strong>B</strong></button>
+                        <button onClick={() => handleToolbar('italic')} className="px-2 py-0.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors" title="斜体 (Ctrl+I)"><em>I</em></button>
                         <button onClick={() => handleToolbar('heading')} className="px-2 py-0.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors" title="标题">H</button>
                         <span className="w-px h-4 bg-gray-700 mx-1" />
                         <button onClick={() => handleToolbar('link')} className="px-2 py-0.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors" title="链接">🔗</button>
                         <button onClick={() => handleToolbar('image')} className="px-2 py-0.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors" title="插入图片">🖼</button>
                         <button onClick={() => handleToolbar('code')} className="px-2 py-0.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors" title="代码块">💻</button>
-                        {uploading && <span className="ml-2 text-xs text-accent-gold">上传中...</span>}
+                        {uploading && <span className="ml-2 text-[10px] text-accent-gold animate-pulse">上传中...</span>}
                       </div>
                       <textarea
                         value={newContent}
                         onChange={e => setNewContent(e.target.value)}
-                        placeholder="支持 Markdown 语法，可以使用工具栏插入格式"
-                        rows={8}
-                        className="w-full bg-dark-900 border border-gray-700 text-white text-sm px-4 py-3 focus:border-accent-gold outline-none resize-none placeholder-gray-600"
+                        onPaste={handlePaste}
+                        placeholder={'写点什么...\n\n支持 Markdown 语法 | 可直接拖拽/粘贴图片'}
+                        className={`flex-1 w-full bg-dark-900 border border-gray-700 text-white text-sm px-4 py-3 focus:border-accent-gold outline-none resize-none placeholder-gray-600 font-mono leading-relaxed ${
+                          dragOver ? 'border-accent-gold border-dashed bg-accent-gold/5' : ''
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
                       />
-                    </>
-                  )}
+                    </div>
+                    {/* 右侧：实时预览 */}
+                    <div className="bg-dark-900 border border-gray-700 text-gray-300 text-sm p-4 overflow-auto max-h-[320px]">
+                      {newContent.trim() ? (
+                        <div className="prose prose-invert prose-sm max-w-none [&_pre]:bg-dark-800 [&_pre]:border [&_pre]:border-gray-700 [&_pre]:rounded-none [&_code]:text-xs [&_pre_code]:bg-transparent">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize, rehypeHighlight]}>
+                            {newContent}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-gray-600 italic text-xs">在左侧输入内容，这里实时预览</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Tags */}

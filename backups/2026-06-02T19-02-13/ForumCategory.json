@@ -1,0 +1,65 @@
+[
+  {
+    "id": "cmoch83tu000012crwi33ttsf",
+    "name": "AIGC",
+    "nameEn": "AIGC",
+    "icon": "🤖",
+    "description": "AIGC驱动的内容创作，探索AI与创意的无限可能",
+    "sortOrder": 0,
+    "createdAt": "2026-04-24T05:35:11.970Z"
+  },
+  {
+    "id": "cmocefz1n0000e2ita28f9405",
+    "name": "TVC广告",
+    "nameEn": null,
+    "icon": "📽️",
+    "description": "商业广告、品牌片、项目案例",
+    "sortOrder": 1,
+    "createdAt": "2026-04-24T04:17:20.169Z"
+  },
+  {
+    "id": "cmocefzob0001e2it3x7g7n5y",
+    "name": "产品动画",
+    "nameEn": null,
+    "icon": "🎬",
+    "description": "三维/二维动画、产品演示、动态图形",
+    "sortOrder": 2,
+    "createdAt": "2026-04-24T04:17:20.987Z"
+  },
+  {
+    "id": "cmoceg15a0003e2it1bj65yvt",
+    "name": "行业机会",
+    "nameEn": null,
+    "icon": "📢",
+    "description": "招聘、合作、比赛、展会、行业活动",
+    "sortOrder": 3,
+    "createdAt": "2026-04-24T04:17:22.894Z"
+  },
+  {
+    "id": "cmoceg1lg0004e2itah0ipb0o",
+    "name": "创意灵感",
+    "nameEn": null,
+    "icon": "💡",
+    "description": "参考素材、灵感来源、审美讨论",
+    "sortOrder": 4,
+    "createdAt": "2026-04-24T04:17:23.476Z"
+  },
+  {
+    "id": "cmoceg2ac0005e2itt1n9fbfv",
+    "name": "技术交流",
+    "nameEn": null,
+    "icon": "🔧",
+    "description": "制作技巧、灯光、合成、调色",
+    "sortOrder": 5,
+    "createdAt": "2026-04-24T04:17:24.372Z"
+  },
+  {
+    "id": "cmoceg3090006e2it0kxu9uji",
+    "name": "资源共享",
+    "nameEn": null,
+    "icon": "📂",
+    "description": "素材分享、工具推荐、学习资料",
+    "sortOrder": 6,
+    "createdAt": "2026-04-24T04:17:25.305Z"
+  }
+]

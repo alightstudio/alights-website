@@ -1,0 +1,97 @@
+[
+  {
+    "key": "seo",
+    "value": "{\"title\":\"栖光文化 | ALIGHTS \",\"description\":\"西安栖光文化传播有限公司，专注于高端视效制作领域。TVC广告、产品动画、AIGC、发布会大屏、影视剧。\",\"keywords\":\"栖光,视效,TVC广告,AIGC,产品动画,发布会大屏,影视剧,3D渲染,CG\"}",
+    "updatedAt": "2026-04-25T08:22:23.717Z"
+  },
+  {
+    "key": "services",
+    "value": "[{\"id\":\"1\",\"title\":\"TVC广告\",\"titleEn\":\"TVC COMMERCIAL\",\"desc\":\"高端商业广告制作\",\"descEn\":\"Premium Commercial Production\",\"order\":1},{\"id\":\"2\",\"title\":\"产品动画\",\"titleEn\":\"PRODUCT ANIMATION\",\"desc\":\"三维产品可视化\",\"descEn\":\"3D Product Visualization\",\"order\":2},{\"id\":\"3\",\"title\":\"发布会\",\"titleEn\":\"EVENT SCREEN\",\"desc\":\"沉浸式视觉体验\",\"descEn\":\"Immersive Visual Experience\",\"order\":3},{\"id\":\"4\",\"title\":\"影视剧\",\"titleEn\":\"FILM & TV\",\"desc\":\"电影级特效制作\",\"descEn\":\"Cinematic VFX Production\",\"order\":4}]",
+    "updatedAt": "2026-04-24T03:23:11.265Z"
+  },
+  {
+    "key": "admin_credentials",
+    "value": "{\"password\":\"$2b$10$BHIGYUuW0inopw/HUrJfTelG8ZwUX4q.739C1D7kdP4bpPOHGvIYW\",\"updatedAt\":\"2026-04-25T22:14:21.050Z\"}",
+    "updatedAt": "2026-04-25T22:14:23.924Z"
+  },
+  {
+    "key": "theme",
+    "value": "{\"primaryColor\":\"#c9a962\",\"bgColor\":\"#0a0a0a\",\"textColor\":\"#ffffff\",\"fontFamily\":\"inter\",\"fontDisplay\":\"inter\",\"borderRadius\":\"0\",\"customCSS\":\"\",\"fontHero\":\"playfair\"}",
+    "updatedAt": "2026-04-26T00:46:55.692Z"
+  },
+  {
+    "key": "particle",
+    "value": "{\"count\":\"300\",\"size\":1.2,\"connectDist\":120,\"mouseRadius\":140,\"speed\":0.4,\"color\":\"#c9a962\",\"opacity\":\"0.8\",\"lineOpacity\":\"0.25\",\"starCount\":\"60\",\"lineWidth\":\"0.1\",\"lineWidthBoost\":\"0.5\",\"trailOpacity\":\"1\"}",
+    "updatedAt": "2026-04-26T12:43:44.021Z"
+  },
+  {
+    "key": "brands",
+    "value": "[{\"id\":\"1\",\"name\":\"Porsche\",\"slug\":\"porsche\",\"order\":1},{\"id\":\"2\",\"name\":\"BMW\",\"slug\":\"bmw\",\"order\":2},{\"id\":\"3\",\"name\":\"Audi\",\"slug\":\"audi\",\"order\":3},{\"id\":\"4\",\"name\":\"Mercedes-Benz\",\"slug\":\"mercedes\",\"order\":4},{\"id\":\"5\",\"name\":\"Tesla\",\"slug\":\"tesla\",\"order\":5},{\"id\":\"6\",\"name\":\"Apple\",\"slug\":\"apple\",\"order\":6},{\"id\":\"7\",\"name\":\"Huawei\",\"slug\":\"huawei\",\"order\":7},{\"id\":\"8\",\"name\":\"Xiaomi\",\"slug\":\"xiaomi\",\"order\":8},{\"id\":\"9\",\"name\":\"Samsung\",\"slug\":\"samsung\",\"order\":9},{\"id\":\"10\",\"name\":\"Sony\",\"slug\":\"sony\",\"order\":10},{\"id\":\"11\",\"name\":\"DJI\",\"slug\":\"dji\",\"order\":11},{\"id\":\"12\",\"name\":\"Dyson\",\"slug\":\"dyson\",\"order\":12},{\"id\":\"13\",\"name\":\"Nike\",\"slug\":\"nike\",\"order\":13},{\"id\":\"14\",\"name\":\"Adidas\",\"slug\":\"adidas\",\"order\":14},{\"id\":\"15\",\"name\":\"FILA\",\"slug\":\"fila\",\"order\":15},{\"id\":\"16\",\"name\":\"Anta\",\"slug\":\"anta\",\"order\":16},{\"id\":\"17\",\"name\":\"Li-Ning\",\"slug\":\"lining\",\"order\":17},{\"id\":\"18\",\"name\":\"Under Armour\",\"slug\":\"underarmour\",\"order\":18},{\"id\":\"19\",\"name\":\"New Balance\",\"slug\":\"newbalance\",\"order\":19},{\"id\":\"20\",\"name\":\"Vans\",\"slug\":\"vans\",\"order\":20},{\"id\":\"21\",\"name\":\"Louis Vuitton\",\"slug\":\"louisvuitton\",\"order\":21},{\"id\":\"22\",\"name\":\"Chanel\",\"slug\":\"chanel\",\"order\":22},{\"id\":\"23\",\"name\":\"Dior\",\"slug\":\"dior\",\"order\":23},{\"id\":\"24\",\"name\":\"Gucci\",\"slug\":\"gucci\",\"order\":24},{\"id\":\"25\",\"name\":\"Prada\",\"slug\":\"prada\",\"order\":25},{\"id\":\"26\",\"name\":\"Hermes\",\"slug\":\"hermes\",\"order\":26},{\"id\":\"27\",\"name\":\"Cartier\",\"slug\":\"cartier\",\"order\":27},{\"id\":\"28\",\"name\":\"Tiffany & Co.\",\"slug\":\"tiffany\",\"order\":28},{\"id\":\"29\",\"name\":\"Rolex\",\"slug\":\"rolex\",\"order\":29},{\"id\":\"30\",\"name\":\"Omega\",\"slug\":\"omega\",\"order\":30},{\"id\":\"31\",\"name\":\"LOreal\",\"slug\":\"loreal\",\"order\":31},{\"id\":\"32\",\"name\":\"Estee Lauder\",\"slug\":\"esteelauder\",\"order\":32},{\"id\":\"33\",\"name\":\"Shiseido\",\"slug\":\"shiseido\",\"order\":33},{\"id\":\"34\",\"name\":\"OPPO\",\"slug\":\"oppo\",\"order\":34},{\"id\":\"35\",\"name\":\"vivo\",\"slug\":\"vivo\",\"order\":35},{\"id\":\"36\",\"name\":\"Bose\",\"slug\":\"bose\",\"order\":36},{\"id\":\"37\",\"name\":\"BYD\",\"slug\":\"byd\",\"order\":37},{\"id\":\"38\",\"name\":\"NIO\",\"slug\":\"nio\",\"order\":38},{\"id\":\"39\",\"name\":\"XPeng\",\"slug\":\"xpeng\",\"order\":39},{\"id\":\"40\",\"name\":\"Lululemon\",\"slug\":\"lululemon\",\"order\":40}]",
+    "updatedAt": "2026-04-23T20:54:44.904Z"
+  },
+  {
+    "key": "featuredWorks",
+    "value": "[{\"id\":\"13593273\",\"title\":\"灯语LIST\",\"titleEn\":\"\",\"category\":\"广告片/汽车\",\"categoryEn\":\"\",\"image\":\"https://us-xpc5.xpccdn.com/b9c708b9-6207-41ce-a59a-b9d6ee88ae7b/c9de12f5-c71f-4aeb-bad9-f67154f88084.jpg\",\"homepageOrder\":1,\"videoUrl\":\"https://www.xinpianchang.com/a13593273\",\"views\":23,\"duration\":17},{\"id\":\"13593271\",\"title\":\"想象LIST\",\"titleEn\":\"\",\"category\":\"广告片/汽车\",\"categoryEn\":\"\",\"image\":\"https://us-xpc5.xpccdn.com/2c1ed4da-92ea-4c0e-9d40-58d1c09b3c5c/6db3c289-f6c1-440d-bc1e-c83671cae8d8.jpg\",\"homepageOrder\":2,\"videoUrl\":\"https://www.xinpianchang.com/a13593271\",\"views\":23,\"duration\":24},{\"id\":\"13593268\",\"title\":\"稳座LIST\",\"titleEn\":\"\",\"category\":\"广告片/产品广告\",\"categoryEn\":\"\",\"image\":\"https://us-xpc5.xpccdn.com/4448bed8-579a-4bb2-9b6d-d8defbabd26a/edc0041e-f0e9-4f07-9623-517d7301aba7.jpg\",\"homepageOrder\":3,\"videoUrl\":\"https://www.xinpianchang.com/a13593268\",\"views\":19,\"duration\":27},{\"id\":\"13569267\",\"title\":\"费翔 X D19 ｜ 零跑D19上市TVC\",\"titleEn\":\"\",\"category\":\"广告片/汽车\",\"categoryEn\":\"\",\"image\":\"https://oss-xpc0.xpccdn.com/uploadfile/article/2025/12/29/e4c586d43e41944b1d8b58476da7549c\",\"homepageOrder\":4,\"videoUrl\":\"https://www.xinpianchang.com/a13569267\",\"views\":5712,\"duration\":207},{\"id\":\"13556111\",\"title\":\"张天爱 | “无问时间，向美而生”雅娜薇图品牌全球代言人\",\"titleEn\":\"\",\"category\":\"广告片/美妆/护肤\",\"categoryEn\":\"\",\"image\":\"https://oss-xpc0.xpccdn.com/uploadfile/article/2025/12/11/03e3d4b574519e1720d84581c1d2e331\",\"homepageOrder\":5,\"videoUrl\":\"https://www.xinpianchang.com/a13556111\",\"views\":23866,\"duration\":68},{\"id\":\"13537991\",\"title\":\"自然堂 × 上海芭蕾舞团\",\"titleEn\":\"\",\"category\":\"广告片/美妆/护肤\",\"categoryEn\":\"\",\"image\":\"https://oss-xpc0.xpccdn.com/uploadfile/article/2025/11/19/8da797222568e63a917063af9df6c14f\",\"homepageOrder\":6,\"videoUrl\":\"https://www.xinpianchang.com/a13537991\",\"views\":162,\"duration\":102},{\"id\":\"13410358\",\"title\":\"乐道汽车「乐道锁“鲜”驿站」\",\"titleEn\":\"\",\"category\":\"广告片/汽车\",\"categoryEn\":\"\",\"image\":\"https://oss-xpc0.xpccdn.com/uploadfile/article/2025/6/23/65e44534a03677081f6c1fb589d95c1d\",\"homepageOrder\":null,\"videoUrl\":\"https://www.xinpianchang.com/a13410358\",\"views\":636,\"duration\":142},{\"id\":\"13401633\",\"title\":\"DIORIVIERA夏日限定系列\",\"titleEn\":\"\",\"category\":\"竖屏广告/服装/时尚\",\"categoryEn\":\"\",\"image\":\"https://oss-xpc0.xpccdn.com/uploadfile/article/2025/6/15/7d91ef6ff0c5026ae22a588dd3bddcec\",\"homepageOrder\":null,\"videoUrl\":\"https://www.xinpianchang.com/a13401633\",\"views\":858,\"duration\":28},{\"id\":\"13399832\",\"title\":\"SuperELLE x FILA蝶舞柔云系列\",\"titleEn\":\"\",\"category\":\"广告片/服装/时尚\",\"categoryEn\":\"\",\"image\":\"https://oss-xpc0.xpccdn.com/uploadfile/article/2025/6/13/7e48b44cd992f72e4f5ef3e0737485c2\",\"homepageOrder\":null,\"videoUrl\":\"https://www.xinpianchang.com/a13399832\",\"views\":2486,\"duration\":24},{\"id\":\"13328776\",\"title\":\"全新帕里斯帝“我想开了”\",\"titleEn\":\"\",\"category\":\"AIGC/创意\",\"categoryEn\":\"\",\"image\":\"https://oss-xpc0.xpccdn.com/uploadfile/article/2025/3/29/b54b8cec5bf962208f815196d08449e2\",\"homepageOrder\":null,\"videoUrl\":\"https://www.xinpianchang.com/a13328776\",\"views\":401,\"duration\":22}]",
+    "updatedAt": "2026-04-24T06:19:57.972Z"
+  },
+  {
+    "key": "contact",
+    "value": "{\"phone\":\"\",\"email\":\"184436962@qq.com\",\"address\":\"陕西省西安市\",\"wechat\":\"15091855505\",\"weibo\":\"\",\"xiaohongshu\":\"\"}",
+    "updatedAt": "2026-04-25T21:48:06.034Z"
+  },
+  {
+    "key": "footer",
+    "value": "{\"logo\":\"栖光\",\"tagline\":\"光栖之处 · 自有答案\",\"columns\":[{\"id\":\"nav\",\"title\":\"导航\",\"type\":\"links\",\"links\":[{\"label\":\"作品集\",\"href\":\"/works\",\"order\":0},{\"label\":\"创意灵感\",\"href\":\"/gallery\",\"order\":1},{\"label\":\"社区\",\"href\":\"/community\",\"order\":2},{\"label\":\"画板\",\"href\":\"/canvas\",\"order\":3},{\"label\":\"关于我们\",\"href\":\"/about\",\"order\":4},{\"label\":\"联系方式\",\"href\":\"/contact\",\"order\":5}]},{\"id\":\"services\",\"title\":\"服务\",\"type\":\"text\",\"items\":[\"TVC广告\",\"产品动画\",\"发布会\",\"影视剧\"]},{\"id\":\"contact\",\"title\":\"联系\",\"type\":\"contact\",\"items\":[\"电话：15091855505\",\"邮箱：184436962@qq.com\",\"地址：西安市\"]}],\"copyright\":\"© 2026 西安栖光文化传播有限公司. All rights reserved.\",\"bottomText\":\"alights.cn\"}",
+    "updatedAt": "2026-04-25T15:45:25.332Z"
+  },
+  {
+    "key": "brandDisplay",
+    "value": "{\"opacity\":\"0.2\",\"opacityHover\":\"2\",\"grayscale\":true,\"grayscaleHover\":true}",
+    "updatedAt": "2026-05-06T11:17:00.296Z"
+  },
+  {
+    "key": "navigation",
+    "value": "{\"navigation\":{\"logo\":\"栖光\",\"items\":[{\"id\":\"home\",\"label\":\"首页\",\"href\":\"/\",\"visible\":true,\"order\":0},{\"id\":\"works\",\"label\":\"作品集\",\"href\":\"/works\",\"visible\":true,\"order\":1},{\"id\":\"gallery\",\"label\":\"创意灵感\",\"href\":\"/gallery\",\"visible\":true,\"order\":2},{\"id\":\"canvas\",\"label\":\"像素画布\",\"href\":\"/canvas\",\"visible\":true,\"order\":3},{\"id\":\"community\",\"label\":\"社区\",\"href\":\"/community\",\"visible\":true,\"order\":4},{\"id\":\"about\",\"label\":\"关于我们\",\"href\":\"/about\",\"visible\":true,\"order\":5},{\"id\":\"contact\",\"label\":\"联系合作\",\"href\":\"/contact\",\"visible\":true,\"order\":6}]}}",
+    "updatedAt": "2026-04-25T17:51:54.539Z"
+  },
+  {
+    "key": "security",
+    "value": "{\"allowSubmissions\":true,\"allowRegistration\":true}",
+    "updatedAt": "2026-04-24T22:11:53.873Z"
+  },
+  {
+    "key": "hero",
+    "value": "{\"title\":\"栖光\",\"titleEn\":\"ALIGHTS\",\"subtitle\":\"光栖之处·自有答案\",\"subtitleEn\":\"Where Alights There Essence\",\"tags\":\"TVC广告,产品动画,AIGC,发布会,影视剧\"}",
+    "updatedAt": "2026-04-29T11:44:51.313Z"
+  },
+  {
+    "key": "company",
+    "value": "{\"name\":\"西安栖光文化传播有限公司\",\"nameEn\":\"Xi'an Qiguang Culture Communication Co., Ltd.\",\"shortName\":\"栖光\",\"shortNameEn\":\"ALIGHTS\",\"slogan\":\"光栖之处 · 自有答案\",\"sloganEn\":\"Where light alights · Truth resides\",\"description\":\"西安栖光文化传播有限公司，专注于高端视效制作领域\",\"descriptionEn\":\"Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. \"}",
+    "updatedAt": "2026-04-25T21:48:29.623Z"
+  },
+  {
+    "key": "company.slogan",
+    "value": "光栖之处·自有答案",
+    "updatedAt": "2026-04-29T11:44:51.795Z"
+  },
+  {
+    "key": "spotlight",
+    "value": "{\"enabled\":true,\"glowSize\":\"220\",\"glowSpread\":\"80\",\"darkColor\":\"#000000\",\"accentGlow\":true,\"textShadowGlow\":\"40\"}",
+    "updatedAt": "2026-04-25T21:47:44.879Z"
+  },
+  {
+    "key": "company.sloganEn",
+    "value": "Where Alights There Essence",
+    "updatedAt": "2026-04-29T11:44:52.269Z"
+  },
+  {
+    "key": "canvas_template",
+    "value": "the-kiss",
+    "updatedAt": "2026-06-02T16:00:56.369Z"
+  },
+  {
+    "key": "community_published_posts",
+    "value": "[\"share-003\",\"insp-009\",\"tvc-002\",\"aigc-001\",\"prod-001\",\"aigc-014\",\"share-002\",\"aigc-006\",\"insp-007\",\"insp-004\",\"aigc-005\",\"share-009\",\"insp-013\",\"insp-010\",\"prod-013\",\"aigc-002\",\"aigc-008\",\"aigc-003\",\"aigc-004\",\"news-113\",\"aigc-85\",\"tvc-004\",\"aigc-009\",\"prod-012\",\"tech-004\",\"share-006\",\"tech-003\",\"tvc-006\",\"tech-010\",\"prod-004\",\"news-115\",\"insp-014\",\"insp-003\",\"share-010\",\"tech-002\",\"aigc-87\",\"prod-102\",\"tech-005\",\"insp-001\",\"share-007\",\"prod-002\",\"tvc-005\",\"prod-005\",\"prod-006\",\"tvc-013\",\"tvc-001\",\"tvc-010\",\"aigc-88\",\"tvc-97\",\"share-005\",\"film-108\",\"share-008\",\"tvc-100\",\"share-001\",\"film-107\",\"prod-007\",\"aigc-84\",\"tvc-003\",\"insp-005\",\"aigc-013\",\"prod-003\",\"insp-012\",\"aigc-82\",\"insp-006\",\"tech-006\",\"tech-009\",\"insp-002\",\"prod-008\",\"aigc-83\",\"aigc-016\",\"tvc-011\",\"prod-103\",\"tech-007\",\"insp-008\",\"prod-104\",\"tech-008\",\"insp-011\",\"aigc-012\",\"tvc-008\",\"tvc-012\",\"share-011\",\"aigc-007\",\"aigc-86\",\"prod-106\",\"tvc-99\",\"tvc-98\",\"aigc-011\",\"tech-001\",\"tech-011\",\"aigc-017\",\"tvc-96\",\"tvc-009\",\"aigc-015\",\"prod-105\",\"film-110\",\"share-004\",\"share-012\",\"tvc-95\",\"film-111\",\"prod-101\",\"tvc-007\",\"prod-010\",\"aigc-010\",\"prod-009\",\"prod-011\"]",
+    "updatedAt": "2026-06-02T12:42:07.292Z"
+  }
+]

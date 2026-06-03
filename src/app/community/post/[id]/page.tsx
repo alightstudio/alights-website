@@ -6,6 +6,7 @@ import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSanitize from 'rehype-sanitize'
+import rehypeHighlight from 'rehype-highlight'
 
 interface Post {
   id: string
@@ -239,8 +240,8 @@ export default function PostPage({ params }: { params: { id: string } }) {
 
           {/* Content */}
           <div className="p-8 md:p-12 border-b border-gray-800">
-            <div className="text-gray-300 leading-relaxed text-[15px] prose prose-invert prose-sm max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
+            <div className="text-gray-300 leading-relaxed text-[15px] prose prose-invert prose-sm max-w-none [&_pre]:bg-dark-800 [&_pre]:border [&_pre]:border-gray-700 [&_pre]:rounded-none [&_code]:text-xs [&_pre_code]:bg-transparent">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize, rehypeHighlight]}>
                 {post.content}
               </ReactMarkdown>
             </div>

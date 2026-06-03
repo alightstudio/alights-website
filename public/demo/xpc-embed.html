@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新片场嵌入测试 · Alights</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #d4d4d4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+    h1 {
+      font-size: 28px; font-weight: 300; margin-bottom: 8px;
+      letter-spacing: 0.05em; color: #c8a86e;
+    }
+    .subtitle {
+      color: #666; font-size: 13px; margin-bottom: 40px;
+      letter-spacing: 0.02em;
+    }
+    .divider {
+      height: 1px; background: linear-gradient(90deg, #c8a86e30, transparent);
+      margin: 40px 0;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+
+    .demo-item {
+      border: 1px solid #1a1a1a;
+      background: #0d0d0d;
+      overflow: hidden;
+    }
+
+    .demo-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .demo-header .title {
+      font-size: 15px; color: #c8a86e; margin-bottom: 4px;
+    }
+    .demo-header .aid {
+      font-size: 11px; color: #555; font-family: monospace;
+    }
+
+    .demo-iframe-wrapper {
+      position: relative;
+      width: 100%;
+      background: #000;
+    }
+
+    /* 新片场 iframe 宽高比 (16:9) */
+    .demo-iframe-wrapper iframe {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: none;
+    }
+
+    .demo-info {
+      padding: 16px 20px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.8;
+    }
+    .demo-info .pass { color: #4ade80; }
+    .demo-info .fail { color: #f87171; }
+    .demo-info .warn { color: #fbbf24; }
+
+    .test-card {
+      margin-top: 24px;
+      border: 1px solid #1a1a1a;
+      padding: 20px;
+    }
+    .test-card h3 { color: #c8a86e; font-weight: 400; font-size: 14px; margin-bottom: 10px; letter-spacing: 0.05em; }
+
+    .checklist { list-style: none; }
+    .checklist li {
+      font-size: 12px; color: #888; padding: 4px 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .checklist li::before { content: '○'; color: #555; font-size: 14px; }
+    .checklist li.done::before { content: '●'; color: #4ade80; }
+    .checklist li.fail::before { content: '●'; color: #f87171; }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 2px;
+      letter-spacing: 0.05em;
+    }
+    .badge.green { background: #4ade8020; color: #4ade80; border: 1px solid #4ade8040; }
+    .badge.yellow { background: #fbbf2420; color: #fbbf24; border: 1px solid #fbbf2440; }
+    .badge.blue { background: #60a5fa20; color: #60a5fa; border: 1px solid #60a5fa40; }
+
+    .notes {
+      margin-top: 32px;
+      padding: 24px;
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+    }
+    .notes h3 { color: #c8a86e; font-weight: 400; font-size: 14px; margin-bottom: 12px; }
+    .notes p { font-size: 13px; color: #888; line-height: 1.8; }
+    .notes code { background: #1a1a1a; padding: 1px 6px; font-size: 12px; color: #aaa; }
+    .notes strong { color: #c8a86e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>新片场 iframe 嵌入测试</h1>
+    <p class="subtitle">Xinpianchang Embed Test · Alights Demo</p>
+
+    <div class="demo-grid">
+      <!-- Demo 1: 用户给的作品链接 -->
+      <div class="demo-item">
+        <div class="demo-header">
+          <span class="badge blue">待测</span>
+          <div class="title">用户提供 · 新片场作品</div>
+          <div class="aid">aid=13704149 · mid=enXV4BnAjZb4BEmM</div>
+        </div>
+        <div class="demo-iframe-wrapper">
+          <iframe
+            src="https://player.xinpianchang.com/?aid=13704149&mid=enXV4BnAjZb4BEmM"
+            allowfullscreen
+            allow="fullscreen"
+            loading="lazy"
+          ></iframe>
+        </div>
+        <div class="demo-info">
+          <div>📱 加载中... 请等待播放器渲染完成</div>
+          <div>🔗 嵌入使用新片场官方 <code>player.xinpianchang.com</code> 播放器</div>
+        </div>
+      </div>
+
+      <!-- Demo 2: Top 1 作品 -->
+      <div class="demo-item">
+        <div class="demo-header">
+          <span class="badge yellow">热门 #1</span>
+          <div class="title">FANTASTIC VOYAGE - ADOBE</div>
+          <div class="aid">🔥 3921 人气 · stash 144</div>
+        </div>
+        <div class="demo-iframe-wrapper">
+          <iframe
+            src="https://player.xinpianchang.com/?aid=13667181"
+            allowfullscreen
+            allow="fullscreen"
+            loading="lazy"
+          ></iframe>
+        </div>
+        <div class="demo-info">
+          <div>尝试仅用 aid 参数（无 mid），看能否正常播放</div>
+        </div>
+      </div>
+
+      <!-- Demo 3: Top 3 作品 -->
+      <div class="demo-item">
+        <div class="demo-header">
+          <span class="badge yellow">热门 #3</span>
+          <div class="title">Inferno</div>
+          <div class="aid">🔥 1314 人气 · stash 173</div>
+        </div>
+        <div class="demo-iframe-wrapper">
+          <iframe
+            src="https://player.xinpianchang.com/?aid=13657132"
+            allowfullscreen
+            allow="fullscreen"
+            loading="lazy"
+          ></iframe>
+        </div>
+        <div class="demo-info">
+          <div>使用新片场公开 sharing 链接<a href="https://www.xinpianchang.com/a13657132" target="_blank" style="color:#60a5fa;text-decoration:none;">a13657132</a></div>
+        </div>
+      </div>
+
+      <!-- Demo 4: 手机端测试 -->
+      <div class="demo-item">
+        <div class="demo-header">
+          <span class="badge green">响应式</span>
+          <div class="title">移动端适配测试</div>
+          <div class="aid">多分辨率表现</div>
+        </div>
+        <div class="demo-iframe-wrapper" style="max-width: 375px; margin: 0 auto;">
+          <iframe
+            src="https://player.xinpianchang.com/?aid=13704149&mid=enXV4BnAjZb4BEmM"
+            allowfullscreen
+            allow="fullscreen"
+            loading="lazy"
+          ></iframe>
+        </div>
+        <div class="demo-info">
+          <div>📱 375px 宽度模拟手机微信内置浏览器</div>
+          <div>测试：播放按钮是否可点、横屏切换、返回行为</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 测试结论区 -->
+    <div class="divider"></div>
+    <div class="test-card">
+      <h3>📋 测试清单 · 手动勾选</h3>
+      <ul class="checklist" id="checklist">
+        <li>播放器正常加载，不报 403/404</li>
+        <li>视频可以点击播放</li>
+        <li>全屏按钮可用</li>
+        <li>自动播放被浏览器拦截（预期行为）</li>
+        <li>手机端 375px 宽正常显示</li>
+        <li>iframe 无 X-Frame-Options 限制</li>
+        <li>无跨域报错（不影响使用）</li>
+        <li>加载速度可接受（< 3s 首屏）</li>
+        <li>页面滚动流畅（多 iframe 不卡顿）</li>
+        <li>视频播放时背景无新片场站内推荐干扰</li>
+      </ul>
+    </div>
+
+    <!-- 分析与结论 -->
+    <div class="notes">
+      <h3>🔍 分析</h3>
+      <p>
+        <strong>嵌入方式：</strong>新片场提供 <code>player.xinpianchang.com/?aid=作品ID</code> 
+        作为官方 embed 播放器。aid 是作品 ID，mid 是媒体 ID（可选）。<br><br>
+
+        <strong>优点：</strong>播放器自带新片场版权保护（防盗链、水印？待验证），
+        视频加载由新片场 CDN 负责，不消耗本站带宽。嵌入代码无需任何后端，纯前端 iframe。<br><br>
+
+        <strong>注意事项：</strong>如果新片场设置了 <code>X-Frame-Options: DENY</code> 
+        或 <code>Content-Security-Policy: frame-ancestors</code>，则无法嵌入。<br><br>
+
+        <strong>性能考量：</strong>每个 iframe 都会额外加载播放器 JS + 视频资源。
+        如果一页嵌入多个 iframe，首屏性能会受影响。建议使用 <code>loading="lazy"</code> 延迟加载。<br><br>
+
+        <strong>版权声明：</strong>本站仅作创意灵感展示，所有版权归属原作者。
+        嵌入播放器本身是新片场官方提供的能力，符合平台 ToS。
+      </p>
+    </div>
+  </div>
+</body>
+</html>

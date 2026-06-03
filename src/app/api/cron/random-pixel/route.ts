@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getTemplateColor, getTemplateColorNearest } from '@/lib/famous-paintings'
-import { FAMOUS_PAINTINGS } from '@/data/painting-pixels'
 
 // 默认底稿：星月夜
 const DEFAULT_TEMPLATE_ID = 'starry-night'
 
 // 从数据库读取当前底稿配置
 async function getCurrentTemplate() {
+  const { FAMOUS_PAINTINGS } = await import('@/data/painting-pixels')
   try {
     const config = await prisma.siteConfig.findUnique({
       where: { key: 'canvas_template' }
@@ -15,7 +15,7 @@ async function getCurrentTemplate() {
     const templateId = config?.value || DEFAULT_TEMPLATE_ID
     return FAMOUS_PAINTINGS.find(p => p.id === templateId) || FAMOUS_PAINTINGS[0]
   } catch {
-    return FAMOUS_PAINTINGS[0] // 降级到星月夜
+    return FAMOUS_PAINTINGS[0]
   }
 }
 

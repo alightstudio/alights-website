@@ -37,58 +37,79 @@ function sanitizeComment(content: string): string {
 
 // GET /api/forum/posts/[id]/comments — list comments for a post
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const comments = await prisma.forumComment.findMany({
-    where: { postId: id },
-    include: { author: { select: { id: true, name: true } } },
-    orderBy: { createdAt: 'asc' },
-  })
-  return NextResponse.json(comments)
+  try {
+    const { id } = await params
+    const comments = await prisma.forumComment.findMany({
+      where: { postId: id },
+      include: { author: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'asc' },
+    })
+    return NextResponse.json(comments)
+  } catch {
+    return NextResponse.json(
+      { error: '服务暂不可用，请稍后再试' },
+      { status: 500 }
+    )
+  }
 }
 
 // POST /api/forum/posts/[id]/comments — add comment (requires login)
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = getVerifiedUserId(req)
-  if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
+  try {
+    const userId = getVerifiedUserId(req)
+    if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
-  const body = await req.json()
-  const { id: postId } = await params
-  const post = await prisma.forumPost.findUnique({ where: { id: postId } })
-  if (!post) return NextResponse.json({ error: '帖子不存在' }, { status: 404 })
+    const body = await req.json()
+    const { id: postId } = await params
+    const post = await prisma.forumPost.findUnique({ where: { id: postId } })
+    if (!post) return NextResponse.json({ error: '帖子不存在' }, { status: 404 })
 
-  if (!body.content?.trim() || typeof body.content !== 'string') {
-    return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
+    if (!body.content?.trim() || typeof body.content !== 'string') {
+      return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
+    }
+
+    const cleanContent = sanitizeComment(body.content)
+    if (!cleanContent.trim()) {
+      return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
+    }
+
+    const comment = await prisma.forumComment.create({
+      data: { content: cleanContent, postId, authorId: userId },
+      include: { author: { select: { id: true, name: true } } },
+    })
+
+    awardPoints(userId, 2, 'comment_create', 20).catch(() => {})
+    return NextResponse.json(comment, { status: 201 })
+  } catch {
+    return NextResponse.json(
+      { error: '服务暂不可用，请稍后再试' },
+      { status: 500 }
+    )
   }
-
-  const cleanContent = sanitizeComment(body.content)
-  if (!cleanContent.trim()) {
-    return NextResponse.json({ error: '评论内容不能为空' }, { status: 400 })
-  }
-
-  const comment = await prisma.forumComment.create({
-    data: { content: cleanContent, postId, authorId: userId },
-    include: { author: { select: { id: true, name: true } } },
-  })
-
-  awardPoints(userId, 2, 'comment_create', 20).catch(console.error)
-  return NextResponse.json(comment, { status: 201 })
 }
 
 // DELETE /api/forum/posts/[id]/comments — delete comment (author or admin)
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = getVerifiedUserId(req)
-  if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
+  try {
+    const userId = getVerifiedUserId(req)
+    if (!userId) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
-  const { id: commentId } = await params
-  const comment = await prisma.forumComment.findUnique({ where: { id: commentId } })
-  if (!comment) return NextResponse.json({ error: '评论不存在' }, { status: 404 })
+    const { id: commentId } = await params
+    const comment = await prisma.forumComment.findUnique({ where: { id: commentId } })
+    if (!comment) return NextResponse.json({ error: '评论不存在' }, { status: 404 })
 
-  // P2 #12 修复：通过 admin session 判断管理员，不再依赖硬编码手机号
-  const isAdmin = await verifyAdminSession()
-  if (comment.authorId !== userId && !isAdmin) {
-    return NextResponse.json({ error: '无权限删除' }, { status: 403 })
+    // P2 #12 修复：通过 admin session 判断管理员，不再依赖硬编码手机号
+    const isAdmin = await verifyAdminSession()
+    if (comment.authorId !== userId && !isAdmin) {
+      return NextResponse.json({ error: '无权限删除' }, { status: 403 })
+    }
+
+    await prisma.forumComment.delete({ where: { id: commentId } })
+    return NextResponse.json({ message: '删除成功' })
+  } catch {
+    return NextResponse.json(
+      { error: '服务暂不可用，请稍后再试' },
+      { status: 500 }
+    )
   }
-
-  await prisma.forumComment.delete({ where: { id: commentId } })
-  return NextResponse.json({ message: '删除成功' })
 }

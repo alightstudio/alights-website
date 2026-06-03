@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { FAMOUS_PAINTINGS } from '@/data/painting-pixels'
 
 // 禁止 Vercel CDN 缓存此动态端点
 export const dynamic = 'force-dynamic'
@@ -84,6 +83,7 @@ async function handleDailySettle() {
     }
 
     // 自动轮换底稿模板
+    const { FAMOUS_PAINTINGS } = await import('@/data/painting-pixels')
     const nextTemplate = FAMOUS_PAINTINGS[Math.floor(Math.random() * FAMOUS_PAINTINGS.length)]
     await prisma.siteConfig.upsert({
       where: { key: 'canvas_template' },

@@ -357,7 +357,7 @@ export default function GalleryPage() {
 
   // 按年代分组
   const stashGroups = [
-    { label: '最新收藏 (170-176)', stashes: allStashes.filter(s => parseInt(s.id) >= 170) },
+    { label: '最新收藏 (170-177)', stashes: allStashes.filter(s => parseInt(s.id) >= 170) },
     { label: '中期收藏 (160-169)', stashes: allStashes.filter(s => parseInt(s.id) >= 160 && parseInt(s.id) < 170) },
     { label: '早期收藏 (150-159)', stashes: allStashes.filter(s => parseInt(s.id) >= 150 && parseInt(s.id) < 160) },
     { label: '更早收藏 (140-149)', stashes: allStashes.filter(s => parseInt(s.id) >= 140 && parseInt(s.id) < 150) },

@@ -9,11 +9,18 @@ import { verifyAdminSession } from '@/lib/admin-auth'
 
 // GET /api/forum/categories — list all
 export async function GET() {
-  const categories = await prisma.forumCategory.findMany({
-    orderBy: { sortOrder: 'asc' },
-    include: { _count: { select: { posts: true } } },
-  })
-  return NextResponse.json(categories)
+  try {
+    const categories = await prisma.forumCategory.findMany({
+      orderBy: { sortOrder: 'asc' },
+      include: { _count: { select: { posts: true } } },
+    })
+    return NextResponse.json(categories)
+  } catch {
+    return NextResponse.json(
+      { error: '服务暂不可用，请稍后再试' },
+      { status: 500 }
+    )
+  }
 }
 
 // POST /api/forum/categories — create (admin only)

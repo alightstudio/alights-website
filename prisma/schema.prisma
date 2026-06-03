@@ -312,3 +312,33 @@ model RateLimitEntry {
 
   @@index([key, type])
 }
+
+// ===== 在线审片系统 =====
+
+model VideoReview {
+  id        String   @id @default(cuid())
+  title     String   // 项目名称
+  videoUrl  String   // Vercel Blob 上的视频 URL
+  videoName String   // 原始文件名
+  passcode  String   // 4位访问码，甲方凭码查看
+  status    String   @default("ACTIVE") // ACTIVE, COMPLETED, ARCHIVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments  ReviewComment[]
+}
+
+model ReviewComment {
+  id        String   @id @default(cuid())
+  reviewId  String
+  timestamp Float    // 评论时间点（秒）
+  comment   String   // 评论内容
+  author    String   @default("甲方") // 评论人标识
+  resolved  Boolean  @default(false) // 是否已处理
+  createdAt DateTime @default(now())
+
+  review    VideoReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@map("ReviewComment")
+}

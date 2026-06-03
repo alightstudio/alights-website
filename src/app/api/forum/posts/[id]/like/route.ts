@@ -49,12 +49,11 @@ export async function POST(
       ])
       // 交易成功后，再给帖子作者加积分（避免操作失败积分已发出）
       if (post?.authorId && post.authorId !== userId) {
-        awardPoints(post.authorId, 1, 'like_received', 20).catch(console.error)
+        awardPoints(post.authorId, 1, 'like_received', 20).catch(() => {})
       }
       return NextResponse.json({ liked: true, likes: (await prisma.forumPost.findUnique({ where: { id: postId } }))?.likes ?? 1 })
     }
-  } catch (error) {
-    console.error('Like error:', error)
+  } catch {
     return NextResponse.json({ error: '操作失败' }, { status: 500 })
   }
 }

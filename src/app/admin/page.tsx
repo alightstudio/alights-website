@@ -566,7 +566,7 @@ export default function AdminPage() {
     { id: 'settings', label: '网站配置', icon: Settings },
     { id: 'analytics', label: '数据分析', icon: BarChart3 },
     { id: 'contact', label: '留言管理', icon: MessageSquare },
-    { id: 'canvas', label: '像素画布', icon: Palette },
+    { id: 'canvas', label: '实验室', icon: Palette },
     { id: 'media', label: '媒体管理', icon: Image },
   ]
 

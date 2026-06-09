@@ -214,7 +214,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     contact: 'Contact',
     lab: 'Lab',
   }
-  // Fallback 默认导航（数据库不可用时也保证完整菜单，不含像素画布入口，画布只在 /lab 中提供）
+  // Fallback 默认导航（数据库不可用时也保证完整菜单，不含实验室入口，画布只在 /lab 中提供）
   const DEFAULT_NAV_ITEMS = [
     { id: 'home', label: '首页', labelEn: 'Home', href: '/', visible: true, order: 0 },
     { id: 'works', label: '作品集', labelEn: 'Works', href: '/works', visible: true, order: 1 },

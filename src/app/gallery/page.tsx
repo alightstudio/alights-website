@@ -267,6 +267,7 @@ function TabBtn({ label, count, active, onClick }: { label: string; count: numbe
 }
 
 function StashSection({ works, label, totalViews }: { works: StashWork[]; label: string; totalViews: number }) {
+  const router = useRouter()
   const [sortMode, setSortMode] = useState<'heat' | 'views'>('heat')
   const [sorted, setSorted] = useState<StashWork[]>(works)
 

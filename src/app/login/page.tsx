@@ -67,8 +67,7 @@ function LoginForm() {
           </Link>
 
           <h1 className="font-display text-4xl font-light mb-4">用户登录</h1>
-          <p className="text-gray-400 mb-2">作品集与创意灵感 · 免费浏览</p>
-          <p className="text-gray-500 text-sm mb-8">
+          <p className="text-gray-400 mb-8">
             {redirectTo === '/works' ? '登录后即可观看完整作品'
             : redirectTo === '/gallery' ? '登录后即可查看完整灵感视频'
             : '登录后可上传作品、管理提交记录'}

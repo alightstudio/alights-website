@@ -56,12 +56,6 @@ export default function WorksPage() {
   const [sorted, setSorted] = useState<WorksWork[]>(rawWorks)
 
   useEffect(() => {
-    if (!localStorage.getItem('userId')) {
-      router.replace('/login')
-    }
-  }, [router])
-
-  useEffect(() => {
     setSorted(sortMode === 'heat' ? [...rawWorks].sort(sortByHeat) : [...rawWorks].sort(sortByViews))
   }, [sortMode])
 
@@ -114,7 +108,14 @@ export default function WorksPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.04 }}
               className="group cursor-pointer"
-              onClick={() => trackWorkClick(work.id)}
+              onClick={(e) => {
+                if (!localStorage.getItem('userId')) {
+                  e.preventDefault()
+                  router.push('/login?redirect=/works')
+                  return
+                }
+                trackWorkClick(work.id)
+              }}
             >
               <div className="relative aspect-video bg-dark-800 border border-dark-700 overflow-hidden mb-3">
                 <img

@@ -308,7 +308,14 @@ function StashSection({ works, label, totalViews }: { works: StashWork[]; label:
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: index * 0.04 }}
             className="group cursor-pointer"
-            onClick={() => trackWorkClick(work.id)}
+            onClick={(e) => {
+              if (!localStorage.getItem('userId')) {
+                e.preventDefault()
+                router.push('/login?redirect=/gallery')
+                return
+              }
+              trackWorkClick(work.id)
+            }}
           >
             <div className="relative aspect-video bg-dark-800 border border-dark-700 overflow-hidden mb-3">
               <img
@@ -368,12 +375,6 @@ function formatDuration(seconds: number) {
 
 export default function GalleryPage() {
   const router = useRouter()
-
-  useEffect(() => {
-    if (!localStorage.getItem('userId')) {
-      router.replace('/login')
-    }
-  }, [router])
   const [activeTab, setActiveTab] = useState('177')
   const [searchTerm, setSearchTerm] = useState('')
 

@@ -16,12 +16,27 @@ interface ReviewListItem {
 export default function ReviewManagePage() {
   const [reviews, setReviews] = useState<ReviewListItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetch('/api/review')
-      .then(res => res.json())
-      .then(data => setReviews(data))
-      .catch(console.error)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.json()
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setReviews(data)
+        } else if (data && data.error) {
+          setError(data.error)
+        } else {
+          setReviews([])
+        }
+      })
+      .catch(err => {
+        console.error('获取审片列表失败:', err)
+        setError(err.message || '获取列表失败')
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -34,6 +49,23 @@ export default function ReviewManagePage() {
     return (
       <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-zinc-700 border-t-white rounded-full animate-spin" />
+      </main>
+    )
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[#0a0a0a] text-white font-['Inter'] flex items-center justify-center">
+        <div className="text-center px-6">
+          <p className="text-lg text-zinc-400 mb-2">审片数据暂时无法加载</p>
+          <p className="text-sm text-zinc-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-5 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-400 hover:text-white transition-colors"
+          >
+            重试
+          </button>
+        </div>
       </main>
     )
   }

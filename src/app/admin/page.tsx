@@ -1130,39 +1130,63 @@ export default function AdminPage() {
                       <h3 className="text-sm font-medium text-white mb-4">每日访问趋势</h3>
                       {(() => {
                         const dl = analyticsData.dateList
-                        const maxPv = Math.max(...dl.map((d: any) => d.pv), 1)
+                        const rawMax = Math.max(...dl.map((d: any) => d.pv), 1)
+                        // 向上取整到整数刻度，避免 max=1 时 100%/50%/25% 挤在一起
+                        const niceMax = rawMax <= 5 ? Math.ceil(rawMax * 1.5) : Math.ceil(rawMax * 1.1)
                         return (
                           <div className="space-y-2">
-                            {/* PV bars */}
-                            <div className="flex items-end gap-[2px] h-40">
-                              {dl.map((d: any) => {
-                                const h = (d.pv / maxPv) * 100
-                                return (
-                                  <div key={d.date} className="flex-1 flex flex-col items-center group relative min-w-0">
-                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-dark-800 border border-white/10 rounded px-2 py-1 text-[10px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-                                      {d.date}<br/>PV: {d.pv} / UV: {d.uv}
-                                    </div>
-                                    <div className="w-full rounded-t bg-blue-400/70 hover:bg-blue-400 transition-all duration-150"
-                                      style={{ height: `${Math.max(h, 2)}%`, minHeight: '2px' }} />
+                            {/* PV bars with Y-axis */}
+                            <div className="flex gap-[2px] h-44 relative">
+                              {/* Y-axis reference lines */}
+                              <div className="absolute inset-0 pointer-events-none">
+                                {[0.75, 0.5, 0.25].map(ratio => (
+                                  <div key={ratio} className="absolute left-0 right-0 flex items-center" style={{ bottom: `${ratio * 100}%` }}>
+                                    <span className="text-[9px] text-gray-600 w-8 text-right pr-1.5 leading-none">{Math.round(niceMax * ratio)}</span>
+                                    <div className="flex-1 border-t border-white/[0.06] border-dashed" />
                                   </div>
-                                )
-                              })}
+                                ))}
+                              </div>
+                              <div className="flex items-end gap-[2px] flex-1 ml-8">
+                                {dl.map((d: any) => {
+                                  const h = (d.pv / niceMax) * 100
+                                  const isZero = d.pv === 0
+                                  return (
+                                    <div key={d.date} className="flex-1 flex flex-col items-center group relative min-w-0">
+                                      <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-dark-800 border border-white/10 rounded px-2 py-1 text-[10px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                                        {d.date}<br/>PV: {d.pv} / UV: {d.uv}
+                                      </div>
+                                      <div className={`w-full rounded-t transition-all duration-150 ${
+                                        isZero ? 'bg-white/5 h-[3px]' : 'bg-blue-400/70 hover:bg-blue-400'
+                                      }`}
+                                        style={isZero ? {} : { height: `${Math.max(h, 10)}%` }} />
+                                      {/* value label below bar */}
+                                      <span className="text-[9px] text-gray-500 mt-0.5 leading-none tabular-nums">
+                                        {dl.length <= 14 ? d.date.slice(5) : ''}
+                                      </span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
                             </div>
                             {/* UV bars */}
-                            <div className="flex items-end gap-[2px] h-20">
+                            <div className="flex items-end gap-[2px] h-20 ml-8">
                               {dl.map((d: any) => {
-                                const h = (d.uv / maxPv) * 100
+                                const h = (d.uv / niceMax) * 100
+                                const isZero = d.uv === 0
                                 return (
                                   <div key={d.date} className="flex-1 min-w-0">
-                                    <div className="w-full rounded-t bg-green-400/50"
-                                      style={{ height: `${Math.max(h, 1)}%`, minHeight: '1px' }} />
+                                    <div className={`w-full rounded-t ${
+                                      isZero ? 'bg-white/5 h-[2px]' : 'bg-green-400/50'
+                                    }`}
+                                      style={isZero ? {} : { height: `${Math.max(h, 6)}%` }} />
                                   </div>
                                 )
                               })}
                             </div>
-                            <div className="flex items-center gap-4 text-[10px] text-gray-500">
+                            <div className="flex items-center gap-4 text-[10px] text-gray-500 ml-8">
                               <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm bg-blue-400/70"/>PV 浏览量</span>
                               <span className="flex items-center gap-1"><span className="w-3 h-2 rounded-sm bg-green-400/50"/>UV 独立访客</span>
+                              <span className="flex items-center gap-1"><span className="w-3 h-[3px] rounded-sm bg-white/5"/>0（无数据）</span>
                             </div>
                           </div>
                         )
@@ -1241,17 +1265,21 @@ export default function AdminPage() {
                       <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2"><Clock className="w-4 h-4 text-accent-gold/60"/>星期分布（近7天）</h3>
                       <div className="grid grid-cols-7 gap-2">
                         {analyticsData.dayOfWeekStats.map((d: { day: number; label: string; labelEn: string; pv: number; uv: number }) => {
-                          const maxPv = Math.max(...analyticsData.dayOfWeekStats.map((x: any) => x.pv), 1)
-                          const barH = (d.pv / maxPv) * 100
+                          const rawMax = Math.max(...analyticsData.dayOfWeekStats.map((x: any) => x.pv), 1)
+                          // 向上取整留余量，避免最高柱贴顶
+                          const niceMax = rawMax <= 5 ? Math.ceil(rawMax * 1.5) : Math.ceil(rawMax * 1.15)
+                          const barH = (d.pv / niceMax) * 100
                           const isToday = new Date().getDay() === d.day
+                          const isZero = d.pv === 0
                           return (
                             <div key={d.day} className={`text-center p-2 rounded-lg ${isToday ? 'bg-accent-gold/10 border border-accent-gold/20' : 'bg-white/[0.02]'}`}>
                               <p className={`text-[10px] ${isToday ? 'text-accent-gold font-medium' : 'text-gray-500'}`}>{d.labelEn}</p>
                               <div className="h-16 flex items-end justify-center mt-2">
-                                <div className="w-full max-w-[20px] rounded-t bg-blue-400/50" style={{ height: `${Math.max(barH, 4)}%` }} />
+                                <div className={`w-full max-w-[20px] rounded-t ${isZero ? 'bg-white/5 h-[3px]' : 'bg-blue-400/50'}`}
+                                  style={isZero ? {} : { height: `${Math.max(barH, 12)}%` }} />
                               </div>
                               <p className="text-[10px] text-gray-400 mt-1">{d.label}</p>
-                              <p className="text-xs text-gray-300 font-mono mt-0.5">{d.pv}</p>
+                              <p className={`text-xs font-mono mt-0.5 ${isZero ? 'text-gray-600' : 'text-gray-300'}`}>{d.pv}</p>
                             </div>
                           )
                         })}

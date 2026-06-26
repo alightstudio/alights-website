@@ -66,7 +66,7 @@ export default function Footer({ initialFooter, initialContact }: FooterProps) {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand */}
           <div>
-            <Image src="/logo.svg" alt="ALIGHTS" width={2810} height={450} className="h-[22px] w-auto mb-6" />
+            <Image src="/logo.svg" alt="ALIGHTS" width={2723} height={413} className="h-[22px] w-auto mb-6" />
             <p className="text-gray-500 text-sm leading-relaxed">{cfg.tagline}</p>
           </div>
 

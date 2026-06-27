@@ -10,10 +10,10 @@
     "nameEn": "Xi'an Alights Culture Communication Co., Ltd.",
     "shortName": "栖光",
     "shortNameEn": "ALIGHTS",
-    "slogan": "专业视效制作 · 光影叙事艺术",
-    "sloganEn": "Professional Visual Effects · Cinematic Storytelling",
-    "description": "西安栖光文化传播有限公司，专注于高端视效制作领域。以光影为笔，以创意为墨，为品牌讲述动人故事。",
-    "descriptionEn": "Xi'an Alights Culture Communication Co., Ltd. specializes in high-end visual effects production. Using light and shadow as our brush, creativity as our ink, we tell compelling stories for brands."
+    "slogan": "以光叙事，为品牌造境",
+    "sloganEn": "Cinematic Visual Storytelling for Brands",
+    "description": "栖光是一家专注于高端视觉内容制作的创意工作室，业务涵盖TVC广告、产品动画、发布会视觉、AIGC创作及影视剧特效。",
+    "descriptionEn": "Alights is a creative studio specializing in high-end visual content production, spanning TVC commercials, product animation, launch event visuals, AIGC creation, and film VFX."
   },
   "contact": {
     "phone": "15091855505",
@@ -24,19 +24,20 @@
     "xiaohongshu": ""
   },
   "seo": {
-    "title": "栖光文化 | ALIGHTS - 专业视效制作",
-    "description": "西安栖光文化传播有限公司，专注于高端视效制作领域。TVC广告、产品动画、发布会、影视剧。",
-    "keywords": "栖光,视效,TVC广告,产品动画,发布会,影视剧,3D渲染,CG"
+    "title": "栖光文化 | ALIGHTS - 以光叙事，为品牌造境",
+    "description": "西安栖光文化传播有限公司，专注高端视觉内容制作。TVC广告、产品动画、发布会视觉、AIGC、影视剧特效。",
+    "keywords": "栖光,视效,TVC广告,产品动画,发布会,AIGC,影视剧,3D渲染,CG,品牌视觉"
   },
   "hero": {
     "title": "栖光",
     "titleEn": "ALIGHTS",
-    "subtitle": "专业视效制作 · 光影叙事艺术",
-    "subtitleEn": "Professional Visual Effects · Cinematic Storytelling",
+    "subtitle": "以光叙事，为品牌造境",
+    "subtitleEn": "Cinematic Visual Storytelling for Brands",
     "tags": [
       "TVC广告",
       "产品动画",
       "发布会",
+      "AIGC",
       "影视剧"
     ]
   },

@@ -7,28 +7,28 @@ import dynamic from 'next/dynamic'
 const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), { ssr: false })
 
 const VALUE_DEFAULTS = [
-  { title: '极简主义', desc: '减到不能减的设计哲学，让每一帧都充满力量' },
-  { title: '追求卓越', desc: '不满足于优秀，始终向着完美迈进' },
-  { title: '光影叙事', desc: '用光与影的交织，讲述触动人心的故事' },
+  { title: '以光叙事', desc: '光是我们创作的第一语言，也是唯一标准。每一次布光，都是一次对质感的追求' },
+  { title: '为品牌造境', desc: '不为炫技，只为品牌找到最恰当的视觉语境——让人看一眼，就记住' },
+  { title: '不止于制作', desc: '从创意策想到最终交付，我们相信好的视觉内容，本身就是一次品牌叙事' },
 ]
 
 const SERVICE_DEFAULTS = [
-  { title: 'AIGC', desc: 'AI 驱动的内容生成，以前沿技术加速创意落地' },
-  { title: 'TVC广告', desc: '高端商业广告制作，为品牌打造令人难忘的视觉体验' },
-  { title: '产品动画', desc: '三维产品可视化，展现产品的每一个精彩细节' },
-  { title: '产品发布会', desc: '沉浸式大屏视觉，让发布会成为值得记住的瞬间' },
-  { title: '影视剧', desc: '电影级特效制作，为叙事增添无限可能' },
+  { title: 'TVC广告', desc: '高端商业广告制作，以前所未见的视觉语言，让品牌被记住' },
+  { title: '产品动画', desc: '三维产品可视化，用镜头语言讲清楚产品的每一个精彩细节' },
+  { title: '发布会视觉', desc: '沉浸式大屏视觉，把发布会现场变成值得被谈论的事件本身' },
+  { title: 'AIGC创作', desc: 'AI 驱动的前沿内容生产，以前沿技术加速创意落地' },
+  { title: '影视剧特效', desc: '电影级视觉特效，为叙事增添不可替代的光影质感' },
 ]
 
 const STORY_TEXT = [
-  '光，是栖光的第一语言。AIGC 生成、CG 渲染、实拍布光——我们用一切手段捕捉和创造光。',
-  '我们的工作，本质上在做同一件事：为每个品牌找到最合适的视觉表达。它可以是一支 TVC 广告里的精密布光，一次产品动画的材质打磨，也可以是一场发布会现场的光影叙事。',
-  '不设边界，不贴标签。从影视级视效到 AI 驱动的创新内容，只要与视觉相关，就是我们的领域。',
+  '栖光成立于西安，是一家专注高端视觉内容的创意工作室。',
+  '我们的核心能力，是用光讲故事。TVC 广告里的精密布光、产品动画的材质打磨、发布会现场的光影叙事——本质上，都是同一件事：找到最恰当的视觉语境，让品牌被看见、被记住。',
+  '从 AIGC 到影视级视效，从一张图到一支片，我们不设边界。只要视觉是答案，就是我们的领域。',
 ]
 
 interface SiteData {
   company?: { name: string; slogan: string; description: string }
-  services?: { title: string; desc: string }[]
+  services?: { title: string; desc: string; titleEn?: string; descEn?: string }[]
   particle?: any
 }
 
@@ -84,7 +84,8 @@ export default function AboutPage() {
   const company = config?.company
   const aboutTitle = company?.name ? `关于${company.name}` : '关于栖光'
   const tagline = company?.slogan || '光栖之处·自有答案'
-  const services = config?.services?.length ? config.services : SERVICE_DEFAULTS
+  // 从 config 优先读取 services（来自 API / site-config.json），兜底用硬编码默认值
+  const services = (config?.services?.length ? config.services : SERVICE_DEFAULTS) as { title: string; desc: string }[]
   const aboutDesc = company?.description || ''
 
   return (

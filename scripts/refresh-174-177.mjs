@@ -1,60 +1,32 @@
-// Bypass security check for stashes 174-177
+// Quick refresh stashes 174-177 using current Chrome tab
 import puppeteer from 'puppeteer-core';
 import fs from 'fs';
 
 const browserURL = 'http://127.0.0.1:9222';
 
-async function processStash(n, bookmarkId) {
+async function refresh(n, bookmarkId) {
   const browser = await puppeteer.connect({ browserURL });
-  const pages = await browser.pages();
-  let page = pages.find(p => p.url().includes(String(bookmarkId)));
+  const page = await browser.newPage();
   
-  if (!page) {
-    page = await browser.newPage();
-  }
-
   const url = `https://www.xinpianchang.com/bookmark/${bookmarkId}?from=userBookmark`;
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await new Promise(r => setTimeout(r, 5000));
 
-  // Wait for security check to pass or page to load
-  let title = await page.title();
-  let waitCycles = 0;
-  while (title === '安全检测中' && waitCycles < 30) {
-    console.log(`stash${n}: security check... waiting (${waitCycles}s)`);
-    await new Promise(r => setTimeout(r, 3000));
-    
-    // Try clicking refresh button if present
-    try {
-      await page.evaluate(() => {
-        const btns = document.querySelectorAll('span, button, a');
-        for (const b of btns) {
-          if (b.textContent.includes('刷新') || b.textContent.includes('重试')) {
-            b.click();
-            return true;
-          }
-        }
-        return false;
-      });
-    } catch(e) {}
-    
-    title = await page.title();
-    waitCycles++;
-  }
+  const title = await page.title();
+  console.log(`stash${n}: ${title.slice(0, 60)}`);
 
-  if (title === '安全检测中') {
-    console.log(`stash${n}: ❌ security check never passed`);
+  if (title.includes('安全检测')) {
+    console.log(`  ❌ 安全检测中`);
+    await page.close();
     await browser.disconnect();
     return false;
   }
-
-  console.log(`stash${n}: page loaded (${title.slice(0, 50)})`);
-  await new Promise(r => setTimeout(r, 4000));
 
   const freshData = await page.evaluate(() => {
     const nd = window.__NEXT_DATA__;
     if (!nd) return null;
     const list = nd.props.pageProps.detail.list;
-    if (!list) return null;
+    if (!list || !list.length) return null;
     const result = [];
     for (let i = 0; i < list.length; i++) {
       const item = list[i].item;
@@ -71,8 +43,10 @@ async function processStash(n, bookmarkId) {
     return result;
   });
 
+  await page.close();
+
   if (!freshData) {
-    console.log(`stash${n}: ❌ No __NEXT_DATA__`);
+    console.log(`  ❌ No __NEXT_DATA__`);
     await browser.disconnect();
     return false;
   }
@@ -91,20 +65,32 @@ async function processStash(n, bookmarkId) {
       updated++;
     }
   }
-
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
-  console.log(`✅ stash${n}: ${updated}/${data.length} updated`);
+  console.log(`  ✅ ${updated}/${data.length} updated`);
+
   await browser.disconnect();
   return true;
 }
 
 async function main() {
-  // 174-177
-  for (const [n, id] of [['174', '2097422'], ['175', '2098799'], ['176', '2099029'], ['177', '2161140']]) {
-    const ok = await processStash(n, id);
+  const stashes = [
+    ['174', '2097422'],
+    ['175', '2098799'],
+    ['176', '2099029'],
+    ['177', '2161140'],
+  ];
+  
+  for (const [n, id] of stashes) {
+    const file = `src/data/stash${n}.json`;
+    if (!fs.existsSync(file)) {
+      console.log(`stash${n} — no file, skipping`);
+      continue;
+    }
+    const ok = await refresh(n, id);
     if (!ok) console.log(`  → stash${n} needs manual bypass`);
     await new Promise(r => setTimeout(r, 2000));
   }
+  console.log('\nDone!');
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

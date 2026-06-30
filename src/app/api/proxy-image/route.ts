@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
   try {
     const res = await fetch(url, {
       headers: {
-        // 不发 Referer，xpccdn 无 Referer 时返回 200
+        Referer: 'https://www.xinpianchang.com/',
       },
       cache: 'no-store',
     })

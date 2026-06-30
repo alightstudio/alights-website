@@ -1,5 +1,4 @@
-// Refresh all stash metrics by visiting bookmark detail pages
-// Extracts count data from __NEXT_DATA__ on each bookmark page
+// Refresh stashes 88-177 (the ones that weren't covered before)
 import puppeteer from 'puppeteer-core';
 import fs from 'fs';
 
@@ -8,39 +7,45 @@ const DATA_DIR = 'src/data/';
 
 async function main() {
   const browser = await puppeteer.connect({ browserURL });
-
-  // Load stash IDs mapping
   const stashIds = JSON.parse(fs.readFileSync('scripts/stash-ids.json', 'utf8'));
   console.log('Stash IDs loaded:', Object.keys(stashIds).length);
 
   let totalUpdated = 0;
-  let totalItems = 0;
-  const missingStashes = [];
+
+  // Focus on stashes that were skipped earlier: 116-120, 122-123, 125-177
+  // Also include 88-89 since they weren't refreshed
+  const targets = [];
+  for (let n = 88; n <= 177; n++) {
+    // Skip 90-115, 121, 124 — already done
+    if ((n >= 90 && n <= 115) || n === 121 || n === 124) continue;
+    if (stashIds[String(n)]) targets.push(n);
+  }
+
+  console.log('Targets:', targets.join(', '));
+  console.log('Count:', targets.length);
+
+  let updatedStashes = 0;
+  let skippedStashes = 0;
   const failedStashes = [];
 
-  for (let n = 90; n <= 177; n++) {
+  for (const n of targets) {
     const file = DATA_DIR + 'stash' + n + '.json';
     if (!fs.existsSync(file)) {
-      console.log(`⏭ stash${n} — no file`);
+      console.log(`⏭ stash${n} — no JSON file`);
+      skippedStashes++;
       continue;
     }
 
     const npcId = stashIds[String(n)];
-    if (!npcId) {
-      console.log(`⏭ stash${n} — no bookmark ID in stash-ids.json`);
-      missingStashes.push(n);
-      continue;
-    }
-
     const data = JSON.parse(fs.readFileSync(file, 'utf8'));
     if (!data.length) {
       console.log(`⏭ stash${n} — empty`);
+      skippedStashes++;
       continue;
     }
 
     const url = `https://www.xinpianchang.com/bookmark/${npcId}?from=userBookmark`;
-    console.log(`📦 stash${n} (${url}) — ${data.length} items`);
-
+    
     try {
       const page = await browser.newPage();
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -51,7 +56,6 @@ async function main() {
         if (!nd) return null;
         const list = nd.props.pageProps.detail.list;
         if (!list) return null;
-
         const result = [];
         for (let i = 0; i < list.length; i++) {
           const item = list[i].item;
@@ -71,12 +75,11 @@ async function main() {
       await page.close();
 
       if (!freshData) {
-        console.log(`  ❌ No __NEXT_DATA__ — safety check triggered?`);
+        console.log(`❌ stash${n} — no __NEXT_DATA__`);
         failedStashes.push(n);
         continue;
       }
 
-      // Merge by id
       let updated = 0;
       const freshMap = new Map(freshData.map(f => [f.id, f]));
       for (const item of data) {
@@ -91,23 +94,22 @@ async function main() {
       }
 
       fs.writeFileSync(file, JSON.stringify(data, null, 2));
-      console.log(`  ✅ ${updated}/${data.length} updated`);
+      console.log(`✅ stash${n}: ${updated}/${data.length} updated`);
+      updatedStashes++;
       totalUpdated += updated;
-      totalItems += data.length;
 
     } catch (e) {
-      console.log(`  ❌ Error: ${e.message}`);
+      console.log(`❌ stash${n}: ${e.message}`);
       failedStashes.push(n);
     }
 
-    // Delay between stashes
     await new Promise(r => setTimeout(r, 2000));
   }
 
-  console.log(`\n=== COMPLETE ===`);
-  console.log(`Updated: ${totalUpdated}/${totalItems} items`);
-  console.log(`Missing bookmark IDs: ${missingStashes.join(', ')}`);
-  console.log(`Failed stashes: ${failedStashes.join(', ')}`);
+  console.log(`\n=== DONE ===`);
+  console.log(`Updated: ${updatedStashes} stashes, ${totalUpdated} items`);
+  console.log(`Skipped (no file): ${skippedStashes}`);
+  if (failedStashes.length) console.log(`Failed: ${failedStashes.join(', ')}`);
 
   await browser.disconnect();
 }
